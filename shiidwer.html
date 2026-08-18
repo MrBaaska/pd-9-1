@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="copyright" content="© 2026 УБТЗ. Бүх эрх хуулиар хамгаалагдсан.">
+    <meta name="author" content="Б.Баасанжаргал">
+    <title>Шийдвэр</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Mongolian&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1f2937;
+            --border: #30363d;
+            --accent: #f0a500;
+            --accent2: #e05c2a;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --green: #3fb950;
+            --red: #f85149;
+            --blue: #58a6ff;
+            --purple: #bc8cff;
+            --yellow: #d29922;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: var(--surface);
+            border-bottom: 2px solid var(--accent);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header h1 {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        header .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text2);
+        }
+        .live-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* LAYOUT */
+        .main-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+        .site-footer {
+            max-width: 1400px;
+            margin: 24px auto 0;
+            padding: 16px 32px 28px;
+            color: var(--text2);
+            font-size: 12px;
+        }
+        .site-footer-inner {
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .site-footer strong {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .stat-card:hover { border-color: var(--accent); }
+        .stat-card .stat-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 28px;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-total .stat-num { color: var(--blue); }
+        .stat-present .stat-num { color: var(--green); }
+        .stat-holiday .stat-num { color: var(--yellow); }
+        .stat-sick .stat-num { color: var(--red); }
+        .stat-free .stat-num { color: var(--purple); }
+        .stat-mission .stat-num { color: var(--accent2); }
+
+        .daily-report {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+        .daily-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .daily-title {
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text2);
+            font-weight: 600;
+        }
+        .daily-head input[type=date] {
+            padding: 7px 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            outline: none;
+        }
+        .daily-head input[type=date]:focus { border-color: var(--accent); }
+        .daily-summary {
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        .daily-stats {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .daily-mini {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            background: var(--surface2);
+            text-align: center;
+        }
+        .daily-mini .n {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 20px;
+            line-height: 1;
+        }
+        .daily-mini .l {
+            font-size: 10px;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .news-daily-stats {
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+        .daily-table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: auto;
+        }
+        .daily-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .daily-table th,
+        .daily-table td {
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        .daily-table th {
+            background: var(--surface2);
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 10px;
+        }
+
+        /* TWO COLUMN */
+        .two-col {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* LEFT PANEL - QR + Controls */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-header .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+        .panel-body { padding: 16px; }
+
+        /* QR Scanner */
+        #qr-reader {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #qr-reader video { border-radius: 8px; }
+
+        .qr-result {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--surface2);
+            border-radius: 8px;
+            font-size: 13px;
+            border-left: 3px solid var(--accent);
+            display: none;
+        }
+        .qr-result.show { display: block; }
+        .qr-result .emp-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--accent);
+        }
+        .qr-result .emp-role {
+            color: var(--text2);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* Status selector inside QR */
+        .status-select-wrap {
+            margin-top: 10px;
+        }
+        .status-select-wrap label {
+            font-size: 11px;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-select-wrap select, .status-select-wrap input {
+            width: 100%;
+            margin-top: 4px;
+            padding: 8px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 13px;
+            appearance: none;
+            outline: none;
+        }
+        .status-select-wrap select:focus, .status-select-wrap input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-confirm {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: opacity 0.2s;
+        }
+        .btn-confirm:hover { opacity: 0.85; }
+        .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Manual scan / QR toggle */
+        .tab-row {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .tab-btn:first-child { border-radius: 6px 0 0 6px; }
+        .tab-btn:last-child { border-radius: 0 6px 6px 0; }
+        .tab-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Manual select */
+        .manual-select select {
+            width: 100%;
+            padding: 9px 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 13px;
+            appearance: none;
+            outline: none;
+            font-family: 'IBM Plex Sans', sans-serif;
+            margin-bottom: 10px;
+        }
+        .manual-select select:focus { border-color: var(--accent); }
+
+        /* Мэдээ нэмэх */
+        .btn-add-news {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px dashed var(--accent);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-add-news:hover { background: rgba(240,165,0,0.08); }
+
+        .worker-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 108px 44px;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .worker-form input {
+            padding: 8px 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            outline: none;
+        }
+        .worker-form input:focus { border-color: var(--accent); }
+        .worker-add-btn {
+            padding: 8px 10px;
+            border: 1px solid var(--accent);
+            background: rgba(240,165,0,0.12);
+            color: var(--accent);
+            border-radius: 6px;
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+            width: 100%;
+            white-space: nowrap;
+            min-height: 34px;
+        }
+        #new-worker-role {
+            width: 100%;
+            max-width: 108px;
+        }
+        .worker-toggle-btn {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .worker-admin-box { display: none; }
+        .worker-list {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 240px;
+        }
+        .worker-row {
+            display: grid;
+            grid-template-columns: 34px 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+        .worker-row:last-child { border-bottom: none; }
+        .worker-index {
+            color: var(--text2);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+        .worker-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .worker-btn {
+            padding: 4px 7px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .worker-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .worker-btn.del { color: var(--red); }
+        .worker-btn.del:hover { border-color: var(--red); color: var(--red); }
+
+        .aggregate-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .aggregate-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface2);
+            padding: 12px;
+        }
+        .aggregate-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .aggregate-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .aggregate-subtitle {
+            font-size: 10px;
+            color: var(--text2);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .aggregate-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .aggregate-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            background: rgba(13, 17, 23, 0.45);
+        }
+        .aggregate-item strong {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+            line-height: 1.1;
+            color: var(--text);
+        }
+        .aggregate-item span {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .aggregate-item.ok strong { color: var(--green); }
+        .aggregate-item.warn strong { color: var(--yellow); }
+        .aggregate-item.bad strong { color: var(--red); }
+        .aggregate-item.free strong { color: var(--purple); }
+        .aggregate-item.mission strong { color: var(--accent2); }
+        .aggregate-item.pending strong { color: var(--blue); }
+
+        /* News cards */
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .news-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .news-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(240,165,0,0.35);
+        }
+        .news-card-top {
+            display: flex;
+            gap: 0;
+        }
+        .news-img-box {
+            width: 160px;
+            min-height: 140px;
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            border-right: 1px solid var(--border);
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+        }
+        .news-img-box input[type=file] { display: none; }
+        .news-img-box span {
+            font-size: 11px;
+            color: var(--text2);
+            text-align: center;
+        }
+        .news-img-box svg { color: var(--text2); }
+        .news-img-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            align-items: stretch;
+        }
+        .news-img-grid img {
+            width: 100%;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            display: block;
+            cursor: zoom-in;
+        }
+        .news-img-box.has-images .news-img-grid {
+            flex: 1;
+            min-height: 120px;
+        }
+        .news-img-box.img-count-1 .news-img-grid {
+            grid-template-columns: 1fr;
+        }
+        .news-img-box.img-count-1 .news-img-grid img {
+            height: 100%;
+            min-height: 120px;
+        }
+        .news-img-box.img-count-2 .news-img-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .news-img-box.img-count-2 .news-img-grid img {
+            height: 100%;
+            min-height: 120px;
+        }
+        .news-img-box.has-images svg,
+        .news-img-box.has-images span {
+            display: none;
+        }
+        .news-meta {
+            flex: 1;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .meta-row {
+            display: flex;
+            gap: 10px;
+        }
+        .meta-row input {
+            flex: 1;
+            padding: 7px 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            outline: none;
+        }
+        .meta-row input:focus { border-color: var(--accent); }
+        .meta-row input[type=date] { color: var(--text2); }
+
+        .news-remove-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--red);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            align-self: flex-start;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        .news-remove-btn:hover { border-color: var(--red); background: rgba(248,81,73,0.08); }
+
+        .table-status-select {
+            width: 100%;
+            padding: 6px 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            outline: none;
+        }
+        .table-status-select:focus {
+            border-color: var(--accent);
+        }
+
+        .img-viewer {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .img-viewer.show { display: flex; }
+        .img-viewer-content {
+            width: min(1200px, 96vw);
+            height: min(92vh, 900px);
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 14px;
+            align-items: stretch;
+        }
+        .img-viewer img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+            background: #111;
+        }
+        .img-viewer-side {
+            border: 1px solid #353535;
+            border-radius: 10px;
+            background: rgba(25,25,25,0.92);
+            padding: 12px;
+            color: #ddd;
+            overflow: auto;
+        }
+        .img-viewer-side h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        .img-viewer-list {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .img-viewer-empty {
+            color: #999;
+            font-size: 13px;
+        }
+        .img-viewer-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            width: 34px;
+            height: 34px;
+            border: 1px solid #666;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        /* ATTENDANCE TABLE */
+        .table-wrap {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 520px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead tr {
+            background: var(--surface2);
+        }
+        th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text2);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--surface2);
+        }
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        .emp-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--text2);
+        }
+        .emp-name-cell {
+            font-weight: 500;
+        }
+        .emp-role-cell {
+            color: var(--text2);
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .s-present { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.25); }
+        .s-holiday { background: rgba(210,153,34,0.12); color: var(--yellow); border: 1px solid rgba(210,153,34,0.25); }
+        .s-sick    { background: rgba(248,81,73,0.12);  color: var(--red);    border: 1px solid rgba(248,81,73,0.25);  }
+        .s-free    { background: rgba(188,140,255,0.12);color: var(--purple); border: 1px solid rgba(188,140,255,0.25);}
+        .s-mission { background: rgba(224,92,42,0.12);  color: var(--accent2);border: 1px solid rgba(224,92,42,0.25); }
+        .s-other   { background: rgba(88,166,255,0.12); color: var(--blue);   border: 1px solid rgba(88,166,255,0.25); }
+        .s-waiting { background: rgba(139,148,158,0.12);color: var(--text2);  border: 1px solid rgba(139,148,158,0.25);}
+
+        .time-cell {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--text2);
+        }
+
+        .note-cell {
+            max-width: 180px;
+            font-size: 12px;
+            color: var(--text2);
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 14px 20px;
+            font-size: 14px;
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 300px;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast .t-name { font-weight: 600; color: var(--accent); }
+        .toast .t-status { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+        /* QR START BTN */
+        .qr-start-btn {
+            width: 100%;
+            padding: 40px 0;
+            background: var(--surface2);
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            color: var(--text2);
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans', sans-serif;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .qr-start-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .qr-start-btn svg { width: 40px; height: 40px; }
+
+        .qr-active #qr-start { display: none; }
+
+        /* search bar */
+        .search-bar {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            outline: none;
+        }
+        .search-bar input:focus { border-color: var(--accent); }
+        .search-bar input::placeholder { color: var(--text2); }
+
+        /* responsive */
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+            .stats-bar { grid-template-columns: repeat(3,1fr); }
+            .worker-form {
+                grid-template-columns: 1fr;
+            }
+            #new-worker-role {
+                width: 100%;
+            }
+            .table-wrap {
+                max-height: none;
+            }
+            .worker-list {
+                max-height: none;
+            }
+            .img-viewer-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .img-viewer-side {
+                max-height: 220px;
+            }
+            .daily-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .main-wrap,
+            .site-footer {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            header {
+                padding: 14px 16px;
+                align-items: flex-start;
+            }
+            .daily-head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .news-card-top {
+                flex-direction: column;
+            }
+            .news-img-box {
+                width: 100%;
+                min-height: 180px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Замын ангийн шийдвэр</h1>
+    <div class="live-badge">
+        <div class="live-dot"></div>
+        <span id="clock">--:--:--</span>
+        &nbsp;·&nbsp;
+        <span id="today-date"></span>
+    </div>
+</header>
+
+<div class="main-wrap">
+    <!-- STATS -->
+    <div class="stats-bar">
+        <div class="stat-card stat-total">
+            <div class="stat-num" id="s-total">30</div>
+            <div class="stat-label">Нийт ажилтан</div>
+        </div>
+        <div class="stat-card stat-present">
+            <div class="stat-num" id="s-present">0</div>
+            <div class="stat-label">Ирсэн</div>
+        </div>
+        <div class="stat-card stat-holiday">
+            <div class="stat-num" id="s-holiday">0</div>
+            <div class="stat-label">Ээлжийн амралт</div>
+        </div>
+        <div class="stat-card stat-sick">
+            <div class="stat-num" id="s-sick">0</div>
+            <div class="stat-label">Өвчтэй</div>
+        </div>
+        <div class="stat-card stat-free">
+            <div class="stat-num" id="s-free">0</div>
+            <div class="stat-label">Чөлөөтэй</div>
+        </div>
+        <div class="stat-card stat-mission">
+            <div class="stat-num" id="s-mission">0</div>
+            <div class="stat-label">Томилолт / Бусад</div>
+        </div>
+    </div>
+
+    <div class="daily-report">
+        <div class="daily-head">
+            <div class="daily-title">Өдрөөр бүртгэл</div>
+            <input type="date" id="daily-date" onchange="renderDailyReport()">
+        </div>
+        <div class="daily-summary" id="daily-summary">Нийт 0 хүнээс 0 бүртгэгдсэн</div>
+        <div class="daily-table-wrap">
+            <table class="daily-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Нэр</th>
+                        <th>Албан тушаал</th>
+                        <th>Төлөв</th>
+                        <th>Цаг</th>
+                    </tr>
+                </thead>
+                <tbody id="daily-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="two-col">
+        <!-- LEFT -->
+        <div class="left-panel">
+            <!-- QR SCANNER -->
+            <div class="panel">
+                <div class="panel-header"><div class="dot"></div>QR Бүртгэл</div>
+                <div class="panel-body">
+                    <div class="tab-row">
+                        <button class="tab-btn active" onclick="switchTab('qr')">📷 QR Уншуулах</button>
+                        <button class="tab-btn" onclick="switchTab('manual')">✏️ Гар аргаар</button>
+                    </div>
+
+                    <!-- QR tab -->
+                    <div class="tab-content active" id="tab-qr" style="margin-top:12px;">
+                        <button class="qr-start-btn" id="qr-start" onclick="startQR()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                <path d="M14 14h1m4 0h1m-5 4h5m-5 3h2m3 0h1m-6-7v1"/>
+                            </svg>
+                            Камер асаах
+                        </button>
+                        <div id="qr-reader" style="display:none;"></div>
+                    </div>
+
+                    <!-- Manual tab -->
+                    <div class="tab-content" id="tab-manual" style="margin-top:12px;">
+                        <div class="manual-select">
+                            <select id="manual-emp">
+                                <option value="">— Ажилтан сонгох —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Мэдээ нэмэх -->
+            <div class="panel">
+                <div class="panel-header"><div class="dot"></div>Мэдээ удирдах</div>
+                <div class="panel-body">
+                    <button class="btn-add-news" onclick="addNews()">+ Мэдээ нэмэх</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><div class="dot"></div>Ажилтан удирдах</div>
+                <div class="panel-body">
+                    <button class="worker-toggle-btn" id="worker-admin-toggle" onclick="toggleWorkerAdmin()">Ажилтаны бүртгэл өөрчлөх</button>
+                    <div class="worker-admin-box" id="worker-admin-box">
+                        <div class="worker-form">
+                            <input type="text" id="new-worker-name" placeholder="Ажилтны нэр">
+                            <input type="text" id="new-worker-role" placeholder="Албан тушаал">
+                            <button class="worker-add-btn" onclick="addWorker()" title="Нэмэх">+</button>
+                        </div>
+                        <div class="worker-list" id="worker-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><div class="dot"></div>Нэгтгэсэн үзүүлэлт</div>
+                <div class="panel-body">
+                    <div class="aggregate-summary" id="aggregate-summary">
+                        <div class="aggregate-card">
+                            <div class="aggregate-head">
+                                <div class="aggregate-title">Жилийн дүн</div>
+                                <div class="aggregate-subtitle" id="agg-year-label">--</div>
+                            </div>
+                            <div class="aggregate-grid">
+                                <div class="aggregate-item"><strong id="agg-year-workers">0</strong><span>Нийт ажилтан</span></div>
+                                <div class="aggregate-item pending"><strong id="agg-year-images">0</strong><span>танилцуулсан</span></div>
+                                <div class="aggregate-item ok"><strong id="agg-year-verified">0</strong><span>Баталгаажсан</span></div>
+                                <div class="aggregate-item pending"><strong id="agg-year-unverified">0</strong><span>Хийгдээгүй</span></div>
+                            </div>
+                        </div>
+
+                        <div class="aggregate-card">
+                            <div class="aggregate-head">
+                                <div class="aggregate-title">Сарын дүн</div>
+                                <div class="aggregate-subtitle" id="agg-month-label">--</div>
+                            </div>
+                            <div class="aggregate-grid">
+                                <div class="aggregate-item"><strong id="agg-month-workers">0</strong><span>Нийт ажилтан</span></div>
+                                <div class="aggregate-item pending"><strong id="agg-month-images">0</strong><span>танилцуулсан</span></div>
+                                <div class="aggregate-item ok"><strong id="agg-month-verified">0</strong><span>Баталгаажсан</span></div>
+                                <div class="aggregate-item pending"><strong id="agg-month-unverified">0</strong><span>Хийгдээгүй</span></div>
+                                <div class="aggregate-item ok"><strong id="agg-month-present">0</strong><span>Ирсэн</span></div>
+                                <div class="aggregate-item warn"><strong id="agg-month-holiday">0</strong><span>Амралт</span></div>
+                                <div class="aggregate-item bad"><strong id="agg-month-sick">0</strong><span>Өвчтэй</span></div>
+                                <div class="aggregate-item free"><strong id="agg-month-free">0</strong><span>Чөлөөтэй</span></div>
+                                <div class="aggregate-item mission"><strong id="agg-month-mission">0</strong><span>Томилолт</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-panel">
+            <!-- Attendance table -->
+            <div class="panel">
+                <div class="panel-header"><div class="dot"></div>Ажилтны бүртгэл</div>
+                <div class="search-bar">
+                    <input type="text" placeholder="Хайх..." oninput="filterTable(this.value)">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Нэр</th>
+                                <th>Албан тушаал</th>
+                                <th>Төлөв</th>
+                                <th>Цаг</th>
+                                <th>Тэмдэглэл</th>
+                            </tr>
+                        </thead>
+                        <tbody id="att-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- News cards -->
+            <div class="news-list" id="news-list"></div>
+        </div>
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <div><strong>© 2026 Б.Баасанжаргал</strong> Бүх эрх хуулиар хамгаалагдсан.</div>
+        <div>Зөвшөөрөлгүй хуулбарлах, түгээх, өөрчлөн ашиглахыг хориглоно.</div>
+    </div>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <div class="t-name" id="toast-name"></div>
+    <div class="t-status" id="toast-status"></div>
+</div>
+
+<div class="img-viewer" id="img-viewer" onclick="closeImageViewer()">
+    <button class="img-viewer-close" onclick="closeImageViewer(event)">×</button>
+    <div class="img-viewer-content" onclick="event.stopPropagation()">
+        <img id="img-viewer-img" alt="preview">
+        <div class="img-viewer-side">
+            <h4 id="img-viewer-title">Бүртгэгдсэн хүмүүс</h4>
+            <div class="img-viewer-empty" id="img-viewer-empty">Тухайн өдөр бүртгэл алга.</div>
+            <ul class="img-viewer-list" id="img-viewer-list" style="display:none;"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+// =====================
+// DATA
+// =====================
+let WORKERS = [
+    { id: 'EMP001', name: 'Б.Баасанжаргал', role: 'ПЧИу' },
+    { id: 'EMP002', name: 'Б.Батболд',       role: 'ПД' },
+    { id: 'EMP003', name: 'О.Нэргүй',        role: 'ПДБк' },
+    { id: 'EMP004', name: 'Л.Жаргал',        role: 'ПДБр' },
+    { id: 'EMP005', name: 'Г.Нямсүрэн',      role: 'ПДБс' },
+    { id: 'EMP006', name: 'Д.Мөнхбаяр',      role: 'пр-4' },
+    { id: 'EMP007', name: 'Т.Оюунтунгалаг',  role: 'пр-3' },
+    { id: 'EMP008', name: 'Э.Сайнзаяа',      role: 'пр-2' },
+    { id: 'EMP009', name: 'Н.Болдбаатар',    role: 'Дагалдан' },
+    { id: 'EMP010', name: 'Х.Уранцэцэг',     role: 'тор засагч' },
+    { id: 'EMP011', name: 'С.Мөнхжаргал',    role: 'жолооч' },
+    { id: 'EMP012', name: 'А.Ганбаатар',     role: 'ус олгогч' },
+    { id: 'EMP013', name: 'Б.Энхтүвшин',     role: 'гармын жижүүр' },
+    { id: 'EMP014', name: 'Д.Батчимэг',      role: 'ПЧИу' },
+    { id: 'EMP015', name: 'Л.Мандах',        role: 'ПД' },
+    { id: 'EMP016', name: 'Н.Эрдэнэчимэг',  role: 'ПДБк' },
+    { id: 'EMP017', name: 'Г.Батсүх',        role: 'ПДБр' },
+    { id: 'EMP018', name: 'Ж.Наранцэцэг',   role: 'пр-4' },
+    { id: 'EMP019', name: 'О.Гантулга',      role: 'пр-3' },
+    { id: 'EMP020', name: 'Х.Баярмаа',       role: 'пр-2' },
+    { id: 'EMP021', name: 'Б.Энхбаяр',       role: 'Дагалдан' },
+    { id: 'EMP022', name: 'С.Чимэдцэрэн',   role: 'тор засагч' },
+    { id: 'EMP023', name: 'Т.Болортуяа',     role: 'жолооч' },
+    { id: 'EMP024', name: 'М.Ганзориг',      role: 'ус олгогч' },
+    { id: 'EMP025', name: 'Д.Туяасүрэн',     role: 'гармын жижүүр' },
+    { id: 'EMP026', name: 'Н.Мөнхбат',       role: 'ПЧИу' },
+    { id: 'EMP027', name: 'Б.Оюунбилэг',    role: 'ПД' },
+    { id: 'EMP028', name: 'Э.Алтантуяа',    role: 'ПДБс' },
+    { id: 'EMP029', name: 'Г.Батжаргал',     role: 'пр-4' },
+    { id: 'EMP030', name: 'Д.Цэрэнпунцаг',  role: 'пр-3' },
+];
+
+const STATUS_MAP = {
+    present: { label: 'Ирсэн',            cls: 's-present' },
+    holiday: { label: 'Ээлжийн амралттай',cls: 's-holiday' },
+    sick:    { label: 'Өвчтэй',           cls: 's-sick'    },
+    free:    { label: 'Чөлөөтэй',         cls: 's-free'    },
+    mission: { label: 'Томилолт',         cls: 's-mission' },
+    other:   { label: 'Бусад',            cls: 's-other'   },
+    waiting: { label: 'Хүлээгдэж буй',   cls: 's-waiting' },
+};
+
+// attendance state
+const attendance = {};
+WORKERS.forEach(w => {
+    attendance[w.id] = { status: 'waiting', time: null, note: '' };
+});
+const newsRegistrations = {};
+let activeNewsId = null;
+const STORAGE_KEY = 'ubtz_news_autosave_v1';
+let autosaveTimer = null;
+
+let qrScanner = null;
+let qrRunning = false;
+let workerAdminVisible = false;
+
+// =====================
+// CLOCK
+// =====================
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('mn-MN');
+    document.getElementById('today-date').textContent = now.toLocaleDateString('mn-MN', { year:'numeric', month:'long', day:'numeric' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// =====================
+// POPULATE MANUAL SELECT
+// =====================
+const manualSel = document.getElementById('manual-emp');
+
+function refreshManualSelect() {
+    manualSel.innerHTML = '<option value="">— Ажилтан сонгох —</option>';
+    WORKERS.forEach(w => {
+        const o = document.createElement('option');
+        o.value = w.id;
+        o.textContent = `${w.name} (${w.role})`;
+        manualSel.appendChild(o);
+    });
+}
+manualSel.onchange = function() {
+    if (!this.value) return;
+    setAttendanceStatus(this.value, 'present', 'Гараар бүртгэв');
+    this.value = '';
+};
+
+function getNextWorkerId() {
+    const max = WORKERS.reduce((acc, w) => {
+        const n = Number(String(w.id || '').replace('EMP', ''));
+        return Number.isFinite(n) ? Math.max(acc, n) : acc;
+    }, 0);
+    return `EMP${String(max + 1).padStart(3, '0')}`;
+}
+
+function syncDataWithWorkers() {
+    const workerIds = new Set(WORKERS.map(w => w.id));
+
+    WORKERS.forEach(w => {
+        if (!attendance[w.id]) attendance[w.id] = { status: 'waiting', time: null, note: '' };
+    });
+    Object.keys(attendance).forEach(id => {
+        if (!workerIds.has(id)) delete attendance[id];
+    });
+
+    Object.keys(newsRegistrations).forEach(newsId => {
+        const reg = newsRegistrations[newsId] || {};
+        WORKERS.forEach(w => {
+            if (!reg[w.id]) reg[w.id] = { status: 'waiting', time: null, note: '' };
+        });
+        Object.keys(reg).forEach(id => {
+            if (!workerIds.has(id)) delete reg[id];
+        });
+        newsRegistrations[newsId] = reg;
+    });
+}
+
+function renderWorkerAdmin() {
+    const box = document.getElementById('worker-list');
+    if (!box) return;
+    box.innerHTML = '';
+    WORKERS.forEach((w, idx) => {
+        const row = document.createElement('div');
+        row.className = 'worker-row';
+        row.innerHTML = `
+            <div class="worker-index">${String(idx + 1).padStart(2, '0')}</div>
+            <div>${w.name}</div>
+            <div>${w.role}</div>
+            <div class="worker-actions">
+                <button class="worker-btn" onclick="editWorker('${w.id}')">Засах</button>
+                <button class="worker-btn del" onclick="deleteWorker('${w.id}')">Устгах</button>
+            </div>
+        `;
+        box.appendChild(row);
+    });
+}
+
+function toggleWorkerAdmin(forceValue = null) {
+    const box = document.getElementById('worker-admin-box');
+    const btn = document.getElementById('worker-admin-toggle');
+    if (!box || !btn) return;
+
+    workerAdminVisible = typeof forceValue === 'boolean' ? forceValue : !workerAdminVisible;
+    box.style.display = workerAdminVisible ? 'block' : 'none';
+    btn.textContent = workerAdminVisible ? 'Ажилтаны бүртгэл хаах' : 'Ажилтаны бүртгэл өөрчлөх';
+}
+
+function addWorker() {
+    const nameInput = document.getElementById('new-worker-name');
+    const roleInput = document.getElementById('new-worker-role');
+    const name = (nameInput?.value || '').trim();
+    const role = (roleInput?.value || '').trim();
+    if (!name) {
+        showToast('Анхааруулга', 'Ажилтны нэр оруулна уу');
+        return;
+    }
+
+    WORKERS.push({ id: getNextWorkerId(), name, role: role || 'Тодорхойгүй' });
+    syncDataWithWorkers();
+    refreshManualSelect();
+    renderWorkerAdmin();
+    renderTable();
+    updateStats();
+    renderDailyReport();
+    renderAllNewsCardStats();
+    scheduleAutosave();
+    nameInput.value = '';
+    roleInput.value = '';
+}
+
+function editWorker(empId) {
+    const worker = WORKERS.find(w => w.id === empId);
+    if (!worker) return;
+    const newName = prompt('Шинэ нэр оруулна уу', worker.name);
+    if (newName === null) return;
+    const newRole = prompt('Шинэ албан тушаал оруулна уу', worker.role);
+    if (newRole === null) return;
+
+    worker.name = newName.trim() || worker.name;
+    worker.role = newRole.trim() || worker.role;
+    refreshManualSelect();
+    renderWorkerAdmin();
+    renderTable();
+    renderDailyReport();
+    renderAllNewsCardStats();
+    scheduleAutosave();
+}
+
+function deleteWorker(empId) {
+    const worker = WORKERS.find(w => w.id === empId);
+    if (!worker) return;
+    if (!confirm(`${worker.name} - устгах уу?`)) return;
+
+    WORKERS = WORKERS.filter(w => w.id !== empId);
+    syncDataWithWorkers();
+    refreshManualSelect();
+    renderWorkerAdmin();
+    renderTable();
+    updateStats();
+    renderDailyReport();
+    renderAllNewsCardStats();
+    scheduleAutosave();
+}
+
+function todayISODate() {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function createEmptyRegistration() {
+    const obj = {};
+    WORKERS.forEach(w => {
+        obj[w.id] = { status: 'waiting', time: null, note: '' };
+    });
+    return obj;
+}
+
+function cloneRegistration(source) {
+    const out = {};
+    WORKERS.forEach(w => {
+        const v = source?.[w.id] || { status: 'waiting', time: null, note: '' };
+        out[w.id] = { status: v.status, time: v.time, note: v.note };
+    });
+    return out;
+}
+
+function persistCurrentAttendanceToActiveNews() {
+    if (!activeNewsId || !newsRegistrations[activeNewsId]) return;
+    newsRegistrations[activeNewsId] = cloneRegistration(attendance);
+}
+
+function scheduleAutosave() {
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(saveAutosaveState, 250);
+}
+
+function normalizeRegistration(raw) {
+    const safe = {};
+    WORKERS.forEach(w => {
+        const v = raw?.[w.id] || {};
+        safe[w.id] = {
+            status: v.status || 'waiting',
+            time: v.time || null,
+            note: v.note || '',
+        };
+    });
+    return safe;
+}
+
+function collectNewsCardsForSave() {
+    return Array.from(document.querySelectorAll('.news-card')).map(card => {
+        const id = card.dataset.newsId;
+        return {
+            id,
+            date: card.querySelector('.news-date')?.value || todayISODate(),
+            number: card.querySelector('.news-no')?.value || '',
+            title: card.querySelector('.news-title')?.value || '',
+            images: Array.from(card.querySelectorAll('.news-img-grid img')).map(img => img.src),
+        };
+    });
+}
+
+function saveAutosaveState() {
+    try {
+        persistCurrentAttendanceToActiveNews();
+        const payload = {
+            version: 1,
+            activeNewsId,
+            workers: WORKERS,
+            newsCards: collectNewsCardsForSave(),
+            registrations: newsRegistrations,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {
+        console.warn('autosave failed', e);
+    }
+}
+
+function loadAutosaveState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.newsCards)) return false;
+
+        if (Array.isArray(parsed.workers) && parsed.workers.length) {
+            WORKERS = parsed.workers
+                .filter(w => w && w.id && w.name && w.role)
+                .map(w => ({ id: String(w.id), name: String(w.name), role: String(w.role) }));
+        }
+
+        Object.keys(newsRegistrations).forEach(k => delete newsRegistrations[k]);
+
+        parsed.newsCards.forEach(item => {
+            if (!item?.id) return;
+            const reg = normalizeRegistration(parsed.registrations?.[item.id]);
+            newsRegistrations[item.id] = reg;
+            createNewsCard(item, false);
+        });
+
+        const fallbackId = parsed.newsCards[0]?.id || null;
+        const nextActive = (parsed.activeNewsId && newsRegistrations[parsed.activeNewsId]) ? parsed.activeNewsId : fallbackId;
+        if (nextActive) setActiveNews(nextActive);
+        return parsed.newsCards.length > 0;
+    } catch (e) {
+        console.warn('autoload failed', e);
+        return false;
+    }
+}
+
+function setActiveNews(newsId) {
+    if (!newsId || !newsRegistrations[newsId]) return;
+    activeNewsId = newsId;
+
+    document.querySelectorAll('.news-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.newsId === newsId);
+    });
+
+    const reg = newsRegistrations[newsId];
+    WORKERS.forEach(w => {
+        const src = reg[w.id] || { status: 'waiting', time: null, note: '' };
+        attendance[w.id] = { status: src.status, time: src.time, note: src.note };
+    });
+
+    const card = document.querySelector(`.news-card[data-news-id="${newsId}"]`);
+    const d = card?.querySelector('.news-date')?.value;
+    if (d) document.getElementById('daily-date').value = d;
+
+    renderTable();
+    updateStats();
+    renderDailyReport();
+    renderAllNewsCardStats();
+    scheduleAutosave();
+}
+
+// =====================
+// QR
+// =====================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b,i) => {
+        b.classList.toggle('active', (i===0 && tab==='qr') || (i===1 && tab==='manual'));
+    });
+    document.getElementById('tab-qr').classList.toggle('active', tab==='qr');
+    document.getElementById('tab-manual').classList.toggle('active', tab==='manual');
+}
+
+function startQR() {
+    if (qrRunning) return;
+    document.getElementById('qr-start').style.display = 'none';
+    const reader = document.getElementById('qr-reader');
+    reader.style.display = 'block';
+    qrScanner = new Html5Qrcode('qr-reader');
+    qrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (text) => {
+            // text should be employee ID e.g. EMP001
+            const emp = WORKERS.find(w => w.id === text.trim());
+            if (emp) {
+                setAttendanceStatus(emp.id, 'present', 'QR уншуулсан');
+                qrScanner.pause(true);
+                setTimeout(() => {
+                    try { qrScanner.resume(); } catch(e) {}
+                }, 1000);
+            } else {
+                showToast('Танигдаагүй QR', 'Бүртгэлд байхгүй');
+            }
+        },
+        () => {}
+    ).then(() => { qrRunning = true; });
+}
+
+// =====================
+// TABLE
+// =====================
+let searchTerm = '';
+function filterTable(v) { searchTerm = v.toLowerCase(); renderTable(); }
+
+function renderTable() {
+    const tbody = document.getElementById('att-tbody');
+    tbody.innerHTML = '';
+    let i = 1;
+    WORKERS.forEach(w => {
+        if (searchTerm && !w.name.toLowerCase().includes(searchTerm) && !w.role.toLowerCase().includes(searchTerm)) return;
+        const a = attendance[w.id];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="emp-num">${String(i++).padStart(2,'0')}</td>
+            <td class="emp-name-cell">${w.name}</td>
+            <td class="emp-role-cell">${w.role}</td>
+            <td>
+                <select class="table-status-select" onchange="setAttendanceStatus('${w.id}', this.value, 'Хүснэгтээс бүртгэв')">
+                    <option value="waiting" ${a.status === 'waiting' ? 'selected' : ''}>Хүлээгдэж буй</option>
+                    <option value="present" ${a.status === 'present' ? 'selected' : ''}>Ирсэн</option>
+                    <option value="holiday" ${a.status === 'holiday' ? 'selected' : ''}>Ээлжийн амралттай</option>
+                    <option value="sick" ${a.status === 'sick' ? 'selected' : ''}>Өвчтэй</option>
+                    <option value="free" ${a.status === 'free' ? 'selected' : ''}>Чөлөөтэй</option>
+                    <option value="mission" ${a.status === 'mission' ? 'selected' : ''}>Томилолт</option>
+                    <option value="other" ${a.status === 'other' ? 'selected' : ''}>Бусад</option>
+                </select>
+            </td>
+            <td class="time-cell">${a.time || '—'}</td>
+            <td class="note-cell">${a.note || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function setAttendanceStatus(empId, status, note = '') {
+    if (!attendance[empId]) return;
+
+    let timeStr = null;
+    let normalizedNote = note;
+    if (status !== 'waiting') {
+        timeStr = new Date().toLocaleTimeString('mn-MN', { hour:'2-digit', minute:'2-digit' });
+    } else {
+        normalizedNote = '';
+    }
+
+    attendance[empId] = { status, time: timeStr, note: normalizedNote };
+
+    persistCurrentAttendanceToActiveNews();
+
+    const emp = WORKERS.find(w => w.id === empId);
+    if (emp) {
+        const st = STATUS_MAP[status] || STATUS_MAP.waiting;
+        showToast(emp.name, `${st.label}${timeStr ? ' — ' + timeStr : ''}`);
+    }
+
+    renderTable();
+    updateStats();
+    renderDailyReport();
+    renderAllNewsCardStats();
+    scheduleAutosave();
+}
+
+// =====================
+// STATS
+// =====================
+function updateStats() {
+    let present=0, holiday=0, sick=0, free=0, mission=0;
+    Object.values(attendance).forEach(a => {
+        if (a.status === 'present') present++;
+        else if (a.status === 'holiday') holiday++;
+        else if (a.status === 'sick') sick++;
+        else if (a.status === 'free') free++;
+        else if (a.status === 'mission' || a.status === 'other') mission++;
+    });
+    document.getElementById('s-total').textContent = WORKERS.length;
+    document.getElementById('s-present').textContent = present;
+    document.getElementById('s-holiday').textContent = holiday;
+    document.getElementById('s-sick').textContent = sick;
+    document.getElementById('s-free').textContent = free;
+    document.getElementById('s-mission').textContent = mission;
+}
+
+function renderDailyReport() {
+    const stats = countStatsFromRegistration(attendance);
+    const total = WORKERS.length;
+    const registered = stats.present + stats.holiday + stats.sick + stats.free + stats.mission;
+
+    document.getElementById('daily-summary').textContent = `Нийт ${total} хүнээс ${registered} бүртгэгдсэн`;
+
+    const tbody = document.getElementById('daily-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let i = 1;
+    WORKERS.forEach(emp => {
+        const a = attendance[emp.id];
+        if (!a || a.status === 'waiting') return;
+        const st = STATUS_MAP[a.status] || STATUS_MAP.waiting;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i++}</td>
+            <td>${emp.name}</td>
+            <td>${emp.role}</td>
+            <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+            <td>${a.time || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function countStatsFromRegistration(reg) {
+    let present = 0;
+    let holiday = 0;
+    let sick = 0;
+    let free = 0;
+    let mission = 0;
+
+    Object.values(reg || {}).forEach(a => {
+        if (a.status === 'present') present++;
+        else if (a.status === 'holiday') holiday++;
+        else if (a.status === 'sick') sick++;
+        else if (a.status === 'free') free++;
+        else if (a.status === 'mission' || a.status === 'other') mission++;
+    });
+
+    return {
+        present,
+        holiday,
+        sick,
+        free,
+        mission,
+        waiting: Math.max(WORKERS.length - (present + holiday + sick + free + mission), 0),
+    };
+}
+
+function getSummaryCards() {
+    return Array.from(document.querySelectorAll('.news-card')).map(card => ({
+        id: card.dataset.newsId,
+        date: card.querySelector('.news-date')?.value || '',
+        reg: newsRegistrations[card.dataset.newsId] || createEmptyRegistration(),
+        images: card.querySelectorAll('.news-img-grid img').length,
+    }));
+}
+
+function buildAggregateStats(cards) {
+    let present = 0;
+    let holiday = 0;
+    let sick = 0;
+    let free = 0;
+    let mission = 0;
+    let verified = 0;
+    let unverified = 0;
+    let images = 0;
+
+    cards.forEach(item => {
+        const stats = countStatsFromRegistration(item.reg);
+        present += stats.present;
+        holiday += stats.holiday;
+        sick += stats.sick;
+        free += stats.free;
+        mission += stats.mission;
+        verified += stats.present + stats.holiday + stats.sick + stats.free + stats.mission;
+        unverified += stats.waiting;
+        images += item.images || 0;
+    });
+
+    return {
+        workers: WORKERS.length,
+        images,
+        present,
+        holiday,
+        sick,
+        free,
+        mission,
+        verified,
+        unverified,
+    };
+}
+
+function setAggregateValues(prefix, stats) {
+    const fields = ['workers', 'images', 'verified', 'unverified', 'present', 'holiday', 'sick', 'free', 'mission'];
+    fields.forEach(key => {
+        const el = document.getElementById(`agg-${prefix}-${key}`);
+        if (el) el.textContent = stats[key] ?? 0;
+    });
+}
+
+function renderAggregateSummary() {
+    const now = new Date();
+    const yearKey = String(now.getFullYear());
+    const monthKey = `${yearKey}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const cards = getSummaryCards();
+
+    const yearCards = cards.filter(item => (item.date || '').startsWith(yearKey));
+    const monthCards = cards.filter(item => (item.date || '').startsWith(monthKey));
+
+    document.getElementById('agg-year-label').textContent = `${yearKey} он`;
+    document.getElementById('agg-month-label').textContent = `${monthKey} сар`;
+
+    setAggregateValues('year', buildAggregateStats(yearCards));
+    setAggregateValues('month', buildAggregateStats(monthCards));
+}
+
+function getDayStats(dayKey) {
+    if (!dayKey) return countStatsFromRegistration(createEmptyRegistration());
+    return countStatsFromRegistration(newsRegistrations[dayKey] || createEmptyRegistration());
+}
+
+function renderNewsCardStats(card) {
+    if (!card) return;
+    const key = card.dataset.newsId;
+    if (!key) return;
+    const stats = getDayStats(key);
+
+    const setNum = (cls, v) => {
+        const el = card.querySelector(cls);
+        if (el) el.textContent = v;
+    };
+    setNum('.nd-present', stats.present);
+    setNum('.nd-holiday', stats.holiday);
+    setNum('.nd-sick', stats.sick);
+    setNum('.nd-free', stats.free);
+    setNum('.nd-mission', stats.mission);
+    setNum('.nd-waiting', stats.waiting);
+}
+
+function renderAllNewsCardStats() {
+    document.querySelectorAll('.news-card').forEach(card => renderNewsCardStats(card));
+    renderAggregateSummary();
+}
+
+function onNewsDateChanged(input) {
+    const card = input.closest('.news-card');
+    renderNewsCardStats(card);
+    if (card && card.dataset.newsId === activeNewsId) {
+        document.getElementById('daily-date').value = input.value || todayISODate();
+    }
+    scheduleAutosave();
+}
+
+function getRegisteredPeopleByDate(dayKey) {
+    const reg = newsRegistrations[dayKey] || {};
+    return Object.keys(reg).map(empId => {
+        const rec = reg[empId];
+        if (!rec || rec.status === 'waiting') return null;
+        const emp = WORKERS.find(w => w.id === empId);
+        if (!emp) return null;
+        const label = (STATUS_MAP[rec.status] || STATUS_MAP.waiting).label;
+        return `${emp.name} (${label})`;
+    }).filter(Boolean);
+}
+
+function renderCardImages(card, images) {
+    const box = card.querySelector('.news-img-box');
+    const grid = card.querySelector('.news-img-grid');
+    if (!box || !grid) return;
+    grid.innerHTML = '';
+
+    box.classList.remove('img-count-1', 'img-count-2', 'img-count-many');
+    const count = (images || []).length;
+    if (count === 1) box.classList.add('img-count-1');
+    else if (count === 2) box.classList.add('img-count-2');
+    else if (count > 2) box.classList.add('img-count-many');
+
+    (images || []).slice(0, 5).forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.onclick = function(ev) {
+            ev.stopPropagation();
+            window.__activeViewerCard = box.closest('.news-card');
+            openImageViewer(src);
+        };
+        grid.appendChild(img);
+    });
+
+    if ((images || []).length) box.classList.add('has-images');
+    else box.classList.remove('has-images');
+}
+
+function createNewsCard(data = {}, makeActive = true) {
+    const list = document.getElementById('news-list');
+    const card = document.createElement('div');
+    card.className = 'news-card';
+    const stamp = Date.now() + Math.floor(Math.random() * 1000);
+    const cardId = data.id || `news_${stamp}`;
+    const uid = 'img_' + stamp;
+
+    card.dataset.newsId = cardId;
+    if (!newsRegistrations[cardId]) newsRegistrations[cardId] = createEmptyRegistration();
+
+    const dateValue = data.date || todayISODate();
+    const numberValue = data.number || '';
+    const titleValue = data.title || '';
+
+    card.innerHTML = `
+        <div class="news-card-top">
+            <div class="news-img-box" onclick="document.getElementById('${uid}').click()">
+                <input type="file" id="${uid}" accept="image/*" multiple onchange="loadMultiImg(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21,15 16,10 5,21"/>
+                </svg>
+                <span>1-5 зураг оруулах</span>
+                <div class="news-img-grid"></div>
+            </div>
+            <div class="news-meta">
+                <div class="meta-row">
+                    <input type="date" class="news-date" value="${dateValue}" onchange="onNewsDateChanged(this)">
+                    <input type="text" class="news-no" placeholder="Дугаар №" style="max-width:120px;" value="${numberValue}">
+                </div>
+                <input type="text" class="news-title" placeholder="Гарчиг / Тайлбар" value="${titleValue}">
+                <button class="news-remove-btn" onclick="removeNewsCard('${cardId}')">🗑 Устгах</button>
+                <div class="daily-stats news-daily-stats">
+                    <div class="daily-mini"><div class="n nd-present">0</div><div class="l">Ирсэн</div></div>
+                    <div class="daily-mini"><div class="n nd-holiday">0</div><div class="l">Ээлжийн амралт</div></div>
+                    <div class="daily-mini"><div class="n nd-sick">0</div><div class="l">Өвчтэй</div></div>
+                    <div class="daily-mini"><div class="n nd-free">0</div><div class="l">Чөлөөтэй</div></div>
+                    <div class="daily-mini"><div class="n nd-mission">0</div><div class="l">Томилолт/Бусад</div></div>
+                    <div class="daily-mini"><div class="n nd-waiting">${WORKERS.length}</div><div class="l">Бүртгэгдээгүй</div></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    list.insertBefore(card, list.firstChild);
+    card.onclick = function() { setActiveNews(cardId); };
+
+    const noInput = card.querySelector('.news-no');
+    const titleInput = card.querySelector('.news-title');
+    const dateInput = card.querySelector('.news-date');
+    if (noInput) noInput.addEventListener('input', scheduleAutosave);
+    if (titleInput) titleInput.addEventListener('input', scheduleAutosave);
+    if (dateInput) dateInput.addEventListener('change', scheduleAutosave);
+
+    renderCardImages(card, data.images || []);
+    renderNewsCardStats(card);
+
+    if (makeActive) {
+        setActiveNews(cardId);
+        showToast('Шинэ мэдээ', 'Тусдаа бүртгэл үүслээ');
+    }
+
+    return cardId;
+}
+
+// =====================
+// TOAST
+// =====================
+function showToast(name, status) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-name').textContent = name;
+    document.getElementById('toast-status').textContent = status;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// =====================
+// NEWS CARDS
+// =====================
+function addNews() {
+    createNewsCard({}, true);
+    scheduleAutosave();
+}
+
+function removeNewsCard(cardId) {
+    const card = document.querySelector(`.news-card[data-news-id="${cardId}"]`);
+    if (!card) return;
+    card.remove();
+    delete newsRegistrations[cardId];
+
+    if (activeNewsId === cardId) {
+        const first = document.querySelector('.news-card');
+        if (first && first.dataset.newsId) {
+            setActiveNews(first.dataset.newsId);
+        } else {
+            activeNewsId = null;
+            WORKERS.forEach(w => {
+                attendance[w.id] = { status: 'waiting', time: null, note: '' };
+            });
+            renderTable();
+            updateStats();
+            renderDailyReport();
+        }
+    }
+
+    scheduleAutosave();
+}
+
+function loadMultiImg(input) {
+    const picked = Array.from(input.files || []).filter(f => (f.type || '').startsWith('image/'));
+    if (!picked.length) return;
+
+    if (picked.length > 5) {
+        showToast('Анхааруулга', 'Нэг дор дээд тал нь 5 зураг оруулна');
+    }
+
+    const files = picked.slice(0, 5);
+    const box = input.closest('.news-img-box');
+    if (!box) return;
+    const grid = box.querySelector('.news-img-grid');
+    if (!grid) return;
+
+    box.classList.remove('img-count-1', 'img-count-2', 'img-count-many');
+    if (files.length === 1) box.classList.add('img-count-1');
+    else if (files.length === 2) box.classList.add('img-count-2');
+    else if (files.length > 2) box.classList.add('img-count-many');
+
+    grid.innerHTML = '';
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.onclick = function(ev) {
+                ev.stopPropagation();
+                window.__activeViewerCard = box.closest('.news-card');
+                openImageViewer(e.target.result);
+            };
+            grid.appendChild(img);
+            box.classList.add('has-images');
+            renderAggregateSummary();
+            scheduleAutosave();
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function openImageViewer(src) {
+    const viewer = document.getElementById('img-viewer');
+    const img = document.getElementById('img-viewer-img');
+    const title = document.getElementById('img-viewer-title');
+    const empty = document.getElementById('img-viewer-empty');
+    const list = document.getElementById('img-viewer-list');
+    if (!viewer || !img || !title || !empty || !list) return;
+
+    const card = window.__activeViewerCard || null;
+    const dayKey = card?.dataset?.newsId || activeNewsId;
+    const people = getRegisteredPeopleByDate(dayKey);
+    const dateText = card?.querySelector('.news-date')?.value || todayISODate();
+    title.textContent = `${dateText} - Бүртгэгдсэн хүмүүс`;
+    list.innerHTML = '';
+    if (people.length) {
+        people.forEach(name => {
+            const li = document.createElement('li');
+            li.textContent = name;
+            list.appendChild(li);
+        });
+        empty.style.display = 'none';
+        list.style.display = 'block';
+    } else {
+        empty.style.display = 'block';
+        list.style.display = 'none';
+    }
+
+    img.src = src;
+    viewer.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageViewer(ev) {
+    if (ev) ev.stopPropagation();
+    const viewer = document.getElementById('img-viewer');
+    const img = document.getElementById('img-viewer-img');
+    if (!viewer || !img) return;
+    viewer.classList.remove('show');
+    img.src = '';
+    window.__activeViewerCard = null;
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeImageViewer();
+});
+
+// INIT
+document.getElementById('daily-date').value = todayISODate();
+const restored = loadAutosaveState();
+syncDataWithWorkers();
+refreshManualSelect();
+renderWorkerAdmin();
+if (!restored) {
+    renderTable();
+    updateStats();
+    renderDailyReport();
+    renderAllNewsCardStats();
+}
+renderAggregateSummary();
+</script>
+</body>
+</html>

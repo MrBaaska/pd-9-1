@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Төмөр Замын Дэр Модны Матриц Судалгаа</title>
+    <link rel="stylesheet" href="pu.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Өртөө замын дэр модын ПУ-5 бүртгэл</h1>
+            <p>Цахим ПУ-5 бүртгэл таны цагийг хэмнэж бүтээмжийг нэмэгдүүлнэ</p>
+        </header>
+
+        <section class="control-section">
+            <div class="track-selector-group">
+                <label for="track-select"><strong>Замын нэршил:</strong></label>
+                <select id="track-select"></select>
+                <button id="add-track-btn" class="btn-primary">+ Шинээр зам нэмэж бүртгэх</button>
+                <button id="delete-track-btn" class="btn-danger" hidden>Энэ замын бүртгэл устгах</button>
+            </div>
+
+            <div id="matrix-tools" class="matrix-tools">
+                <button id="add-row-btn" class="btn-secondary">+ Дэрийн тоо нэмэх</button>
+                <button id="remove-row-btn" class="btn-secondary">- Дэрийн тоо хасах</button>
+                <button id="add-col-btn" class="btn-secondary">+ Үеийн дугаар нэмэх</button>
+                <button id="remove-col-btn" class="btn-secondary">- Үеийн дугаар хасах</button>
+            </div>
+        </section>
+
+        <section class="matrix-section">
+            <h3 id="matrix-track-title" class="track-context-title"></h3>
+            <div class="table-responsive">
+                <table id="matrix-table">
+                    <thead>
+                        <tr id="table-head-row">
+                            <th class="fixed-col">Дэр/ Үе</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-body">
+                        </tbody>
+                </table>
+            </div>
+            <div class="autosave-status" id="autosave-status">💾 Автоматаар хадгалагдлаа</div>
+        </section>
+
+        <section class="report-section">
+            <h2>Бүртгэгдсэн дэр модны тайлан</h2>
+            <div class="track-selector-group report-selector-group">
+                <label for="report-track-select"><strong>Сонгож харах:</strong></label>
+                <select id="report-track-select"></select>
+            </div>
+            <div class="report-grid report-grid-total">
+                <div class="report-card chart-card total-chart-card">
+                    <h3>Нэгдсэн үзүүлэлтийн график</h3>
+                    <canvas id="totalSleeperChart"></canvas>
+                </div>
+                <div class="report-card chart-card year-chart-card">
+                    <h3>МД(Х) сольсон дэрийн бүртгэл</h3>
+                    <canvas id="yearBreakdownChart"></canvas>
+                </div>
+                <div class="report-card total-stats-card">
+                    <h3 style="text-align: center;">Нэгдсэн тоон үзүүлэлт</h3>
+                    <div id="total-stats-summary" class="stats-box"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Өгөгдлийн менежмент (LocalStorage-оос авах эсвэл анхдагч утга үүсгэх)
+let tracksData = JSON.parse(localStorage.getItem('railwayTracksData')) || {
+    "1-р Гол зам": {
+        rows: 14,
+        cols: 10,
+        matrix: []
+    }
+};
+
+function createEmptyCell() {
+    return { type: "", year: "" };
+}
+
+function createMatrix(rows, cols) {
+    return Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => createEmptyCell())
+    );
+}
+
+Object.values(tracksData).forEach(track => {
+    if (!track.matrix || !track.rows || !track.cols) return;
+
+    track.matrix = Array.from({ length: track.rows }, (_, rowIndex) =>
+        Array.from({ length: track.cols }, (_, colIndex) => {
+            const cell = track.matrix[rowIndex]?.[colIndex];
+            return {
+                type: cell?.type || "",
+                year: cell?.year || ""
+            };
+        })
+    );
+});
+
+const REPORT_ALL_OPTION = '__REPORT_ALL_TRACKS__';
+let currentTrackName = Object.keys(tracksData)[0];
+let currentReportTrackName = REPORT_ALL_OPTION;
+let myChart = null;
+let totalChart = null;
+let yearBreakdownChart = null;
+
+const trackSelect = document.getElementById('track-select');
+const reportTrackSelect = document.getElementById('report-track-select');
+const addTrackBtn = document.getElementById('add-track-btn');
+const deleteTrackBtn = document.getElementById('delete-track-btn');
+const tableHeadRow = document.getElementById('table-head-row');
+const matrixBody = document.getElementById('matrix-body');
+const autosaveStatus = document.getElementById('autosave-status');
+const matrixTrackTitle = document.getElementById('matrix-track-title');
+
+if (!tracksData["1-р Гол зам"]?.matrix?.length) {
+    tracksData["1-р Гол зам"].matrix = createMatrix(14, 10);
+}
+
+function getFallbackTrackName() {
+    return Object.keys(tracksData)[0] || null;
+}
+
+// Зам сонголтыг шинэчлэх
+function updateTrackDropdown() {
+    trackSelect.innerHTML = '';
+    Object.keys(tracksData).forEach(trackName => {
+        const opt = document.createElement('option');
+        opt.value = trackName;
+        opt.textContent = trackName;
+        if (trackName === currentTrackName) opt.selected = true;
+        trackSelect.appendChild(opt);
+    });
+
+    deleteTrackBtn.hidden = Object.keys(tracksData).length <= 1;
+}
+
+function updateReportTrackDropdown() {
+    if (!tracksData[currentReportTrackName] && currentReportTrackName !== REPORT_ALL_OPTION) {
+        currentReportTrackName = REPORT_ALL_OPTION;
+    }
+
+    reportTrackSelect.innerHTML = '';
+
+    const allOpt = document.createElement('option');
+    allOpt.value = REPORT_ALL_OPTION;
+    allOpt.textContent = 'Нийт нэгдсэн (бүх зам)';
+    if (currentReportTrackName === REPORT_ALL_OPTION) allOpt.selected = true;
+    reportTrackSelect.appendChild(allOpt);
+
+    Object.keys(tracksData).forEach(trackName => {
+        const opt = document.createElement('option');
+        opt.value = trackName;
+        opt.textContent = trackName;
+        if (trackName === currentReportTrackName) opt.selected = true;
+        reportTrackSelect.appendChild(opt);
+    });
+}
+
+trackSelect.addEventListener('change', (e) => {
+    currentTrackName = e.target.value;
+    renderFullTable();
+});
+
+reportTrackSelect.addEventListener('change', (e) => {
+    currentReportTrackName = e.target.value;
+    updateReport();
+});
+
+// Шинэ зам бүртгэх
+addTrackBtn.addEventListener('click', () => {
+    const newName = prompt("Шинэ замын нэр оруулна уу (Жишээ: Мухар салаа зам):");
+    if (newName && !tracksData[newName]) {
+        tracksData[newName] = {
+            rows: 10,
+            cols: 8,
+            matrix: createMatrix(10, 8)
+        };
+        currentTrackName = newName;
+        saveAndSync();
+    } else if (tracksData[newName]) {
+        alert("Энэ нэртэй зам аль хэдийн бүртгэгдсэн байна!");
+    }
+});
+
+// Замын бүртгэл устгах
+deleteTrackBtn.addEventListener('click', () => {
+    if (Object.keys(tracksData).length <= 1) {
+        alert("Хамгийн багадаа нэг зам байх ёстой.");
+        return;
+    }
+    if (confirm(`"${currentTrackName}" замын бүртгэлийг устгахдаа итгэлтэй байна уу?`)) {
+        delete tracksData[currentTrackName];
+        currentTrackName = Object.keys(tracksData)[0];
+        saveAndSync();
+    }
+});
+
+// Мөр, багана нэмэх / хасах хяналтууд
+document.getElementById('add-row-btn').addEventListener('click', () => {
+    const track = tracksData[currentTrackName];
+    if (!track) return;
+    track.rows++;
+    track.matrix.push(Array.from({ length: track.cols }, () => createEmptyCell()));
+    saveAndSync();
+});
+
+document.getElementById('remove-row-btn').addEventListener('click', () => {
+    const track = tracksData[currentTrackName];
+    if (!track) return;
+    if (track.rows > 1) {
+        track.rows--;
+        track.matrix.pop();
+        saveAndSync();
+    }
+});
+
+document.getElementById('add-col-btn').addEventListener('click', () => {
+    const track = tracksData[currentTrackName];
+    if (!track) return;
+    track.cols++;
+    track.matrix.forEach(row => row.push({ type: "", year: "" }));
+    saveAndSync();
+});
+
+document.getElementById('remove-col-btn').addEventListener('click', () => {
+    const track = tracksData[currentTrackName];
+    if (!track) return;
+    if (track.cols > 1) {
+        track.cols--;
+        track.matrix.forEach(row => row.pop());
+        saveAndSync();
+    }
+});
+
+// Хүснэгтийг бүхэлд нь зурах
+function renderFullTable() {
+    if (!tracksData[currentTrackName]) {
+        currentTrackName = getFallbackTrackName();
+    }
+
+    updateTrackDropdown();
+    updateReportTrackDropdown();
+
+    const track = tracksData[currentTrackName];
+    matrixTrackTitle.textContent = `Одоогийн зам: ${currentTrackName}`;
+
+    // Толгой үүсгэх
+    tableHeadRow.innerHTML = `<th class="fixed-col">Дэр / Үе</th>`;
+    for (let c = 1; c <= track.cols; c++) {
+        const th = document.createElement('th');
+        th.textContent = c;
+        tableHeadRow.appendChild(th);
+    }
+
+    // Мөр болон нүднүүд зурах
+    matrixBody.innerHTML = '';
+    for (let r = 0; r < track.rows; r++) {
+        const tr = document.createElement('tr');
+
+        const thFixed = document.createElement('th');
+        thFixed.className = 'fixed-col';
+        thFixed.textContent = r + 1;
+        tr.appendChild(thFixed);
+
+        for (let c = 0; c < track.cols; c++) {
+            const td = document.createElement('td');
+            const cellData = track.matrix[r][c] || { type: "", year: "" };
+
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'cell-container';
+
+            // Select сонголт (ТБД, МД-О, МД-Х)
+            const select = document.createElement('select');
+            select.className = `cell-select ${getSelectClass(cellData.type)}`;
+            
+            const options = [
+                { val: "", text: "-" },
+                { val: "TBD", text: "ТБД" },
+                { val: "MD-O", text: "МД (О)" },
+                { val: "MD-X", text: "МД (Х)" }
+            ];
+
+            options.forEach(opt => {
+                const optElem = document.createElement('option');
+                optElem.value = opt.val;
+                optElem.textContent = opt.text;
+                if (cellData.type === opt.val) optElem.selected = true;
+                select.appendChild(optElem);
+            });
+
+            // Он оруулах input (Зөвхөн МД-Х үед идэвхжинэ)
+            const yearInput = document.createElement('input');
+            yearInput.type = 'text';
+            yearInput.className = 'year-input';
+            yearInput.placeholder = 'Он';
+            yearInput.value = cellData.year || '';
+            yearInput.style.display = (cellData.type === "MD-X") ? "block" : "none";
+
+            // Event listener: Төрөл солигдох үед
+            select.addEventListener('change', (e) => {
+                const val = e.target.value;
+                const currentCell = track.matrix[r][c] || createEmptyCell();
+                track.matrix[r][c] = {
+                    ...currentCell,
+                    type: val,
+                    year: val === "MD-X" ? currentCell.year || "" : ""
+                };
+                select.className = `cell-select ${getSelectClass(val)}`;
+                
+                if (val === "MD-X") {
+                    yearInput.style.display = "block";
+                } else {
+                    yearInput.style.display = "none";
+                    yearInput.value = "";
+                }
+                saveAndSync(false); // Render хийхгүйгээр хадгалах
+            });
+
+            // Event listener: Он өөрчлөгдөх үед
+            yearInput.addEventListener('input', (e) => {
+                const currentCell = track.matrix[r][c] || createEmptyCell();
+                track.matrix[r][c] = {
+                    ...currentCell,
+                    year: e.target.value
+                };
+                triggerAutosave();
+            });
+
+            cellDiv.appendChild(select);
+            cellDiv.appendChild(yearInput);
+            td.appendChild(cellDiv);
+            tr.appendChild(td);
+        }
+        matrixBody.appendChild(tr);
+    }
+    updateReport();
+}
+
+function getSelectClass(val) {
+    if (val === "TBD") return "val-tbd";
+    if (val === "MD-O") return "val-mdo";
+    if (val === "MD-X") return "val-mdx";
+    return "val-empty";
+}
+
+// Автомат хадгалалт ба Sync хийх
+function saveAndSync(fullRender = true) {
+    localStorage.setItem('railwayTracksData', JSON.stringify(tracksData));
+    triggerAutosave();
+    if (fullRender) {
+        renderFullTable();
+    } else {
+        updateReport();
+    }
+}
+
+function triggerAutosave() {
+    localStorage.setItem('railwayTracksData', JSON.stringify(tracksData));
+    autosaveStatus.classList.add('show');
+    setTimeout(() => {
+        autosaveStatus.classList.remove('show');
+    }, 1200);
+    updateReport();
+}
+
+function hasSelectedType(cell) {
+    return Boolean(cell && cell.type);
+}
+
+// График ба статистик шинэчлэх
+function updateReport() {
+    const isAllReport = currentReportTrackName === REPORT_ALL_OPTION;
+    const selectedTrack = isAllReport ? null : tracksData[currentReportTrackName];
+    const activeTrack = selectedTrack || tracksData[getFallbackTrackName()];
+    let tbdCount = 0;
+    let mdoCount = 0;
+    let mdxCount = 0;
+    let totalCells = 0;
+
+    let allTracksTotalCells = 0;
+    let allTracksTbd = 0;
+    let allTracksMdo = 0;
+    let allTracksMdx = 0;
+    const allTracksMdxYearCounts = {};
+    const selectedTrackMdxYearCounts = {};
+
+    if (activeTrack) {
+        activeTrack.matrix.forEach(row => {
+            row.forEach(cell => {
+                if (!hasSelectedType(cell)) return;
+                totalCells++;
+                if (cell.type === "TBD") tbdCount++;
+                else if (cell.type === "MD-O") mdoCount++;
+                else if (cell.type === "MD-X") {
+                    mdxCount++;
+                    const year = (cell.year || '').toString().trim();
+                    if (year) {
+                        selectedTrackMdxYearCounts[year] = (selectedTrackMdxYearCounts[year] || 0) + 1;
+                    }
+                }
+            });
+        });
+    }
+
+    Object.values(tracksData).forEach(trackItem => {
+        trackItem.matrix.forEach(row => {
+            row.forEach(cell => {
+                if (!hasSelectedType(cell)) return;
+                allTracksTotalCells++;
+                if (cell.type === "TBD") allTracksTbd++;
+                else if (cell.type === "MD-O") allTracksMdo++;
+                else if (cell.type === "MD-X") {
+                    allTracksMdx++;
+                    const year = (cell.year || '').toString().trim();
+                    if (year) {
+                        allTracksMdxYearCounts[year] = (allTracksMdxYearCounts[year] || 0) + 1;
+                    }
+                }
+            });
+        });
+    });
+
+    if (isAllReport) {
+        tbdCount = allTracksTbd;
+        mdoCount = allTracksMdo;
+        mdxCount = allTracksMdx;
+        totalCells = allTracksTotalCells;
+    }
+
+    const totalStatsSummary = document.getElementById('total-stats-summary');
+
+    const percent = (count, total) => {
+        if (!total) return '0.0';
+        return ((count / total) * 100).toFixed(1);
+    };
+
+    const reportMdxYearCounts = isAllReport ? allTracksMdxYearCounts : selectedTrackMdxYearCounts;
+
+    const mdxYearEntries = Object.entries(reportMdxYearCounts)
+        .sort((a, b) => Number(a[0]) - Number(b[0]));
+
+    const mdxYearGroupsText = mdxYearEntries.length
+        ? mdxYearEntries.map(([year, count]) => `${year} он: ${count}ш`).join(', ')
+        : 'Бүртгэлгүй';
+
+    totalStatsSummary.innerHTML = `
+        <p><span>Бүртгэлтэй нийт дэр:</span> <strong>${totalCells}</strong></p>
+        <p><span>ТБД:</span> <strong>${tbdCount} (${percent(tbdCount, totalCells)}%)</strong></p>
+        <p><span>МД(О) тэнцэхгүй дэр:</span> <strong>${mdoCount} (${percent(mdoCount, totalCells)}%)</strong></p>
+        <p><span>МД(Х) сольсон дэр:</span> <strong>${mdxCount} (${percent(mdxCount, totalCells)}%)</strong></p>
+        <p><span>МД(Х) сольсон дэрийг он тус бүрээр:</span> <strong>${mdxYearGroupsText}</strong></p>
+    `;
+
+    // Сонгосон тайлангийн график
+    const totalCtx = document.getElementById('totalSleeperChart').getContext('2d');
+    if (totalChart) {
+        totalChart.destroy();
+    }
+
+    const totalChartLabelPlugin = {
+        id: 'totalChartLabelPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+
+            if (!meta || !meta.data || !meta.data.length) return;
+
+            const firstArc = meta.data[0];
+            const centerX = firstArc.x;
+            const centerY = firstArc.y;
+
+            ctx.save();
+
+            // Төвд нийт тоог томоор харуулах
+            ctx.fillStyle = '#1a202c';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '700 24px Segoe UI';
+            ctx.fillText(String(totalCells), centerX, centerY - 4);
+            ctx.font = '600 11px Segoe UI';
+            ctx.fillStyle = '#4a5568';
+            ctx.fillText('Нийт', centerX, centerY + 16);
+
+            // Тойргийн зузаан хүрээ дотор сектор бүрийн тоог харуулах
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 12px Segoe UI';
+            meta.data.forEach((arc, index) => {
+                const value = dataset.data[index];
+                if (!value || value <= 0) return;
+
+                const midAngle = (arc.startAngle + arc.endAngle) / 2;
+                const midRadius = (arc.innerRadius + arc.outerRadius) / 2;
+                const labelX = arc.x + Math.cos(midAngle) * midRadius;
+                const labelY = arc.y + Math.sin(midAngle) * midRadius;
+                ctx.fillText(String(value), labelX, labelY);
+            });
+
+            ctx.restore();
+        }
+    };
+
+    totalChart = new Chart(totalCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                `ТБД (${tbdCount})`,
+                `МД (О) (${mdoCount})`,
+                `МД (Х) (${mdxCount})`
+            ],
+            datasets: [{
+                data: [tbdCount, mdoCount, mdxCount],
+                backgroundColor: ['#3182ce', '#e53e3e', '#38a169'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '58%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        footer: () => `Нийт нүд: ${totalCells}`
+                    }
+                }
+            }
+        },
+        plugins: [totalChartLabelPlugin]
+    });
+
+    // МД(Х) сольсон дэрийг он тус бүрээр ангилан харуулах график
+    const yearCtx = document.getElementById('yearBreakdownChart').getContext('2d');
+    if (yearBreakdownChart) {
+        yearBreakdownChart.destroy();
+    }
+
+    const yearLabels = mdxYearEntries.length
+        ? mdxYearEntries.map(([year]) => `${year} он`)
+        : ['Бүртгэлгүй'];
+    const yearData = mdxYearEntries.length
+        ? mdxYearEntries.map(([, count]) => count)
+        : [0];
+
+    const yearValueLabelPlugin = {
+        id: 'yearValueLabelPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+
+            ctx.save();
+            ctx.fillStyle = '#1a202c';
+            ctx.font = '600 12px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+
+            meta.data.forEach((bar, index) => {
+                const value = dataset.data[index];
+                if (!value || value <= 0) return;
+                const xPos = bar.x;
+                const yPos = bar.y - 6;
+                ctx.fillText(String(value), xPos, yPos);
+            });
+
+            ctx.restore();
+        }
+    };
+
+    yearBreakdownChart = new Chart(yearCtx, {
+        type: 'bar',
+        data: {
+            labels: yearLabels,
+            datasets: [{
+                label: 'Сольсон дэр (ширхэг)',
+                data: yearData,
+                backgroundColor: '#2c7a7b',
+                borderColor: '#285e61',
+                borderWidth: 1,
+                borderRadius: 4,
+                maxBarThickness: 34
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 18
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grace: '12%',
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1
+                    }
+                }
+            }
+        },
+        plugins: [yearValueLabelPlugin]
+    });
+}
+
+// Эхлүүлэх
+document.addEventListener('DOMContentLoaded', () => {
+    renderFullTable();
+});
+    </script>
+</body>
+</html>

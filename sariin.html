@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сарын Ажлын Төлөвлөгөө / Гүйцэтгэл</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 98%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .date-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .date-selector label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .date-selector select {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .date-selector select:hover {
+            border-color: #667eea;
+        }
+
+        .date-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        #workTable {
+            width: 100%;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+        }
+
+        #workTable th, #workTable td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 10px;
+            text-align: center;
+            font-size: 13px;
+            min-height: 45px;
+            vertical-align: top;
+        }
+
+        #workTable thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 14px 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .row-label-cell {
+            min-width: 180px;
+            font-weight: 700;
+            background-color: #f8f9fa;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            text-align: left;
+            padding-left: 15px;
+            font-size: 14px;
+            color: #2c3e50;
+            vertical-align: middle;
+        }
+
+        .day-col {
+            min-width: 220px;
+            text-align: center;
+            font-size: 12px;
+            padding: 8px 5px;
+        }
+
+        .day-date-line {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.95;
+        }
+
+        .day-cell-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .work-item {
+            margin-bottom: 8px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .work-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transform: scale(1.01); /* Hover scale */
+        }
+
+        .work-item.editing {
+            transform: scale(2);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+            border-color: #90caf9;
+            z-index: 12;
+        }
+
+        .work-item-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .delete-work-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .delete-work-btn:hover {
+            background: #d32f2f;
+            transform: scale(1.1); /* Hover scale */
+        }
+
+        .add-work-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .add-work-btn:hover {
+            transform: scale(1.02); /* Hover scale */
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid transparent;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            min-height: 36px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Disabled input style for conditional logic */
+        .form-control:disabled {
+            background-color: #eeeeee;
+            border-color: #ddd;
+            cursor: not-allowed;
+            color: #888;
+        }
+
+        .form-control:hover {
+            border-color: #ddd;
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+        }
+
+        input[type="number"].form-control {
+            text-align: center;
+            font-weight: 700;
+            color: #2196f3;
+            font-size: 14px;
+        }
+
+        input[type="text"].form-control {
+            background-color: #fff3e0;
+            font-weight: 500;
+        }
+
+        .section-header td {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: 700;
+            text-align: center;
+            font-size: 17px;
+            padding: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: none !important;
+        }
+
+        th.rest-day-header {
+            background: var(--rest-day-color, #fde68a) !important;
+            color: rgba(17, 24, 39, 0.95);
+        }
+
+        td.rest-day-cell {
+            background: var(--rest-day-color, rgba(253, 230, 138, 0.35));
+            transition: background 0.3s ease;
+        }
+
+        th.locked-day-header,
+        td.locked-day-cell {
+            background: #eceff1 !important;
+        }
+
+        td.locked-day-cell {
+            opacity: 0.92;
+        }
+
+        .executed-section {
+            background-color: #e8f5e9 !important;
+        }
+
+        tbody tr:hover {
+            background-color: #fafafa;
+            transition: background-color 0.2s ease;
+        }
+
+        .hidden-day {
+            display: none;
+        }
+
+        .visible-days-info {
+            text-align: center;
+            color: #666;
+            font-size: 17px;
+            font-weight: 600;
+            margin-top: 10px;
+            font-style: normal;
+        }
+
+        .work-field {
+            margin-bottom: 6px;
+        }
+
+        .work-field-label {
+            font-size: 9px;
+            color: #666;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .work-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        /* New styles for dynamic executed details */
+        .dynamic-details-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 5px;
+        }
+        .work-execution-item {
+            background-color: #e3f2fd;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #bbdefb;
+            text-align: left;
+        }
+        .work-execution-item.total-summary {
+            background-color: #dcedc8;
+            border: 2px solid #aed581;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .work-execution-item label {
+            font-size: 10px;
+            color: #555;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .work-execution-item .detail-grid {
+            /* Өргөнийг 60px-ээс 70px болгож өөрчлөв */
+            display: grid;
+            grid-template-columns: 1fr 1fr 70px; /* Work/Unit, Plan/Execute, Percent */ 
+            gap: 5px;
+            align-items: center;
+        }
+        .work-execution-item .plan-execute-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+        .plan-qty-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #3f51b5;
+        }
+        .executed-qty-input {
+            width: 64px;
+            min-width: 56px;
+            max-width: 150px;
+            padding: 4px;
+            border: 1px solid #b3e5fc;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #00796b;
+            background-color: white;
+            transition: width 0.15s ease, font-size 0.15s ease;
+            /* Спиннер бутон арилгах CSS */
+            -moz-appearance: textfield; /* Firefox */
+        }
+        /* Webkit/Chrome/Safari-д спиннер бутон арилгах */
+        .executed-qty-input::-webkit-outer-spin-button,
+        .executed-qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .executed-percent-display {
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .total-summary .total-percent-display {
+            font-size: 16px;
+            color: #388e3c;
+        }
+
+        /* 4. Нийт Гүйцэтгэлийн Хувийг Харуулах Хэсэг */
+        .overall-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .overall-summary h3 {
+            color: #388e3c;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .overall-summary-main,
+        .overall-summary-reasons {
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .overall-summary-main {
+            text-align: center;
+        }
+
+        .overall-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .overall-metric-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .overall-metric-card h3 {
+            color: #388e3c;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .metric-caption {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #558b2f;
+        }
+
+        .overall-summary-reasons {
+            text-align: left;
+        }
+
+        .reason-columns {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 16px;
+            align-items: start;
+        }
+
+        .reason-panel {
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .reason-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-top: 6px;
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(56, 142, 60, 0.2);
+        }
+
+        .reason-item:last-child {
+            border-bottom: none;
+        }
+
+        .reason-label {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .reason-percent {
+            color: #1b5e20;
+            font-weight: 700;
+        }
+
+        .reason-empty {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #558b2f;
+        }
+
+        .reason-subtitle {
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .overall-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .overall-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .reason-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .overall-percent-value {
+            font-size: 48px;
+            font-weight: 900;
+            color: #1b5e20;
+            transition: color 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1 id="mainTitle">2026 оны 01-р сарын Ажлын Төлөвлөгөө / Гүйцэтгэл</h1>
+            
+            <div class="date-selector">
+                <label>Он:</label>
+                <select id="yearSelect"></select>
+                <label>Сар:</label>
+                <select id="monthSelect">
+                    <option value="1" selected>1-р сар</option>
+                    <option value="2">2-р сар</option>
+                    <option value="3">3-р сар</option>
+                    <option value="4">4-р сар</option>
+                    <option value="5">5-р сар</option>
+                    <option value="6">6-р сар</option>
+                    <option value="7">7-р сар</option>
+                    <option value="8">8-р сар</option>
+                    <option value="9">9-р сар</option>
+                    <option value="10">10-р сар</option>
+                    <option value="11">11-р сар</option>
+                    <option value="12">12-р сар</option>
+                </select>
+                <label>Өдрүүд:</label>
+                <select id="dayRangeSelect">
+                    <option value="1-10">1-10</option>
+                    <option value="11-20">11-20</option>
+                    <option value="21-31">21-31</option>
+                    <option value="all" selected>Бүгд</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="workTable">
+                <thead>
+                    <tr id="dayHeaders"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div class="visible-days-info" id="visibleDaysInfo"></div>
+
+        <div class="overall-summary">
+            <div class="overall-summary-main">
+                <div class="overall-metrics">
+                    <div class="overall-metric-card">
+                        <h3>Сарын ажлын төлөвлөгөөний биелэлт</h3>
+                        <div id="overallPercent" class="overall-percent-value">0.0%</div>
+                    </div>
+                    <div class="overall-metric-card">
+                        <h3 id="annualSummaryTitle">2026 оны жилийн дундаж биелэлт</h3>
+                        <div id="annualAveragePercent" class="overall-percent-value">0.0%</div>
+                        <div id="annualSummaryCaption" class="metric-caption">Хадгалсан саруудын дундажаар тооцоолно.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="overall-summary-reasons">
+                <h3>Төлөвлөгөөний дагуу ажлаагүй шалтгаан (%)</h3>
+                <div class="reason-columns">
+                    <div class="reason-panel">
+                        <div class="reason-subtitle">Сарын ангилал</div>
+                        <div id="reasonSummary">
+                            <div class="reason-empty">Одоогоор тооцоолох өгөгдөл алга.</div>
+                        </div>
+                    </div>
+                    <div class="reason-panel">
+                        <div class="reason-subtitle" id="yearlyReasonTitle">Жилийн өссөн дүн (1-1 сар)</div>
+                        <div id="yearlyReasonSummary">
+                            <div class="reason-empty">Одоогоор тооцоолох өгөгдөл алга.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+        const SELECT_OPTIONS = {
+            'ГТХАБ': ["Сонор сэрэмж", "Хурд хасах", "Сургалт", "Туршилт"],
+            'Нэгж': ["цэг", "ширхэг", "хүн", "км"],
+            'Цаг Агаар': ["бороо/цас", "салхи/шуурхай", "халуун", "хүйтэн"],
+            'АжлынНэр': ["ЭШП хийх", "Солигдсон дор татах", "Аж ахуйн ажил", "Засвар"],
+            'Тийм/Үгүй': ["тийм", "үгүй"],
+        };
+
+        const REST_DAY_COLOR_MAP = {
+            1: '#fde68a', 2: '#fbcfe8', 3: '#bfdbfe', 4: '#bbf7d0',
+            5: '#fde2e4', 6: '#fbe7c6', 7: '#e0f7fa', 8: '#f5d0fe',
+            9: '#c7d2fe', 10: '#ffd7e0', 11: '#d1fae5', 12: '#e2e8f0'
+        };
+
+        let currentData = {
+            1: { compliance: 'үгүй', executed: 0, workItems: [] },
+            2: { compliance: 'тийм', executed: 0, workItems: [0, 0] } // Жишээ: 2-р өдөр 2 ажил төлөвлөсөн
+            // Энэ нь зөвхөн анхны утгуудыг хадгалах жишээ. Бодит утгыг DOM-оос уншина.
+        };
+
+        const tableData = [
+            { label: "ТӨЛӨВЛӨГӨӨ", isHeader: true, id: 'plan-header', section: 'plan' },
+            { 
+                label: "Ажлын төлөвлөгөө", 
+                inputType: 'unified-work', 
+                section: 'plan', 
+                id: 'plan-work', 
+                defaultValues: {
+                    1: [{location: '940-945.5', gtkhab: 'Сонор сэрэмж', work: 'ЭШП хийх', unit: 'цаг', qty: 4, resource: 4}],
+                    2: [{location: '940-950', gtkhab: 'Хурд хасах', work: 'Засвар', unit: 'км', qty: 10, resource: 2}, {location: '940-950', gtkhab: 'Сонор сэрэмж', work: 'Аж ахуйн ажил', unit: 'хүн', qty: 5, resource: 2}]
+                } 
+            },
+            
+            { label: "ГҮЙЦЭТГЭЛ", isHeader: true, id: 'executed-header', className: 'executed-section', section: 'executed' },
+            // Нөхцөлт логикт ашиглагдах ID-уудыг нэмсэн
+            { label: "Төлөвлөгөөний дагуу ажилласан эсэх", inputType: 'yes/no', section: 'executed', defaultValues: {1: 'үгүй', 2: 'тийм'}, id: 'executed-plan-compliance' },
+            // Динамик ажлын хэмжээний дэлгэрэнгүйг харуулах шинэ мөр
+            { label: "Төлөвлөгөөт ажлын гүйцэтгэл", inputType: 'dynamic-work-details', section: 'executed', id: 'executed-dynamic-details' }, 
+            
+            // Нөхцөлтөөр идэвхждэг шалтгааны мөрүүд
+            { label: "Хүн хүч хангалттай байсан эсэх", inputType: 'yes/no', section: 'executed', defaultValues: {1: 'тийм', 2: 'тийм'}, id: 'executed-resource' },
+            { label: "Багаж, материалын хангалт чанар, эврэлээс шалтгаалсан эсэх", inputType: 'yes/no', section: 'executed', defaultValues: {1: 'тийм', 2: 'үгүй'}, id: 'executed-tool' },
+            { label: "Цаг агаарын байдал шалтгаалсан эсэх", inputType: 'select', optionsKey: 'Цаг Агаар', section: 'executed', defaultValues: {1: 'бороо/цас', 2: 'хүчтэй салхи/шуурга'}, id: 'executed-weather' },
+            { label: "Бусад шалтгаан", inputType: 'text', section: 'executed', defaultValues: {2: 'тайлбар'}, id: 'executed-other' },
+               { label: "Тайлбар", inputType: 'text', section: 'executed', defaultValues: {2: 'шалтгаан'}, id: 'executed-note' },
+        ];
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.getElementById('tableBody');
+            const dayHeaders = document.getElementById('dayHeaders');
+            const yearSelect = document.getElementById('yearSelect');
+            const monthSelect = document.getElementById('monthSelect');
+            const dayRangeSelect = document.getElementById('dayRangeSelect');
+            const mainTitle = document.getElementById('mainTitle');
+            const visibleDaysInfo = document.getElementById('visibleDaysInfo');
+            const overallPercentDisplay = document.getElementById('overallPercent');
+            const annualPercentDisplay = document.getElementById('annualAveragePercent');
+            const annualSummaryTitle = document.getElementById('annualSummaryTitle');
+            const annualSummaryCaption = document.getElementById('annualSummaryCaption');
+            const reasonSummary = document.getElementById('reasonSummary');
+            const yearlyReasonTitle = document.getElementById('yearlyReasonTitle');
+            const yearlyReasonSummary = document.getElementById('yearlyReasonSummary');
+            const baseYear = new Date().getFullYear();
+            const yearOptionCount = 25;
+            
+            let currentMonth = 1;
+            let currentYear = baseYear;
+            let totalDays = 31;
+            const initialCurrentData = JSON.parse(JSON.stringify(currentData));
+            let activeMonthSnapshot = null;
+            const daysInMonth = {
+                1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+                7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+            };
+
+            function populateYearOptions() {
+                const years = Array.from({ length: yearOptionCount }, (_, index) => baseYear + index);
+                yearSelect.innerHTML = years
+                    .map(year => `<option value="${year}"${year === currentYear ? ' selected' : ''}>${year}</option>`)
+                    .join('');
+            }
+
+            function getStorageKey(targetYear = currentYear, targetMonth = currentMonth) {
+                return `work-plan-${targetYear}-${targetMonth}`;
+            }
+
+            function loadMonthSnapshot(targetMonth = currentMonth, targetYear = currentYear) {
+                try {
+                    const raw = localStorage.getItem(getStorageKey(targetYear, targetMonth));
+                    return raw ? JSON.parse(raw) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function saveMonthSnapshot() {
+                const snapshot = {
+                    planWork: {},
+                    rowValues: {},
+                    currentData: currentData
+                };
+
+                const rowIdsToSave = ['executed-plan-compliance', 'executed-resource', 'executed-tool', 'executed-weather', 'executed-other', 'executed-note'];
+
+                for (let day = 1; day <= totalDays; day++) {
+                    const works = getPlannedWorkItems(day).map(work => ({
+                        location: work.location || '',
+                        gtkhab: work.gtkhab || '',
+                        work: work.work || '',
+                        unit: work.unit || '',
+                        qty: work.plannedQty || 0,
+                        resource: work.resource || ''
+                    }));
+                    if (works.length > 0) {
+                        snapshot.planWork[day] = works;
+                    }
+
+                    rowIdsToSave.forEach(rowId => {
+                        const value = document.querySelector(`tr[data-row-id="${rowId}"] .form-control[data-day="${day}"]`)?.value;
+                        if (value !== undefined) {
+                            if (!snapshot.rowValues[rowId]) snapshot.rowValues[rowId] = {};
+                            snapshot.rowValues[rowId][day] = value;
+                        }
+                    });
+                }
+
+                try {
+                    localStorage.setItem(getStorageKey(), JSON.stringify(snapshot));
+                } catch (e) {
+                    // LocalStorage write failure should not break user flow.
+                }
+            }
+
+            function getSnapshotValue(rowId, day, fallbackValue) {
+                const snapshotVal = activeMonthSnapshot?.rowValues?.[rowId]?.[day];
+                return snapshotVal !== undefined ? snapshotVal : fallbackValue;
+            }
+
+            function isDayLocked(day) {
+                const now = new Date();
+                const nowYear = now.getFullYear();
+                const nowMonth = now.getMonth() + 1;
+                const nowDay = now.getDate();
+
+                if (currentYear < nowYear) return true;
+                if (currentYear > nowYear) return false;
+                if (currentMonth < nowMonth) return true;
+                if (currentMonth > nowMonth) return false;
+                if (day < nowDay) return true;
+                if (day > nowDay) return false;
+
+                return now.getHours() > 23 || (now.getHours() === 23 && now.getMinutes() >= 59);
+            }
+
+            function applyDayLocks() {
+                for (let day = 1; day <= totalDays; day++) {
+                    const locked = isDayLocked(day);
+                    const header = document.querySelector(`#dayHeaders th[data-day="${day}"]`);
+                    if (header) {
+                        header.classList.toggle('locked-day-header', locked);
+                    }
+
+                    document.querySelectorAll(`td[data-day="${day}"]`).forEach(cell => {
+                        cell.classList.toggle('locked-day-cell', locked);
+                        cell.inert = locked;
+                    });
+                }
+            }
+
+        function isRestDay(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            const dayOfWeek = date.getDay();
+            return dayOfWeek === 0 || dayOfWeek === 6;
+        }
+
+        function getMonthRestColor(month) {
+            return REST_DAY_COLOR_MAP[month] || '#fde68a';
+        }
+
+        function getWeekdayName(year, month, day) {
+            const dayNames = ['ням', 'даваа', 'мягмар', 'лхагва', 'пүрэв', 'баасан', 'бямба'];
+            return dayNames[new Date(year, month - 1, day).getDay()];
+        }
+
+            function calculateAveragePercentFromSnapshot(snapshot) {
+                if (!snapshot) {
+                    return null;
+                }
+
+                const planWork = snapshot.planWork || {};
+                const snapshotCurrentData = snapshot.currentData || {};
+                const complianceValues = snapshot.rowValues?.['executed-plan-compliance'] || {};
+                const candidateDays = new Set([
+                    ...Object.keys(planWork),
+                    ...Object.keys(snapshotCurrentData),
+                    ...Object.keys(complianceValues)
+                ]);
+
+                let dayPercentSum = 0;
+                let countedDays = 0;
+
+                candidateDays.forEach(dayKey => {
+                    const day = Number(dayKey);
+                    if (!Number.isFinite(day)) {
+                        return;
+                    }
+
+                    const complianceValue = snapshotCurrentData[day]?.compliance ?? complianceValues[day] ?? '';
+                    if (complianceValue !== 'тийм') {
+                        return;
+                    }
+
+                    const plannedWorks = Array.isArray(planWork[day]) ? planWork[day] : [];
+                    const totalPlanned = plannedWorks.reduce((sum, work) => sum + (parseFloat(work.qty) || 0), 0);
+                    if (totalPlanned <= 0) {
+                        return;
+                    }
+
+                    const executedItems = Array.isArray(snapshotCurrentData[day]?.workItems)
+                        ? snapshotCurrentData[day].workItems
+                        : [];
+                    const totalExecuted = plannedWorks.reduce(
+                        (sum, work, index) => sum + (parseFloat(executedItems[index]) || 0),
+                        0
+                    );
+
+                    dayPercentSum += Math.min(100, (totalExecuted / totalPlanned) * 100);
+                    countedDays++;
+                });
+
+                return countedDays > 0 ? dayPercentSum / countedDays : 0;
+            }
+
+            function updateAnnualAveragePercent(currentMonthPercent) {
+                let monthPercentSum = 0;
+                let monthsCount = 0;
+
+                for (let month = 1; month <= 12; month++) {
+                    if (month === currentMonth) {
+                        if (Number.isFinite(currentMonthPercent)) {
+                            monthPercentSum += currentMonthPercent;
+                            monthsCount++;
+                        }
+                        continue;
+                    }
+
+                    const snapshot = loadMonthSnapshot(month, currentYear);
+                    if (!snapshot) {
+                        continue;
+                    }
+
+                    const monthPercent = calculateAveragePercentFromSnapshot(snapshot);
+                    if (monthPercent === null) {
+                        continue;
+                    }
+
+                    monthPercentSum += monthPercent;
+                    monthsCount++;
+                }
+
+                const annualAveragePercent = monthsCount > 0 ? monthPercentSum / monthsCount : 0;
+
+                annualSummaryTitle.textContent = `${currentYear} оны жилийн дундаж биелэлт`;
+                annualPercentDisplay.textContent = annualAveragePercent.toFixed(1) + '%';
+                annualPercentDisplay.style.color = annualAveragePercent >= 100 ? '#1b5e20' : annualAveragePercent > 0 ? '#FF9800' : '#f44336';
+                annualSummaryCaption.textContent = monthsCount > 0
+                    ? `${monthsCount} сарын биелэлтийн дунджаар тооцоолсон.`
+                    : 'Хадгалсан сарын мэдээлэл алга.';
+            }
+
+            function buildReasonAggregateFromSource(days, getValuesByDay) {
+                const counts = { resource: 0, tool: 0, weather: 0, other: 0 };
+                let totalReasonHits = 0;
+                let nonCompliantCount = 0;
+
+                days.forEach(day => {
+                    const values = getValuesByDay(day);
+                    if (!values || values.compliance !== 'үгүй') {
+                        return;
+                    }
+
+                    nonCompliantCount++;
+
+                    if (values.resource === 'үгүй') {
+                        counts.resource++;
+                        totalReasonHits++;
+                    }
+                    if (values.tool === 'үгүй') {
+                        counts.tool++;
+                        totalReasonHits++;
+                    }
+                    if (values.weather !== '') {
+                        counts.weather++;
+                        totalReasonHits++;
+                    }
+                    if (values.other !== '') {
+                        counts.other++;
+                        totalReasonHits++;
+                    }
+                });
+
+                return { counts, totalReasonHits, nonCompliantCount };
+            }
+
+            function getCurrentMonthReasonAggregate() {
+                const days = Array.from({ length: totalDays }, (_, index) => index + 1);
+                return buildReasonAggregateFromSource(days, day => {
+                    const complianceSelect = document.querySelector(`tr[data-row-id="executed-plan-compliance"] select.form-control[data-day="${day}"]`);
+                    const compliance = (complianceSelect?.value || '').trim().toLowerCase();
+                    return {
+                        compliance,
+                        resource: document.querySelector(`tr[data-row-id="executed-resource"] .form-control[data-day="${day}"]`)?.value?.trim().toLowerCase() || '',
+                        tool: document.querySelector(`tr[data-row-id="executed-tool"] .form-control[data-day="${day}"]`)?.value?.trim().toLowerCase() || '',
+                        weather: document.querySelector(`tr[data-row-id="executed-weather"] .form-control[data-day="${day}"]`)?.value?.trim() || '',
+                        other: document.querySelector(`tr[data-row-id="executed-other"] .form-control[data-day="${day}"]`)?.value?.trim() || ''
+                    };
+                });
+            }
+
+            function getSnapshotReasonAggregate(snapshot) {
+                if (!snapshot) {
+                    return { counts: { resource: 0, tool: 0, weather: 0, other: 0 }, totalReasonHits: 0, nonCompliantCount: 0 };
+                }
+
+                const rowValues = snapshot.rowValues || {};
+                const complianceValues = rowValues['executed-plan-compliance'] || {};
+                const candidateDays = new Set([
+                    ...Object.keys(complianceValues),
+                    ...Object.keys(rowValues['executed-resource'] || {}),
+                    ...Object.keys(rowValues['executed-tool'] || {}),
+                    ...Object.keys(rowValues['executed-weather'] || {}),
+                    ...Object.keys(rowValues['executed-other'] || {}),
+                    ...Object.keys(snapshot.currentData || {})
+                ]);
+
+                return buildReasonAggregateFromSource(Array.from(candidateDays, Number), day => {
+                    const snapshotCompliance = snapshot.currentData?.[day]?.compliance ?? complianceValues[day] ?? '';
+                    return {
+                        compliance: String(snapshotCompliance).trim().toLowerCase(),
+                        resource: String(rowValues['executed-resource']?.[day] ?? '').trim().toLowerCase(),
+                        tool: String(rowValues['executed-tool']?.[day] ?? '').trim().toLowerCase(),
+                        weather: String(rowValues['executed-weather']?.[day] ?? '').trim(),
+                        other: String(rowValues['executed-other']?.[day] ?? '').trim()
+                    };
+                });
+            }
+
+            function renderReasonSummary(targetEl, aggregate, emptyMessage) {
+                if (aggregate.nonCompliantCount === 0 || aggregate.totalReasonHits === 0) {
+                    targetEl.innerHTML = `<div class="reason-empty">${emptyMessage}</div>`;
+                    return;
+                }
+
+                const toPercent = count => ((count / aggregate.totalReasonHits) * 100).toFixed(1) + '%';
+                targetEl.innerHTML = `
+                    <div class="reason-item"><span class="reason-label">Хүн хүч</span><span class="reason-percent">${toPercent(aggregate.counts.resource)}</span></div>
+                    <div class="reason-item"><span class="reason-label">Багаж, материал</span><span class="reason-percent">${toPercent(aggregate.counts.tool)}</span></div>
+                    <div class="reason-item"><span class="reason-label">Цаг агаар</span><span class="reason-percent">${toPercent(aggregate.counts.weather)}</span></div>
+                    <div class="reason-item"><span class="reason-label">Бусад</span><span class="reason-percent">${toPercent(aggregate.counts.other)}</span></div>
+                `;
+            }
+
+            function updateYearlyReasonSummary(currentMonthAggregate) {
+                const yearAggregate = {
+                    counts: { resource: 0, tool: 0, weather: 0, other: 0 },
+                    totalReasonHits: 0,
+                    nonCompliantCount: 0
+                };
+
+                for (let month = 1; month <= currentMonth; month++) {
+                    const monthAggregate = month === currentMonth
+                        ? currentMonthAggregate
+                        : getSnapshotReasonAggregate(loadMonthSnapshot(month, currentYear));
+
+                    yearAggregate.counts.resource += monthAggregate.counts.resource;
+                    yearAggregate.counts.tool += monthAggregate.counts.tool;
+                    yearAggregate.counts.weather += monthAggregate.counts.weather;
+                    yearAggregate.counts.other += monthAggregate.counts.other;
+                    yearAggregate.totalReasonHits += monthAggregate.totalReasonHits;
+                    yearAggregate.nonCompliantCount += monthAggregate.nonCompliantCount;
+                }
+
+                yearlyReasonTitle.textContent = `${currentYear} оны өссөн дүн (1-${currentMonth} сар)`;
+                renderReasonSummary(yearlyReasonSummary, yearAggregate, 'Жилийн өссөн дүн тооцоолох өгөгдөл алга.');
+            }
+            
+            function updateTitle() {
+                currentYear = parseInt(yearSelect.value, 10) || currentYear;
+                const selectedMonth = parseInt(monthSelect.value, 10) || currentMonth;
+                currentMonth = selectedMonth;
+                mainTitle.textContent = `${currentYear} оны ${selectedMonth}-р сарын Ажлын Төлөвлөгөө / Гүйцэтгэл`;
+            }
+
+            function getVisibleDays() {
+                if (dayRangeSelect.value === 'all') {
+                    return Array.from({length: totalDays}, (_, i) => i + 1);
+                }
+                const [start, end] = dayRangeSelect.value.split('-').map(Number);
+                return Array.from({length: Math.min(end, totalDays) - start + 1}, (_, i) => start + i);
+            }
+
+            function updateVisibleDaysInfo() {
+                const visibleDays = getVisibleDays();
+                const workingDaysCount = visibleDays.filter(day => !isRestDay(currentYear, currentMonth, day)).length;
+                const now = new Date();
+                let remainingWorkingDays = 0;
+
+                if (currentYear > now.getFullYear() || (currentYear === now.getFullYear() && currentMonth > (now.getMonth() + 1))) {
+                    remainingWorkingDays = Array.from({length: totalDays}, (_, i) => i + 1)
+                        .filter(day => !isRestDay(currentYear, currentMonth, day)).length;
+                } else if (currentYear === now.getFullYear() && currentMonth === (now.getMonth() + 1)) {
+                    for (let d = now.getDate() + 1; d <= totalDays; d++) {
+                        if (!isRestDay(currentYear, currentMonth, d)) {
+                            remainingWorkingDays++;
+                        }
+                    }
+                }
+
+                if (dayRangeSelect.value === 'all') {
+                    visibleDaysInfo.innerHTML = `Энэ сар <strong>${totalDays}</strong> өдөртэй ба ажлын: <strong>${workingDaysCount}</strong> хоногтой. Үлдсэн ажлын хоног : <strong>${remainingWorkingDays}</strong>`;
+                } else {
+                    visibleDaysInfo.innerHTML = `${visibleDays[0]}-${visibleDays[visibleDays.length - 1]} өдрүүдийг харуулж байна | Ажлын нийт өдөр: <strong>${workingDaysCount}</strong> | Тухайн сард үлдсэн ажлын хоног: <strong>${remainingWorkingDays}</strong>`;
+                }
+            }
+
+            function createTableHeaders() {
+                const visibleDays = getVisibleDays();
+                let headerHTML = '<th class="row-label-cell">Үзүүлэлт</th>';
+                const restColor = getMonthRestColor(currentMonth);
+                visibleDays.forEach(d => {
+                    const isRest = isRestDay(currentYear, currentMonth, d);
+                    const classAttr = isRest ? ' class="day-col rest-day-header hidden-day"' : ' class="day-col"';
+                    const restAttr = isRest ? ` style="--rest-day-color:${restColor}" data-rest="true"` : ` data-rest="false"`;
+                    const dateLine = `${getWeekdayName(currentYear, currentMonth, d)}`;
+                    headerHTML += `<th data-day="${d}"${classAttr}${restAttr}>${d}-ны өдөр <span class="day-date-line">${dateLine}</span></th>`;
+                });
+                dayHeaders.innerHTML = headerHTML;
+            }
+            
+            // Төлөвлөгөөний ажлын мэдээллийг DOM-оос цуглуулах
+            function getPlannedWorkItems(day) {
+                const dayCell = document.querySelector(`tr[data-row-id="plan-work"] td[data-day="${day}"] .day-cell-content`);
+                if (!dayCell) return [];
+                
+                const works = [];
+                dayCell.querySelectorAll('.work-item').forEach((item, index) => {
+                    const qtyInput = item.querySelector('.work-qty');
+                    const workNameSelect = item.querySelector('.work-name');
+                    const unitSelect = item.querySelector('.work-unit');
+                    const locationInput = item.querySelector('.work-location');
+                    const gtkhabSelect = item.querySelector('.work-gtkhab');
+                    const resourceInput = item.querySelector('.work-resource');
+                    
+                    if (qtyInput && workNameSelect && unitSelect) {
+                        works.push({
+                            index: index,
+                            location: locationInput ? locationInput.value : '',
+                            gtkhab: gtkhabSelect ? gtkhabSelect.value : '',
+                            work: workNameSelect.value,
+                            unit: unitSelect.value,
+                            plannedQty: parseFloat(qtyInput.value) || 0,
+                            resource: resourceInput ? resourceInput.value : ''
+                        });
+                    }
+                });
+                return works;
+            }
+
+            function createWorkItemHTML(work, idx, day) {
+                const color = getGTKHABColor(work.gtkhab);
+                return `
+                    <div class="work-item" data-work-index="${idx}">
+                        <div class="work-item-actions">
+                            <button class="delete-work-btn" onclick="deleteWorkItem(this, ${day})">✕</button>
+                        </div>
+                        <div class="work-grid-2" style="margin-bottom: 6px;">
+                            <div class="work-field">
+                                <div class="work-field-label">Байршил</div>
+                                <input type="text" value="${work.location || ''}" placeholder="км/пк" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;" class="work-location">
+                            </div>
+                            <div class="work-field">
+                                <div class="work-field-label">ГТХАБ</div>
+                                <select class="work-gtkhab" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; background-color: ${color};" onchange="updateGTKHABColor(this)">
+                                    ${SELECT_OPTIONS['ГТХАБ'].map(opt => `<option value="${opt}" ${work.gtkhab === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="work-grid-2" style="margin-bottom: 6px;">
+                            <div class="work-field">
+                                <div class="work-field-label">Ажил</div>
+                                <select class="work-name" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
+                                    ${SELECT_OPTIONS['АжлынНэр'].map(opt => `<option value="${opt}" ${work.work === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="work-field">
+                                <div class="work-field-label">Нэгж</div>
+                                <select class="work-unit" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
+                                    ${SELECT_OPTIONS['Нэгж'].map(opt => `<option value="${opt}" ${work.unit === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="work-grid-2" style="margin-bottom: 6px;">
+                            <div class="work-field">
+                                <div class="work-field-label">Төлөвлөсөн Хэмжээ</div> 
+                                <input type="number" value="${work.qty || 0}" min="0" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; text-align: center; font-weight: bold; color: #1976d2;" class="work-qty" onchange="updatePercentages()"> 
+                            </div>
+                            <div class="work-field">
+                                <div class="work-field-label">Хүн хүч</div>
+                                <input type="number" value="${work.resource || ''}" min="0" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; text-align: center; font-weight: bold; color: #4caf50;" class="work-resource">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function getGTKHABColor(gtkhab) {
+                switch (gtkhab) {
+                    case 'Сонор сөрөмж': return '#c8e6c9';
+                    case 'Хурд хасах': return '#ffcdd2';
+                    case 'Сургалт': return '#fff9c4';
+                    case 'Туршилт': return '#e1bee7';
+                    default: return 'white';
+                }
+            }
+
+            window.updateGTKHABColor = function(selectElement) {
+                selectElement.style.backgroundColor = getGTKHABColor(selectElement.value);
+            };
+
+            function createInputCell(day, rowData, isNewRow = false) {
+                const visibleDays = getVisibleDays();
+                const isVisible = visibleDays.includes(day);
+                
+                let cellContent = '';
+                const defaultValue = !isNewRow && rowData.defaultValues && rowData.defaultValues[day] !== undefined ? rowData.defaultValues[day] : '';
+
+                if (rowData.inputType === 'unified-work') {
+                    const snapshotWorks = activeMonthSnapshot?.planWork?.[day];
+                    const works = Array.isArray(snapshotWorks) ? snapshotWorks : (Array.isArray(defaultValue) ? defaultValue : []);
+                    const worksHTML = works.map((work, idx) => createWorkItemHTML(work, idx, day)).join('');
+                    
+                    cellContent = `<div class="day-cell-content" data-day="${day}">
+                        ${worksHTML}
+                        ${works.length < 5 ? `<button class="add-work-btn" onclick="addWorkItem(this, ${day}, '${rowData.section}')">+ Ажил нэмэх</button>` : ''}
+                    </div>`;
+                } else if (rowData.inputType === 'dynamic-work-details') {
+                    // Энэ хэсэг нь DOM ачаалсны дараа динамикаар дүүргэгдэнэ
+                    cellContent = `<div class="dynamic-details-container" data-day="${day}"></div>`;
+                } else if (rowData.inputType === 'select' || rowData.inputType === 'yes/no') {
+                    const optionsList = rowData.inputType === 'yes/no' ? SELECT_OPTIONS['Тийм/Үгүй'] : SELECT_OPTIONS[rowData.optionsKey];
+                    const selectedValue = getSnapshotValue(rowData.id, day, defaultValue);
+                    const options = optionsList.map(opt => 
+                        `<option value="${opt}" ${selectedValue === opt ? 'selected' : ''}>${opt}</option>`
+                    ).join('');
+                    
+                    const selectElement = `<select class="form-control" data-type="select" data-day="${day}">
+                        ${options}
+                    </select>`;
+                    cellContent = selectElement;
+
+                } else if (rowData.inputType === 'number') {
+                    const numberValue = getSnapshotValue(rowData.id, day, defaultValue);
+                    cellContent = `<input type="number" class="form-control" value="${numberValue}" min="0" data-type="number" data-day="${day}" onchange="updatePercentages()">`;
+                } else if (rowData.inputType === 'text') {
+                    const textValue = getSnapshotValue(rowData.id, day, defaultValue);
+                    cellContent = `<input type="text" class="form-control" value="${textValue}" data-type="text" data-day="${day}">`;
+                } else {
+                    cellContent = defaultValue;
+                }
+                
+                const isRest = isRestDay(currentYear, currentMonth, day);
+                const baseClasses = [];
+                if (!isVisible || isRest) baseClasses.push('hidden-day');
+                if (isRest) baseClasses.push('rest-day-cell');
+                const classAttr = baseClasses.length > 0 ? ` class="${baseClasses.join(' ')}"` : '';
+                const restAttr = isRest ? ` style="--rest-day-color:${getMonthRestColor(currentMonth)}" data-rest="true"` : ` data-rest="false"`;
+                return `<td data-day="${day}"${classAttr} data-row-id="${rowData.id}"${restAttr}>
+                            ${cellContent}
+                        </td>`;
+            }
+
+            function buildTable() {
+                currentYear = parseInt(yearSelect.value, 10) || currentYear;
+                currentMonth = parseInt(monthSelect.value, 10) || currentMonth;
+                totalDays = daysInMonth[currentMonth];
+                activeMonthSnapshot = loadMonthSnapshot();
+                currentData = JSON.parse(JSON.stringify(activeMonthSnapshot?.currentData || initialCurrentData));
+                updateTitle();
+                // 31-ээс их өдрийн сонголтыг хаах/нуух
+                document.querySelectorAll('#dayRangeSelect option').forEach(opt => {
+                    if (opt.value.includes('31')) {
+                        if (totalDays < 31) {
+                            opt.disabled = true;
+                            opt.textContent = '21-' + totalDays;
+                            if (dayRangeSelect.value === '21-31') dayRangeSelect.value = 'all'; // Хэрэв 31-тэйг сонгосон байвал 'Бүгд' рүү шилжүүлэх
+                        } else {
+                            opt.disabled = false;
+                            opt.textContent = '21-31';
+                        }
+                    }
+                });
+
+                createTableHeaders();
+                tableBody.innerHTML = '';
+                
+                tableData.forEach(rowData => {
+                    let rowHTML = `<tr data-row-id="${rowData.id || ''}" data-section="${rowData.section || ''}" data-input-type="${rowData.inputType || ''}" class="${rowData.isHeader ? 'section-header' : ''}">`;
+                    
+                    if (rowData.isHeader) {
+                        const visibleDays = getVisibleDays();
+                        // 1 нь Үзүүлэлт багана
+                        rowHTML += `<td colspan="${visibleDays.length + 1}" class="section-title">${rowData.label}</td>`;
+                    } else {
+                        rowHTML += `<td class="row-label-cell">${rowData.label}</td>`;
+                        
+                        for (let d = 1; d <= totalDays; d++) {
+                            rowHTML += createInputCell(d, rowData);
+                        }
+                    }
+                    
+                    rowHTML += '</tr>';
+                    tableBody.innerHTML += rowHTML;
+                });
+                updateDayVisibility();
+                
+                // Анхны ачаалалтын дараа нөхцөлт логикийг ажиллуулж, динамик контентийг үүсгэх
+                Array.from(document.querySelectorAll('tr[data-row-id="executed-plan-compliance"] select.form-control')).forEach(select => {
+                    handlePlanComplianceChange(select);
+                });
+                updatePercentages(); // Хувийг анх тооцоолох
+                applyDayLocks();
+                saveMonthSnapshot();
+            }
+
+            function updateDayVisibility() {
+                createTableHeaders(); 
+                const visibleDays = getVisibleDays();
+                document.querySelectorAll('td[data-day]').forEach(cell => {
+                    if (cell.getAttribute('data-rest') === 'true') {
+                        cell.classList.add('hidden-day');
+                        return;
+                    }
+                    const day = parseInt(cell.getAttribute('data-day'));
+                    if (visibleDays.includes(day)) {
+                        cell.classList.remove('hidden-day');
+                    } else {
+                        cell.classList.add('hidden-day');
+                    }
+                });
+                updateVisibleDaysInfo();
+                applyDayLocks();
+            }
+
+            window.addWorkItem = function(btn, day, section) {
+                const container = btn.parentElement;
+                const currentWorks = container.querySelectorAll('.work-item').length;
+                
+                if (currentWorks >= 5) {
+                    alert('Хамгийн ихдээ 5 ажил нэмж болно!');
+                    return;
+                }
+
+                if (isDayLocked(day)) {
+                    alert('Энэ өдөр хаагдсан тул засварлах боломжгүй.');
+                    return;
+                }
+
+                const newWork = { location: '', gtkhab: '', work: '', unit: '', qty: 0, resource: '' };
+                const newWorkHTML = createWorkItemHTML(newWork, currentWorks, day);
+                
+                btn.insertAdjacentHTML('beforebegin', newWorkHTML);
+                
+                if (currentWorks + 1 >= 5) {
+                    btn.style.display = 'none';
+                }
+                
+                // Ажил нэмэгдэхэд currentData-д нэмэлт утга оруулж, дахин compliance check хийх шаардлагатай
+                if (!currentData[day]) currentData[day] = { compliance: 'үгүй', workItems: [] };
+                if (!currentData[day].workItems) currentData[day].workItems = [];
+                currentData[day].workItems.push(0);
+
+                const complianceSelect = document.querySelector(`tr[data-row-id="executed-plan-compliance"] select.form-control[data-day="${day}"]`);
+                if(complianceSelect) handlePlanComplianceChange(complianceSelect);
+            };
+
+            window.deleteWorkItem = function(btn, day) {
+                if (confirm('Энэ ажлыг устгах уу?')) {
+                    const workItem = btn.closest('.work-item');
+                    const workIndex = parseInt(workItem.getAttribute('data-work-index'));
+                    const container = workItem.parentElement;
+                    workItem.remove();
+                    
+                    // currentData-аас устгах
+                    if (currentData[day] && currentData[day].workItems) {
+                        currentData[day].workItems.splice(workIndex, 1);
+                    }
+                    
+                    // Үлдсэн work-item-уудын index-ийг шинэчлэх
+                    container.querySelectorAll('.work-item').forEach((item, index) => {
+                        item.setAttribute('data-work-index', index);
+                        item.querySelector('.executed-qty-input')?.setAttribute('data-work-index', index);
+                        item.querySelector('.executed-percent-display')?.setAttribute('data-work-index', index);
+                    });
+
+
+                    const addBtn = container.querySelector('.add-work-btn');
+                    if (addBtn) {
+                        addBtn.style.display = 'block'; 
+                    }
+                    
+                    const complianceSelect = document.querySelector(`tr[data-row-id="executed-plan-compliance"] select.form-control[data-day="${day}"]`);
+                    if(complianceSelect) handlePlanComplianceChange(complianceSelect);
+                    saveMonthSnapshot();
+                }
+            };
+
+            function isWorkItemField(element) {
+                return element && element.matches('input, select, textarea');
+            }
+
+            // Work-item дотор бичиж байх үед томруулж, фокус гарахад хэвийн болгоно.
+            tableBody.addEventListener('focusin', function(e) {
+                if (!isWorkItemField(e.target)) return;
+                const workItem = e.target.closest('.work-item');
+                if (workItem) {
+                    workItem.classList.add('editing');
+                }
+            });
+
+            tableBody.addEventListener('focusout', function(e) {
+                if (!isWorkItemField(e.target)) return;
+                const workItem = e.target.closest('.work-item');
+                if (!workItem) return;
+
+                // Дараагийн фокус энэ item дотор хэвээр байвал class-ыг авч болохгүй.
+                requestAnimationFrame(() => {
+                    if (!workItem.contains(document.activeElement)) {
+                        workItem.classList.remove('editing');
+                    }
+                });
+            });
+            
+            // Өдрийн төлөвлөгдсөн нийт хэмжээг буцаах функц
+            function getDailyPlannedQuantity(day) {
+                return getPlannedWorkItems(day).reduce((sum, work) => sum + work.plannedQty, 0);
+            }
+
+            function adjustExecutedQtyInputSize(inputElement) {
+                if (!inputElement) return;
+                const rawValue = String(inputElement.value || '0').trim();
+                const digitCount = Math.max(1, rawValue.replace(/[^0-9.-]/g, '').length);
+                const numericValue = parseFloat(rawValue);
+
+                let fontSize = 16;
+                if (!Number.isNaN(numericValue)) {
+                    if (Math.abs(numericValue) >= 1000) fontSize = 22;
+                    else if (Math.abs(numericValue) >= 100) fontSize = 20;
+                    else if (Math.abs(numericValue) >= 10) fontSize = 18;
+                }
+
+                const widthPx = Math.min(150, Math.max(56, 22 + digitCount * 10));
+                inputElement.style.width = widthPx + 'px';
+                inputElement.style.fontSize = fontSize + 'px';
+            }
+            window.adjustExecutedQtyInputSize = adjustExecutedQtyInputSize;
+
+            function adjustAllExecutedQtyInputs() {
+                document.querySelectorAll('.executed-qty-input').forEach(adjustExecutedQtyInputSize);
+            }
+
+            // Төлөвлөгөөний дагуу - 'Тийм' үед динамик контент үүсгэх
+            function renderExecutedDetailsForYes(day) {
+                const plannedWorks = getPlannedWorkItems(day);
+                let html = '<div class="dynamic-details-container">';
+                
+                // currentData-аас өмнөх гүйцэтгэлийн утгуудыг сэргээх
+                const executedValues = currentData[day] && Array.isArray(currentData[day].workItems) ? currentData[day].workItems : [];
+
+                // currentData-г төлөвлөсөн ажлын тоотой тааруулах
+                while (executedValues.length < plannedWorks.length) {
+                    executedValues.push(0); 
+                }
+                currentData[day] = { compliance: 'тийм', workItems: executedValues.slice(0, plannedWorks.length) };
+                
+                if (plannedWorks.length === 0) {
+                    html += `<div class="work-execution-item">Төлөвлөгөө оруулаагүй.</div>`;
+                } else {
+                    plannedWorks.forEach((work, index) => {
+                        const plannedQty = work.plannedQty;
+                        const executedValue = executedValues[index] !== undefined ? executedValues[index] : 0; 
+                        
+                        let percent = (plannedQty > 0) ? (executedValue / plannedQty) * 100 : executedValue > 0 ? 100 : 0;
+                        percent = Math.min(100, percent);
+
+                        html += `
+                            <div class="work-execution-item">
+                                <label>${work.work || 'Ажил'} (${work.unit || '-'}) - ${work.location || '-'}</label>
+                                <div class="detail-grid">
+                                    <div class="plan-execute-grid">
+                                        <div class="plan-qty-label" title="Хийх байсанаас">${plannedQty} ${work.unit || ''} хийх байсанаас</div>
+                                        <input type="number" class="executed-qty-input" value="${executedValue}" min="0" data-day="${day}" data-work-index="${index}" oninput="adjustExecutedQtyInputSize(this)" onchange="updateIndividualWorkExecution(this)">
+                                    </div>
+                                    <div class="executed-percent-display" style="color: ${percent >= 100 ? '#4CAF50' : percent > 0 ? '#FF9800' : '#d32f2f'};" data-work-index="${index}">
+                                        ${percent.toFixed(1)}% гүйцэтгэсэн
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                const totalWorkCount = plannedWorks.length;
+                const totalPercentPlaceholder = totalWorkCount > 0 ? '0.0' : '-';
+
+                html += `
+                    <div class="work-execution-item total-summary">
+                        <div class="detail-grid" style="grid-template-columns: 1fr 1fr 70px;">
+                            <span>${totalWorkCount} ажлын гүйцэтгэл</span>
+                           
+                            <div class="total-percent-display" data-day="${day}" style="color: #388e3c;">
+                                ${totalPercentPlaceholder}%
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                
+                return html;
+            }
+
+            // Төлөвлөгөөний дагуу - 'Үгүй' үед динамик контент үүсгэх (идэвхгүй)
+            function renderExecutedDetailsForNo(day) {
+                const totalPlanned = getDailyPlannedQuantity(day);
+                let html = '<div class="dynamic-details-container">';
+                
+                html += `
+                    <div class="work-execution-item total-summary" style="background-color: #fce4ec; border-color: #f48fb1;">
+                        <div style="font-size: 11px; margin-bottom: 5px;">Төлөвлөгөөний дагуу хийгдээгүй тул гүйцэтгэл тооцохгүй.</div>
+                        <div class="detail-grid" style="grid-template-columns: 1fr 1fr 70px;">
+                            <span class="plan-qty-label" title="Төлөвлөсөн">Төлөвлөсөн: ${totalPlanned}</span>
+                            <input type="number" class="executed-qty-input" value="0" disabled data-day="${day}" style="background-color: #ffccbc;" oninput="adjustExecutedQtyInputSize(this)">
+                            <div class="total-percent-display" style="color: #f44336;">0.0%</div>
+                        </div>
+                    </div>
+                </div>`;
+                
+                return html;
+            }
+
+            // Гүйцэтгэлийн хэмжээг нэг ажил дээр өөрчлөх үед
+            window.updateIndividualWorkExecution = function(inputElement) {
+                const day = parseInt(inputElement.getAttribute('data-day'));
+                const workIndex = parseInt(inputElement.getAttribute('data-work-index'));
+                const executedQty = parseFloat(inputElement.value) || 0;
+
+                // 1. CurrentData-д утгыг хадгалах
+                if (!currentData[day] || currentData[day].compliance !== 'тийм') {
+                     // Төлөвлөгөөний дагуу 'үгүй' байсан бол 'тийм' болгож currentData-г шинэчлэх
+                    currentData[day] = { compliance: 'тийм', workItems: [] };
+                    const complianceSelect = document.querySelector(`tr[data-row-id="executed-plan-compliance"] select.form-control[data-day="${day}"]`);
+                    if (complianceSelect) complianceSelect.value = 'тийм';
+                    handlePlanComplianceChange(complianceSelect); 
+                }
+
+                // workItems-ийн уртыг шалгаж, шаардлагатай бол 0-ээр дүүргэх
+                const plannedWorks = getPlannedWorkItems(day);
+                while (currentData[day].workItems.length < plannedWorks.length) {
+                    currentData[day].workItems.push(0);
+                }
+                
+                currentData[day].workItems[workIndex] = executedQty;
+
+                // 2. Хувийг шинэчлэх
+                updatePercentages();
+                saveMonthSnapshot();
+            }
+
+            // Нөхцөлт логикийг зохицуулах функц
+            function handlePlanComplianceChange(selectElement) {
+                const day = parseInt(selectElement.getAttribute('data-day'));
+                const value = selectElement.value;
+                const isYes = value === 'тийм';
+
+                const detailCellContainer = document.querySelector(`tr[data-row-id="executed-dynamic-details"] td[data-day="${day}"]`);
+                if (!detailCellContainer) return;
+                
+                // 1. Dynamic content үүсгэх
+                if (isYes) {
+                    detailCellContainer.innerHTML = renderExecutedDetailsForYes(day);
+                } else {
+                    detailCellContainer.innerHTML = renderExecutedDetailsForNo(day);
+                }
+                adjustAllExecutedQtyInputs();
+                
+                // 2. Compliance утгыг хадгалах
+                if (!currentData[day]) currentData[day] = {};
+                currentData[day].compliance = value;
+
+                // 3. Шалтгаан тайлбарлах мөрүүдийг идэвхжүүлэх/идэвхгүй болгох
+                const dependentRowIds = ['executed-resource', 'executed-tool', 'executed-weather', 'executed-other', 'executed-note'];
+                dependentRowIds.forEach(rowId => {
+                    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+                    if (row) {
+                        const cell = row.querySelector(`td[data-day="${day}"]`);
+                        if (cell) {
+                            const input = cell.querySelector('.form-control');
+                            if (input) {
+                                input.disabled = isYes; // 'Тийм' бол идэвхгүй
+                                cell.style.backgroundColor = isYes ? '#f3f3f3' : 'white'; 
+                                if (isYes) {
+                                    // 'Тийм' бол шалтгаануудыг цэвэрлэх
+                                    input.value = '';
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // 4. Хувийг шинэчлэх
+                updatePercentages();
+                adjustAllExecutedQtyInputs();
+                saveMonthSnapshot();
+            }
+
+
+            function updatePercentages() {
+                const visibleDays = getVisibleDays();
+                let dayPercentSum = 0;
+                let countedDays = 0;
+
+                const reasonCounts = {
+                    resource: 0,
+                    tool: 0,
+                    weather: 0,
+                    other: 0
+                };
+                let nonCompliantCount = 0;
+                let totalReasonHits = 0;
+
+                visibleDays.forEach(day => {
+                    const complianceSelect = document.querySelector(`tr[data-row-id="executed-plan-compliance"] select.form-control[data-day="${day}"]`);
+                    const isYes = complianceSelect && complianceSelect.value === 'тийм';
+
+                    const plannedWorks = getPlannedWorkItems(day);
+
+                    if (isYes) {
+                        const detailCellContainer = document.querySelector(`tr[data-row-id="executed-dynamic-details"] td[data-day="${day}"] .dynamic-details-container`);
+                        if (!detailCellContainer) return;
+
+                        let totalPlanned = 0;
+                        let totalExecuted = 0;
+
+                        plannedWorks.forEach((work, index) => {
+                            const plannedQty = work.plannedQty;
+                            const executedInput = detailCellContainer.querySelector(`.executed-qty-input[data-work-index="${index}"]`);
+                            const executedQty = parseFloat(executedInput ? executedInput.value : 0) || 0;
+                            const percentDisplay = detailCellContainer.querySelector(`.executed-percent-display[data-work-index="${index}"]`);
+
+                            totalPlanned += plannedQty;
+                            totalExecuted += executedQty;
+
+                            let percent = (plannedQty > 0) ? (executedQty / plannedQty) * 100 : executedQty > 0 ? 100 : 0;
+                            percent = Math.min(100, percent);
+
+                            if (percentDisplay) {
+                                percentDisplay.textContent = percent.toFixed(1) + '% гүйцэтгэсэн';
+                                percentDisplay.style.color = percent >= 100 ? '#4CAF50' : percent > 0 ? '#FF9800' : '#d32f2f';
+                            }
+                        });
+
+                        const dayPercent = totalPlanned > 0 ? Math.min(100, (totalExecuted / totalPlanned) * 100) : 0;
+                        const totalPercentDisplay = detailCellContainer.querySelector('.total-percent-display');
+                        if (totalPercentDisplay) {
+                            totalPercentDisplay.textContent = dayPercent.toFixed(1) + '%';
+                            totalPercentDisplay.style.color = dayPercent >= 100 ? '#4CAF50' : dayPercent > 0 ? '#FF9800' : '#d32f2f';
+                        }
+
+                        if (totalPlanned > 0) {
+                            dayPercentSum += dayPercent;
+                            countedDays++;
+                        }
+                    } else {
+                        const totalPercentDisplay = document.querySelector(`tr[data-row-id="executed-dynamic-details"] td[data-day="${day}"] .total-percent-display`);
+                        if (totalPercentDisplay) {
+                            totalPercentDisplay.textContent = '0.0%';
+                            totalPercentDisplay.style.color = '#f44336';
+                        }
+
+                        nonCompliantCount++;
+                        const resourceValue = document.querySelector(`tr[data-row-id="executed-resource"] .form-control[data-day="${day}"]`)?.value?.trim().toLowerCase() || '';
+                        const toolValue = document.querySelector(`tr[data-row-id="executed-tool"] .form-control[data-day="${day}"]`)?.value?.trim().toLowerCase() || '';
+                        const weatherValue = document.querySelector(`tr[data-row-id="executed-weather"] .form-control[data-day="${day}"]`)?.value?.trim() || '';
+                        const otherValue = document.querySelector(`tr[data-row-id="executed-other"] .form-control[data-day="${day}"]`)?.value?.trim() || '';
+
+                        // Нэг өдөрт олон шалтгаан давхар байж болох тул тус бүрийг нь тоолно.
+                        if (resourceValue === 'үгүй') {
+                            reasonCounts.resource++;
+                            totalReasonHits++;
+                        }
+                        if (toolValue === 'үгүй') {
+                            reasonCounts.tool++;
+                            totalReasonHits++;
+                        }
+                        if (weatherValue !== '') {
+                            reasonCounts.weather++;
+                            totalReasonHits++;
+                        }
+                        if (otherValue !== '') {
+                            reasonCounts.other++;
+                            totalReasonHits++;
+                        }
+                    }
+                });
+
+                let overallAveragePercent = 0;
+                if (countedDays > 0) {
+                    overallAveragePercent = dayPercentSum / countedDays;
+                }
+
+                const currentMonthReasonAggregate = {
+                    counts: reasonCounts,
+                    totalReasonHits,
+                    nonCompliantCount
+                };
+
+                overallPercentDisplay.textContent = overallAveragePercent.toFixed(1) + '%';
+                overallPercentDisplay.style.color = overallAveragePercent >= 100 ? '#1b5e20' : overallAveragePercent > 0 ? '#FF9800' : '#f44336';
+                updateAnnualAveragePercent(overallAveragePercent);
+                updateYearlyReasonSummary(currentMonthReasonAggregate);
+
+                renderReasonSummary(reasonSummary, currentMonthReasonAggregate, 'Төлөвлөгөөний дагуу ажлаагүй өдөр алга.');
+            }
+
+            // --- Event Listeners ---
+            yearSelect.addEventListener('change', function() {
+                currentYear = parseInt(this.value, 10) || currentYear;
+                buildTable();
+            });
+
+            monthSelect.addEventListener('change', function() {
+                currentMonth = parseInt(this.value);
+                buildTable();
+            });
+
+            dayRangeSelect.addEventListener('change', function() {
+                updateDayVisibility();
+                updatePercentages(); // Харагдах өдөр өөрчлөгдөхөд нийт хувийг шинэчлэх
+            });
+
+            // Төлөвлөгөөний хэмжээ (work-item доторх) өөрчлөгдөхөд нөхцөлт логикийг дахин ажиллуулж, хувийг шинэчлэх
+            tableBody.addEventListener('change', function(e) {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'number' && e.target.classList.contains('work-qty')) {
+                    const day = parseInt(e.target.closest('td[data-day]').getAttribute('data-day'));
+                    const complianceSelect = document.querySelector(`tr[data-row-id="executed-plan-compliance"] select.form-control[data-day="${day}"]`);
+                    // Төлөвлөгөөний хэмжээ өөрчлөгдсөн ч, гүйцэтгэлийн хэсэгт зөвхөн compliance утгаар дахин үүсгэж, хувь тооцоог хийх
+                    if(complianceSelect) handlePlanComplianceChange(complianceSelect); 
+                }
+                
+                // Төлөвлөгөөний дагуу цэс өөрчлөгдөхөд нөхцөлт логикийг ажиллуулах
+                if (e.target.closest('tr[data-row-id="executed-plan-compliance"]') && e.target.tagName === 'SELECT') {
+                    handlePlanComplianceChange(e.target);
+                }
+
+                if (e.target.closest('tr[data-row-id="executed-resource"], tr[data-row-id="executed-tool"], tr[data-row-id="executed-weather"], tr[data-row-id="executed-other"]')) {
+                    updatePercentages();
+                }
+
+                saveMonthSnapshot();
+            });
+
+            // Текст оруулж байх үед шалтгааны хувийг бодит цагт шинэчлэх.
+            tableBody.addEventListener('input', function(e) {
+                if (e.target.closest('tr[data-row-id="executed-other"]')) {
+                    updatePercentages();
+                }
+                if (e.target.classList && e.target.classList.contains('executed-qty-input')) {
+                    adjustExecutedQtyInputSize(e.target);
+                }
+                saveMonthSnapshot();
+            });
+
+            setInterval(function() {
+                applyDayLocks();
+                saveMonthSnapshot();
+            }, 60000);
+
+            window.addEventListener('beforeunload', function() {
+                saveMonthSnapshot();
+            });
+
+            // Эхний ачаалалт
+            populateYearOptions();
+            currentYear = parseInt(yearSelect.value, 10) || currentYear;
+            currentMonth = parseInt(monthSelect.value, 10) || currentMonth;
+            buildTable();
+            adjustAllExecutedQtyInputs();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Хатуу тооцоот багаж бүртгэл</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        /* Lucide icon-уудыг Tailwind-тэй ашиглахын тулд */
+        .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
+        .number-cell {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .number-cell--editable:hover {
+            background-color: #e0f2ff;
+        }
+        .number-cell--empty {
+            color: #94a3b8;
+            font-style: italic;
+        }
+        .number-cell--removed {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            font-weight: 600;
+        }
+        .number-cell--active {
+            background-color: #fff7d6;
+            color: #92400e;
+            font-weight: 600;
+        }
+        .number-cell--in-use {
+            background-color: #dcfce7;
+            color: #166534;
+            font-weight: 700;
+        }
+        .number-cell--editing {
+            padding: 0.25rem;
+            background-color: #dbeafe;
+        }
+        .number-input {
+            width: 100%;
+            min-width: 4rem;
+            border: 1px solid #2563eb;
+            border-radius: 0.375rem;
+            padding: 0.35rem 0.5rem;
+            text-align: center;
+            outline: none;
+        }
+        .number-cell__content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+        .number-cell__delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 9999px;
+            color: #dc2626;
+            background-color: #fee2e2;
+            font-size: 0.9rem;
+            line-height: 1;
+        }
+        .number-cell__delete:hover {
+            background-color: #fecaca;
+        }
+        .stat-value--editable {
+            cursor: text;
+            border-radius: 0.5rem;
+            padding-inline: 0.35rem;
+        }
+        .stat-value--editable:focus {
+            outline: 2px solid #fb923c;
+            background-color: #fff7ed;
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.72);
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-card {
+            width: min(100%, 34rem);
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+            overflow: hidden;
+        }
+        .qr-reader {
+            width: 100%;
+            min-height: 320px;
+        }
+        .qr-reader video {
+            border-radius: 0.75rem;
+        }
+        .scan-status {
+            min-height: 2.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">
+                        Хатуу тооцоот багаж
+                    </h1>
+                </div>
+                <div id="syncStatus" class="hidden rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600" aria-hidden="true">
+                    Холболт шалгаж байна...
+                </div>
+            </div>
+            
+            <div id="statsContainer" class="grid grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Нийт багаж</p>
+                    <p id="totalTools" class="text-3xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Ашиглалтад</p>
+                    <p id="usageTotal" class="text-3xl font-bold text-orange-600 stat-value--editable" contenteditable="true" spellcheck="false" title="Давхар дарж тоо засна">0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-600">Үлдэгдэл</p>
+                    <p id="remainingTotal" class="text-3xl font-bold text-green-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">
+                    Багажны жагсаалт
+                </h2>
+                <button id="toggleEditMode" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                    <i data-lucide="edit-2" class="icon edit-icon" data-size="18"></i>
+                    <span class="edit-text">Засах</span>
+                </button>
+            </div>
+
+            <div id="toolManagementPanel" class="hidden mb-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                <p class="mb-3 text-sm font-semibold text-orange-800">Засах горим: багажны нэр болон дугаар нэмэх, засах, устгах</p>
+                <div class="grid gap-3 md:grid-cols-2">
+                    <div class="rounded-lg bg-white p-3 shadow-sm">
+                        <p class="mb-2 text-sm font-semibold text-slate-700">Багажны нэр</p>
+                        <div class="mb-2 flex gap-2">
+                            <input id="manageNewToolName" type="text" placeholder="Шинэ багажны нэр" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                            <button id="manageAddToolBtn" type="button" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Нэмэх</button>
+                        </div>
+                        <div class="mb-2 flex gap-2">
+                            <select id="manageToolSelect" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"></select>
+                            <input id="manageToolNameEdit" type="text" placeholder="Шинэ нэр" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="manageRenameToolBtn" type="button" class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-600">Нэр засах</button>
+                            <button id="manageDeleteToolBtn" type="button" class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700">Устгах</button>
+                        </div>
+                    </div>
+                    <div class="rounded-lg bg-white p-3 shadow-sm">
+                        <p class="mb-2 text-sm font-semibold text-slate-700">Багажны дугаар</p>
+                        <div class="mb-2 flex gap-2">
+                            <select id="manageNumberToolSelect" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"></select>
+                            <select id="manageNumberSelect" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"></select>
+                        </div>
+                        <div class="mb-2 flex gap-2">
+                            <input id="manageNumberValue" type="text" placeholder="Дугаар" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="manageAddNumberBtn" type="button" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Дугаар нэмэх</button>
+                            <button id="manageUpdateNumberBtn" type="button" class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-600">Дугаар засах</button>
+                            <button id="manageDeleteNumberBtn" type="button" class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700">Дугаар устгах</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="toolsTable" class="w-full border-collapse">
+                    <thead id="toolsTableHeader"></thead>
+                    <tbody id="toolsTableBody"></tbody>
+                    <tfoot id="toolsTableFooter"></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-6 bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">Ашиглалтын бүртгэлийн түүх</h2>
+            <div id="usageHistoryDuplicate"></div>
+        </div>
+    </div>
+
+    <div id="qrModal" class="modal hidden">
+        <div class="modal-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800">QR код уншуулах</h3>
+                <button id="closeQrModal" type="button" class="text-2xl leading-none text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <p class="text-sm text-gray-600 mb-4">Гар утасны камераар QR уншуулахад нэр автоматаар бүртгэлд хадгалагдана.</p>
+            <div id="qrReader" class="qr-reader"></div>
+            <div id="scanStatus" class="scan-status mt-4 text-sm text-gray-600"></div>
+        </div>
+    </div>
+
+    <script>
+        // Багажны анхны жагсаалт
+        const initialTools = [
+            { id: 1, name: 'ЛАП', numbers: ['021', '022', '023', '024', '025'] },
+            { id: 2, name: 'Замын түлхүүр', numbers: ['021', '022', '023', '024', '025', '026'] },
+            { id: 3, name: 'АРС түлхүүр', numbers: ['021', '022', '023', '024', '025', '026', '027'] },
+            { id: 4, name: 'Босоо түлхүүр', numbers: ['021', '022', '023', '024', '025', '026', '027', '028'] }
+        ];
+
+        // Төлөвүүд (State)
+        const DISPLAY_ONLY = true;
+        const ALLOW_MANUAL_NUMBER_EDIT = true;
+        const MANUAL_USAGE_TOTAL_STORAGE_KEY = 'manualUsageTotal';
+        let tools = [];
+        let removedItems = {};
+        let usageData = [];
+        let manualUsageTotalOverride = null;
+        let isEditingUsageTotal = false;
+        let editMode = false;
+        let editingCellKey = null;
+        let selectedRegistrantName = '';
+        let html5QrCode = null;
+        let qrScanInProgress = false;
+        let qrScannerStarting = false;
+        let qrScannerStopPromise = null;
+        let activeUsageView = 'log';
+        const SHEET_ID = '1YrGzepKEZ70eZBj9Rxshu0amfhtbDY6vYyo1x5jbx_s';
+        const SHEET_GID = '0';
+        const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzEZ28txc51rzR74sh8f7Yrl5-__uL1JYOE2KkbSiknfp_vUx-m4Ku_YQzkkaiW8xx9/exec';
+        const FALLBACK_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZV214_EA2YvQtNh2rYFQOaWj7JMt9BkvEw7pn1L7BlTw7_iWTyWZrVkxHIntNHgZQ/exec';
+        const PD1_SHEET_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWCI6xEW3Hpzc05rAiLO_5d7n34HYK2NmcIdxrKs_EThl_4EOWfHAVtXlVRmYyMkYe/exec';
+        const KNOWN_TOOL_ACTIONS = [
+            'Ажилд ашиглах',
+            'Засварт өгсөн',
+            'Томилолтонд явуулсан',
+            'Стандарт бус',
+            'Бусад'
+        ];
+        const DEFAULT_REMOVED_ITEMS = {
+            '1-4': true,
+            '2-5': true,
+            '3-6': true,
+            '4-7': true
+        };
+        const SHEETS_SYNC_EVENT_TYPE = 'hatyy_usage';
+        const SHEETS_POLL_INTERVAL_MS = 5000;
+        const CURRENT_USAGE_SESSION_GAP_MS = 60 * 60 * 1000;
+        let sheetsPollTimer = null;
+        let isFetchingSheetState = false;
+        let lastAppliedSheetVersion = '';
+
+        function ensureUsageTimestamps() {
+            usageData.forEach(entry => {
+                if (!entry.timestamp) {
+                    entry.timestamp = entry.id || Date.now();
+                }
+                if (!('registrant' in entry)) {
+                    entry.registrant = '';
+                }
+            });
+        }
+
+        function getEntryTimestamp(entry) {
+            return entry.timestamp || entry.id || 0;
+        }
+
+        function isInventoryUsageEntry(entry) {
+            const tool = tools.find(item => item.name === entry.name);
+            return Boolean(tool && tool.numbers.includes(entry.number));
+        }
+
+        function buildLatestUsageSession(entries) {
+            if (!entries.length) {
+                return [];
+            }
+
+            const sortedEntries = [...entries].sort((a, b) => getEntryTimestamp(b) - getEntryTimestamp(a));
+            const latestSession = [sortedEntries[0]];
+
+            for (let index = 1; index < sortedEntries.length; index += 1) {
+                const previousEntry = sortedEntries[index - 1];
+                const currentEntry = sortedEntries[index];
+                const previousDate = (previousEntry.date || '').split(' ')[0];
+                const currentDate = (currentEntry.date || '').split(' ')[0];
+                const timeGap = Math.abs(getEntryTimestamp(previousEntry) - getEntryTimestamp(currentEntry));
+
+                if (previousDate !== currentDate || timeGap > CURRENT_USAGE_SESSION_GAP_MS) {
+                    break;
+                }
+
+                latestSession.push(currentEntry);
+            }
+
+            const uniqueKeys = new Set();
+            return latestSession.filter(entry => {
+                const entryKey = `${entry.name}||${entry.number}`;
+                if (uniqueKeys.has(entryKey)) {
+                    return false;
+                }
+                uniqueKeys.add(entryKey);
+                return true;
+            });
+        }
+
+        function getCurrentUsageEntries() {
+            const activeEntries = usageData.filter(item => !item.deleted);
+            const inventoryEntries = activeEntries.filter(isInventoryUsageEntry);
+            const latestInventorySession = buildLatestUsageSession(inventoryEntries);
+
+            if (latestInventorySession.length) {
+                return latestInventorySession;
+            }
+
+            return buildLatestUsageSession(activeEntries);
+        }
+
+        function getActiveUsageKeySet() {
+            return new Set(getCurrentUsageEntries().map(item => `${item.name}||${item.number}`));
+        }
+
+        function getAvailableCountByTool(tool, activeUsageKeys) {
+            return tool.numbers.filter((number, idx) => {
+                const key = `${tool.id}-${idx}`;
+                if (removedItems[key]) return false;
+                const usageKey = `${tool.name}||${number}`;
+                return !activeUsageKeys.has(usageKey);
+            }).length;
+        }
+
+        function getToolById(toolId) {
+            return tools.find(tool => tool.id === toolId);
+        }
+
+        function isDuplicateNumber(tool, candidateNumber, currentIndex) {
+            return tool.numbers.some((number, idx) => idx !== currentIndex && number === candidateNumber);
+        }
+
+        function syncEditedNumberReferences(tool, oldNumber, newNumber) {
+            usageData.forEach(entry => {
+                if (entry.name === tool.name && entry.number === oldNumber) {
+                    entry.number = newNumber;
+                }
+            });
+        }
+
+        function restoreEditedNumberReferences(tool, numberToRestore) {
+            const matchingEntries = usageData
+                .filter(entry => entry.name === tool.name && entry.number === numberToRestore && entry.deleted)
+                .sort((a, b) => getEntryTimestamp(b) - getEntryTimestamp(a));
+
+            if (matchingEntries.length) {
+                matchingEntries[0].deleted = false;
+            }
+        }
+
+        function removeEditedNumberReferences(tool, numberToRemove) {
+            usageData = usageData.map(entry => {
+                if (entry.name === tool.name && entry.number === numberToRemove && !entry.deleted) {
+                    return { ...entry, deleted: true };
+                }
+                return entry;
+            });
+        }
+
+        function setRemovedItemState(toolId, numIdx, isRemoved) {
+            const key = `${toolId}-${numIdx}`;
+            const tool = getToolById(toolId);
+            const number = tool?.numbers[numIdx];
+
+            if (!tool || !number) {
+                return;
+            }
+
+            if (isRemoved) {
+                removedItems[key] = true;
+                removeEditedNumberReferences(tool, number);
+            } else {
+                delete removedItems[key];
+                restoreEditedNumberReferences(tool, number);
+            }
+        }
+        
+        // DOM элементүүд
+        const toolNameSelect = document.getElementById('toolName');
+        const toolNumberSelect = document.getElementById('toolNumber');
+        const toolCommentInput = document.getElementById('toolComment');
+        const toolActionSelect = document.getElementById('toolAction');
+        const addUsageButton = document.getElementById('addUsage');
+        const scanQrButton = document.getElementById('scanQrButton');
+        const selectedRegistrantBadge = document.getElementById('selectedRegistrant');
+        const clearRegistrantButton = document.getElementById('clearRegistrant');
+        const qrModal = document.getElementById('qrModal');
+        const scanStatus = document.getElementById('scanStatus');
+        const syncStatus = document.getElementById('syncStatus');
+        const usageLogTabButton = document.getElementById('usageLogTab');
+        const usageHistoryTabButton = document.getElementById('usageHistoryTab');
+        const usageLogPanel = document.getElementById('usageLogPanel');
+        const usageHistoryPanel = document.getElementById('usageHistoryPanel');
+        const toolManagementPanel = document.getElementById('toolManagementPanel');
+        const manageNewToolNameInput = document.getElementById('manageNewToolName');
+        const manageToolSelect = document.getElementById('manageToolSelect');
+        const manageToolNameEditInput = document.getElementById('manageToolNameEdit');
+        const manageAddToolBtn = document.getElementById('manageAddToolBtn');
+        const manageRenameToolBtn = document.getElementById('manageRenameToolBtn');
+        const manageDeleteToolBtn = document.getElementById('manageDeleteToolBtn');
+        const manageNumberToolSelect = document.getElementById('manageNumberToolSelect');
+        const manageNumberSelect = document.getElementById('manageNumberSelect');
+        const manageNumberValueInput = document.getElementById('manageNumberValue');
+        const manageAddNumberBtn = document.getElementById('manageAddNumberBtn');
+        const manageUpdateNumberBtn = document.getElementById('manageUpdateNumberBtn');
+        const manageDeleteNumberBtn = document.getElementById('manageDeleteNumberBtn');
+
+        function clearRemovedItemsForTool(toolId) {
+            const prefix = `${toolId}-`;
+            Object.keys(removedItems).forEach(key => {
+                if (key.startsWith(prefix)) {
+                    delete removedItems[key];
+                }
+            });
+        }
+
+        function setDeletedStateByToolName(toolName, isDeleted) {
+            usageData = usageData.map(entry => {
+                if (entry.name === toolName && Boolean(entry.deleted) !== isDeleted) {
+                    return { ...entry, deleted: isDeleted };
+                }
+                return entry;
+            });
+        }
+
+        // ===================================
+        // 1. Local Storage-ийн функцууд
+        // ===================================
+
+        function loadState() {
+            try {
+                const storedTools = JSON.parse(localStorage.getItem('tools'));
+                const storedRemovedItems = JSON.parse(localStorage.getItem('removedItems'));
+                const storedUsageData = JSON.parse(localStorage.getItem('usageData'));
+
+                tools = Array.isArray(storedTools)
+                    ? storedTools
+                    : initialTools.map(tool => ({ ...tool, numbers: [...tool.numbers] }));
+                removedItems = storedRemovedItems && typeof storedRemovedItems === 'object'
+                    ? storedRemovedItems
+                    : { ...DEFAULT_REMOVED_ITEMS };
+                usageData = Array.isArray(storedUsageData) ? storedUsageData : [];
+                const storedManualUsageTotal = Number(localStorage.getItem(MANUAL_USAGE_TOTAL_STORAGE_KEY));
+                manualUsageTotalOverride = Number.isFinite(storedManualUsageTotal) ? storedManualUsageTotal : null;
+            } catch (error) {
+                tools = initialTools.map(tool => ({ ...tool, numbers: [...tool.numbers] }));
+                removedItems = { ...DEFAULT_REMOVED_ITEMS };
+                usageData = [];
+                manualUsageTotalOverride = null;
+            }
+            ensureUsageTimestamps();
+        }
+
+        function compactUsageDataForStorage(entries) {
+            if (!Array.isArray(entries)) {
+                return [];
+            }
+
+            return entries.map(entry => ({
+                id: entry.id,
+                name: entry.name,
+                number: entry.number,
+                action: entry.action,
+                comment: entry.comment,
+                registrant: entry.registrant,
+                date: entry.date,
+                timestamp: entry.timestamp,
+                deleted: Boolean(entry.deleted),
+                source: entry.source || ''
+            }));
+        }
+
+        function setLocalStorageItemSafe(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (error) {
+                if (error && error.name === 'QuotaExceededError') {
+                    return false;
+                }
+                throw error;
+            }
+        }
+
+        function saveState() {
+            if (!ALLOW_MANUAL_NUMBER_EDIT && DISPLAY_ONLY) {
+                return;
+            }
+
+            setLocalStorageItemSafe('tools', JSON.stringify(tools));
+            setLocalStorageItemSafe('removedItems', JSON.stringify(removedItems));
+
+            const compactUsageData = compactUsageDataForStorage(usageData);
+            if (!setLocalStorageItemSafe('usageData', JSON.stringify(compactUsageData))) {
+                localStorage.removeItem('usageData');
+            }
+        }
+
+        function parseEditableNumber(value) {
+            const normalizedValue = String(value || '').replace(/[^\d-]/g, '').trim();
+            if (!normalizedValue) {
+                return null;
+            }
+
+            const parsedValue = Number(normalizedValue);
+            return Number.isFinite(parsedValue) ? parsedValue : null;
+        }
+
+        function saveManualUsageTotalOverride(value) {
+            if (value == null) {
+                localStorage.removeItem(MANUAL_USAGE_TOTAL_STORAGE_KEY);
+                manualUsageTotalOverride = null;
+                return;
+            }
+
+            manualUsageTotalOverride = value;
+            localStorage.setItem(MANUAL_USAGE_TOTAL_STORAGE_KEY, String(value));
+        }
+
+        function initializeUsageTotalEditing() {
+            const usageTotalElement = document.getElementById('usageTotal');
+            if (!usageTotalElement) {
+                return;
+            }
+
+            usageTotalElement.addEventListener('focus', () => {
+                isEditingUsageTotal = true;
+            });
+
+            usageTotalElement.addEventListener('dblclick', () => {
+                isEditingUsageTotal = true;
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(usageTotalElement);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+
+            usageTotalElement.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    usageTotalElement.blur();
+                }
+
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    isEditingUsageTotal = false;
+                    updateStats();
+                    usageTotalElement.blur();
+                }
+            });
+
+            usageTotalElement.addEventListener('blur', () => {
+                const parsedValue = parseEditableNumber(usageTotalElement.textContent);
+                saveManualUsageTotalOverride(parsedValue);
+                isEditingUsageTotal = false;
+                updateStats();
+            });
+        }
+
+        function setSyncStatus(message, tone = 'neutral') {
+            const toneClassMap = {
+                neutral: 'bg-slate-100 text-slate-600',
+                loading: 'bg-sky-100 text-sky-700',
+                success: 'bg-emerald-100 text-emerald-700',
+                warning: 'bg-amber-100 text-amber-700',
+                error: 'bg-rose-100 text-rose-700'
+            };
+
+            syncStatus.className = `rounded-full px-3 py-1 text-sm ${toneClassMap[tone] || toneClassMap.neutral}`;
+            syncStatus.textContent = message;
+        }
+
+        function getLatestLocalVersion() {
+            const latestUsageTimestamp = usageData.reduce((maxValue, entry) => {
+                return Math.max(maxValue, getEntryTimestamp(entry));
+            }, 0);
+
+            return `${latestUsageTimestamp}:${usageData.length}:${Object.keys(removedItems).length}:${tools.length}`;
+        }
+
+        function getSnapshotVersion(snapshotWrapper) {
+            if (!snapshotWrapper) {
+                return '';
+            }
+
+            const record = snapshotWrapper.record || {};
+            const snapshot = snapshotWrapper.snapshot || {};
+            const remoteUsageData = Array.isArray(snapshot.usageData)
+                ? snapshot.usageData
+                : (Array.isArray(snapshotWrapper.usageData) ? snapshotWrapper.usageData : []);
+            const latestUsageTimestamp = remoteUsageData.reduce((maxValue, entry) => {
+                const entryTimestamp = entry && (entry.timestamp || entry.id) ? Number(entry.timestamp || entry.id) : 0;
+                return Math.max(maxValue, entryTimestamp);
+            }, 0);
+
+            return [
+                String(record.savedAt || ''),
+                String(record.eventId || ''),
+                String(latestUsageTimestamp),
+                String(remoteUsageData.length)
+            ].join(':');
+        }
+
+        function normalizeRemoteSnapshot(payload) {
+            if (!payload) {
+                return null;
+            }
+
+            if (payload.data) {
+                return normalizeRemoteSnapshot(payload.data);
+            }
+
+            if (Array.isArray(payload)) {
+                return {
+                    record: {},
+                    snapshot: {
+                        tools: tools.length ? tools : initialTools,
+                        removedItems: {},
+                        usageData: payload
+                    },
+                    usageData: payload,
+                    tools: tools.length ? tools : initialTools,
+                    removedItems: {}
+                };
+            }
+
+            const hasSnapshot = payload.snapshot && typeof payload.snapshot === 'object';
+            const hasDirectState = Array.isArray(payload.usageData) || Array.isArray(payload.tools) || (payload.removedItems && typeof payload.removedItems === 'object');
+
+            if (hasSnapshot) {
+                return payload;
+            }
+
+            if (hasDirectState) {
+                return {
+                    record: payload.record || {},
+                    snapshot: {
+                        tools: Array.isArray(payload.tools) ? payload.tools : (tools.length ? tools : initialTools),
+                        removedItems: payload.removedItems && typeof payload.removedItems === 'object' ? payload.removedItems : {},
+                        usageData: Array.isArray(payload.usageData) ? payload.usageData : []
+                    },
+                    usageData: Array.isArray(payload.usageData) ? payload.usageData : [],
+                    tools: Array.isArray(payload.tools) ? payload.tools : (tools.length ? tools : initialTools),
+                    removedItems: payload.removedItems && typeof payload.removedItems === 'object' ? payload.removedItems : {}
+                };
+            }
+
+            return null;
+        }
+
+        function applyRemoteSnapshot(snapshotWrapper) {
+            const normalizedSnapshot = normalizeRemoteSnapshot(snapshotWrapper);
+            if (!normalizedSnapshot || !normalizedSnapshot.snapshot) {
+                return false;
+            }
+
+            const snapshot = normalizedSnapshot.snapshot;
+            const nextTools = Array.isArray(snapshot.tools)
+                ? snapshot.tools
+                : (Array.isArray(normalizedSnapshot.tools) ? normalizedSnapshot.tools : null);
+            const nextUsageData = Array.isArray(snapshot.usageData)
+                ? snapshot.usageData
+                : (Array.isArray(normalizedSnapshot.usageData) ? normalizedSnapshot.usageData : null);
+            const nextRemovedItems = snapshot.removedItems && typeof snapshot.removedItems === 'object'
+                ? snapshot.removedItems
+                : (normalizedSnapshot.removedItems && typeof normalizedSnapshot.removedItems === 'object' ? normalizedSnapshot.removedItems : null);
+
+            if (!nextTools || !nextUsageData || nextRemovedItems == null) {
+                return false;
+            }
+
+            tools = nextTools;
+            removedItems = nextRemovedItems;
+            usageData = nextUsageData;
+            ensureUsageTimestamps();
+            saveState();
+            updateUI();
+            setSyncStatus(`Мэдээлэл шинэчлэгдлээ: ${new Date().toLocaleTimeString('mn-MN')}`, 'success');
+            return true;
+        }
+
+        function tryParseJson(text) {
+            if (!text) {
+                return null;
+            }
+
+            try {
+                const parsed = JSON.parse(text);
+
+                if (typeof parsed === 'string') {
+                    const nestedText = parsed.trim();
+                    if ((nestedText.startsWith('{') && nestedText.endsWith('}')) || (nestedText.startsWith('[') && nestedText.endsWith(']'))) {
+                        return JSON.parse(nestedText);
+                    }
+                }
+
+                return parsed;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        async function fetchJsonFromUrl(url) {
+            const response = await fetch(url, {
+                method: 'GET',
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const responseText = await response.text();
+            const parsed = tryParseJson(responseText);
+
+            if (!parsed) {
+                if (!responseText.trim()) {
+                    return null;
+                }
+                throw new Error('JSON бус эсвэл хоосон response ирлээ');
+            }
+
+            return parsed;
+        }
+
+        function normalizeRecordKey(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/\s+/g, '')
+                .replace(/[_-]/g, '')
+                .trim();
+        }
+
+        function getRecordField(record, candidates) {
+            if (!record || typeof record !== 'object') {
+                return '';
+            }
+
+            for (const candidate of candidates) {
+                if (candidate in record && record[candidate] != null && String(record[candidate]).trim() !== '') {
+                    return record[candidate];
+                }
+            }
+
+            const normalizedCandidates = candidates.map(normalizeRecordKey);
+            for (const [key, value] of Object.entries(record)) {
+                if (normalizedCandidates.includes(normalizeRecordKey(key)) && value != null && String(value).trim() !== '') {
+                    return value;
+                }
+            }
+
+            return '';
+        }
+
+        function normalizePd1SheetRecord(record, rowIndex) {
+            if (!record || typeof record !== 'object') {
+                return null;
+            }
+
+            const rawColumns = Object.keys(record).filter(key => key !== 'rowNumber');
+            const orderedRawValues = rawColumns
+                .filter(key => key !== 'rowNumber')
+                .map(key => record[key]);
+            const orderedValues = rawColumns
+                .filter(key => key !== 'rowNumber')
+                .map(key => record[key])
+                .filter(value => value != null && String(value).trim() !== '');
+            const toolNameOptions = (tools.length ? tools : initialTools).map(tool => tool.name);
+            const normalizedOrderedValues = orderedValues.map(value => String(value || '').trim());
+            const detectedAction = normalizedOrderedValues.find(value => KNOWN_TOOL_ACTIONS.includes(value)) || '';
+            const detectedToolName = normalizedOrderedValues.find(value => toolNameOptions.includes(value)) || '';
+            const parsedDateCandidates = normalizedOrderedValues
+                .map((value, index) => ({
+                    index,
+                    value,
+                    timestamp: Date.parse(value)
+                }))
+                .filter(candidate => !Number.isNaN(candidate.timestamp));
+            const latestParsedDateCandidate = parsedDateCandidates.length
+                ? parsedDateCandidates[parsedDateCandidates.length - 1]
+                : null;
+            const numericCandidatesBeforeDate = latestParsedDateCandidate
+                ? normalizedOrderedValues
+                    .slice(0, latestParsedDateCandidate.index)
+                    .filter(value => /^\d+$/.test(value))
+                : [];
+
+            const fallbackValueAt = index => orderedValues[index] != null ? orderedValues[index] : '';
+            const rawDate = getRecordField(record, ['savedAt', 'SavedAt', 'date', 'Date', 'огноо', 'Огноо', 'timestamp'])
+                || (latestParsedDateCandidate ? latestParsedDateCandidate.value : '')
+                || fallbackValueAt(0);
+            const rawName = getRecordField(record, ['name', 'Name', 'нэр', 'Нэр', 'toolName', 'Багажны нэр'])
+                || detectedToolName
+                || fallbackValueAt(1)
+                || fallbackValueAt(0);
+            const rawNumber = getRecordField(record, ['number', 'Number', 'дугаар', 'Дугаар', 'toolNumber'])
+                || numericCandidatesBeforeDate[0]
+                || fallbackValueAt(2)
+                || '';
+            const rawAction = getRecordField(record, ['toolAction', 'ToolAction', 'action', 'Action', 'зорилго', 'Зорилго'])
+                || detectedAction
+                || 'Ажилд ашиглах';
+            const remainingOrderedValues = [...orderedValues];
+            const consumeValue = target => {
+                const normalizedTarget = String(target || '').trim();
+                if (!normalizedTarget) {
+                    return;
+                }
+
+                const matchIndex = remainingOrderedValues.findIndex(value => String(value || '').trim() === normalizedTarget);
+                if (matchIndex >= 0) {
+                    remainingOrderedValues.splice(matchIndex, 1);
+                }
+            };
+
+            consumeValue(rawDate);
+            consumeValue(rawName);
+            consumeValue(rawNumber);
+            consumeValue(rawAction);
+            const rawComment = getRecordField(record, ['comment', 'Comment', 'тайлбар', 'Тайлбар'])
+                || remainingOrderedValues[0]
+                || '';
+            const rawRegistrant = getRecordField(record, ['registrant', 'Registrant', 'бүртгэл', 'Бүртгэл', 'registeredBy'])
+                || orderedRawValues[orderedRawValues.length - 1]
+                || '';
+
+            const parsedTimestamp = Date.parse(String(rawDate || ''));
+            const rowNumber = Number(record.rowNumber || rowIndex + 1);
+
+            return {
+                id: `pd1-${rowNumber}-${String(rawDate || Date.now())}`,
+                name: String(rawName || 'Тодорхойгүй').trim(),
+                number: String(rawNumber || '-').trim() || '-',
+                action: String(rawAction || 'Ажилд ашиглах').trim() || 'Ажилд ашиглах',
+                comment: String(rawComment || '').trim(),
+                registrant: String(rawRegistrant || '').trim(),
+                date: String(rawDate || 'Огноо тодорхойгүй').trim() || 'Огноо тодорхойгүй',
+                timestamp: Number.isNaN(parsedTimestamp) ? rowNumber : parsedTimestamp,
+                deleted: false,
+                source: 'pd-1-sheet',
+                rawRecord: record,
+                rawColumns,
+                rawValues: Object.values(record)
+            };
+        }
+
+        function buildSnapshotFromPd1Json(payload) {
+            const rows = Array.isArray(payload)
+                ? payload
+                : (Array.isArray(payload?.rows) ? payload.rows : (Array.isArray(payload?.data) ? payload.data : []));
+
+            const usageRows = rows
+                .map((row, rowIndex) => normalizePd1SheetRecord(row, rowIndex))
+                .filter(Boolean)
+                .reverse();
+
+            if (!usageRows.length) {
+                return null;
+            }
+
+            return {
+                record: {
+                    source: 'pd-1-sheet',
+                    savedAt: usageRows[0].date || ''
+                },
+                snapshot: {
+                    tools: tools.length ? tools : initialTools,
+                    removedItems: {},
+                    usageData: usageRows
+                },
+                usageData: usageRows,
+                tools: tools.length ? tools : initialTools,
+                removedItems: {}
+            };
+        }
+
+        function fetchJsonpFromUrl(url) {
+            return new Promise((resolve, reject) => {
+                const callbackName = `hatyyDisplayJsonp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+                const script = document.createElement('script');
+                const cleanup = () => {
+                    delete window[callbackName];
+                    script.remove();
+                };
+
+                window[callbackName] = payload => {
+                    cleanup();
+                    resolve(payload || null);
+                };
+
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('JSONP ачаалж чадсангүй'));
+                };
+
+                script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
+                document.body.appendChild(script);
+            });
+        }
+
+        function parseCsvText(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentValue = '';
+            let inQuotes = false;
+
+            for (let index = 0; index < text.length; index += 1) {
+                const char = text[index];
+                const nextChar = text[index + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentValue += '"';
+                        index += 1;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+
+                if (char === ',' && !inQuotes) {
+                    currentRow.push(currentValue);
+                    currentValue = '';
+                    continue;
+                }
+
+                if ((char === '\n' || char === '\r') && !inQuotes) {
+                    if (char === '\r' && nextChar === '\n') {
+                        index += 1;
+                    }
+                    currentRow.push(currentValue);
+                    if (currentRow.some(cell => cell.trim() !== '')) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentValue = '';
+                    continue;
+                }
+
+                currentValue += char;
+            }
+
+            if (currentValue !== '' || currentRow.length) {
+                currentRow.push(currentValue);
+            }
+            if (currentRow.some(cell => cell.trim() !== '')) {
+                rows.push(currentRow);
+            }
+
+            return rows;
+        }
+
+        function normalizeSheetCsvRow(row, rowIndex) {
+            if (!Array.isArray(row) || row.length === 0) {
+                return null;
+            }
+
+            const cells = row.map(cell => String(cell || '').replace(/\s+/g, ' ').trim());
+            const [date = '', col1 = '', col2 = '', col3 = '', col4 = '', col5 = '', col6 = '', col7 = '', col8 = ''] = cells;
+            if (!date && !col1 && !col2 && !col3 && !col4 && !col5 && !col6) {
+                return null;
+            }
+
+            const explicitAction = cells.find(cell => KNOWN_TOOL_ACTIONS.includes(cell)) || '';
+            const hasLegacyShape = col3 === 'usage_add' && !col1 && !col2;
+            const hasStructuredUsageShape = col3 === 'usage_add' && Boolean(col1 || col2);
+            const structuredAction = explicitAction || (hasStructuredUsageShape && KNOWN_TOOL_ACTIONS.includes(col4) ? col4 : '');
+            const name = hasLegacyShape ? (col4 || 'Тодорхойгүй') : (col1 || 'Тодорхойгүй');
+            const number = hasLegacyShape ? '-' : (col2 || '-');
+            const action = structuredAction || ((col3 && col3 !== 'usage_add') ? col3 : 'Ажилд ашиглах');
+            const comment = hasLegacyShape
+                ? ''
+                : (hasStructuredUsageShape
+                    ? ((structuredAction && col4 === structuredAction) ? col5 : col4)
+                    : ((col4 && col4 !== name && col4 !== action) ? col4 : ''));
+            const registrant = hasLegacyShape
+                ? (col5 || col6 || '')
+                : (hasStructuredUsageShape
+                    ? ((structuredAction && col4 === structuredAction) ? (col6 || col7 || col8 || '') : (col5 || col6 || col7 || ''))
+                    : (col5 || col6 || ''));
+            const deletedTokens = new Set(['true', 'deleted', 'remove', 'removed', 'устгагдсан']);
+            const deleted = cells.some(cell => deletedTokens.has(cell.toLowerCase()));
+            const timestamp = Date.parse(date);
+
+            return {
+                id: `sheet-${rowIndex}-${date || Date.now()}`,
+                name,
+                number,
+                action,
+                comment,
+                registrant,
+                date: date || 'Огноо тодорхойгүй',
+                timestamp: Number.isNaN(timestamp) ? rowIndex : timestamp,
+                deleted
+            };
+        }
+
+        function buildSnapshotFromSheetCsv(text) {
+            const rows = parseCsvText(text);
+            const usageRows = rows
+                .map((row, rowIndex) => normalizeSheetCsvRow(row, rowIndex))
+                .filter(Boolean)
+                .reverse();
+
+            if (!usageRows.length) {
+                return null;
+            }
+
+            return {
+                record: {
+                    source: 'google-sheet-csv',
+                    savedAt: usageRows[0].date || ''
+                },
+                snapshot: {
+                    tools: tools.length ? tools : initialTools,
+                    removedItems: {},
+                    usageData: usageRows
+                },
+                usageData: usageRows,
+                tools: tools.length ? tools : initialTools,
+                removedItems: {}
+            };
+        }
+
+        async function fetchSheetCsvSnapshot() {
+            const response = await fetch(`${SHEET_CSV_URL}&t=${Date.now()}`, {
+                method: 'GET',
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Sheet CSV HTTP ${response.status}`);
+            }
+
+            const responseText = await response.text();
+            if (!responseText.trim()) {
+                return null;
+            }
+
+            return buildSnapshotFromSheetCsv(responseText);
+        }
+
+        function buildUsageRowMarkup(entry, index, cellPaddingClass = 'p-3') {
+            const rowClass = entry.deleted ? 'opacity-60 line-through text-red-600' : 'hover:bg-gray-50';
+            return `
+                <tr class="${rowClass}">
+                    <td class="border border-gray-300 ${cellPaddingClass} text-center">${index + 1}</td>
+                    <td class="border border-gray-300 ${cellPaddingClass}">${entry.name}</td>
+                    <td class="border border-gray-300 ${cellPaddingClass} text-center">${entry.number}</td>
+                    <td class="border border-gray-300 ${cellPaddingClass}">${entry.action || 'Ажилд ашиглах'}</td>
+                    <td class="border border-gray-300 ${cellPaddingClass}">${entry.comment || '-'}</td>
+                    <td class="border border-gray-300 ${cellPaddingClass} text-sm text-gray-600">${formatDisplayDate(entry.date)}</td>
+                    <td class="border border-gray-300 ${cellPaddingClass}">${entry.registrant || '-'}</td>
+                </tr>
+            `;
+        }
+
+        function setActiveUsageView(view) {
+            activeUsageView = view === 'history' ? 'history' : 'log';
+
+            if (!usageLogPanel || !usageHistoryPanel || !usageLogTabButton || !usageHistoryTabButton) {
+                return;
+            }
+
+            const isLogView = activeUsageView === 'log';
+            usageLogPanel.classList.toggle('hidden', !isLogView);
+            usageHistoryPanel.classList.toggle('hidden', isLogView);
+
+            usageLogTabButton.className = isLogView
+                ? 'flex-1 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition lg:flex-none'
+                : 'flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-700 lg:flex-none';
+            usageHistoryTabButton.className = !isLogView
+                ? 'flex-1 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition lg:flex-none'
+                : 'flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-700 lg:flex-none';
+        }
+
+        async function fetchLatestSheetState() {
+            if (isFetchingSheetState) {
+                return false;
+            }
+
+            isFetchingSheetState = true;
+            setSyncStatus('Мэдээлэл татаж байна...', 'loading');
+
+            try {
+                const result = await fetchJsonFromUrl(`${PD1_SHEET_SCRIPT_URL}?sheet=pd-1&t=${Date.now()}`);
+                const normalizedSnapshot = buildSnapshotFromPd1Json(result);
+
+                if (!normalizedSnapshot) {
+                    setSyncStatus('pd-1 шитнээс ашиглах мөр олдсонгүй.', 'warning');
+                    return false;
+                }
+
+                const remoteVersion = getSnapshotVersion(normalizedSnapshot);
+                const localVersion = getLatestLocalVersion();
+
+                if (!remoteVersion || remoteVersion === lastAppliedSheetVersion || remoteVersion === localVersion) {
+                    setSyncStatus(`Өөрчлөлтгүй: ${new Date().toLocaleTimeString('mn-MN')}`, 'neutral');
+                    return false;
+                }
+
+                const applied = applyRemoteSnapshot(normalizedSnapshot);
+                if (applied) {
+                    lastAppliedSheetVersion = remoteVersion;
+                    return true;
+                }
+
+                setSyncStatus('Өгөгдөл ирсэн ч дэлгэцэнд хөрвүүлж чадсангүй.', 'warning');
+                return false;
+            } catch (error) {
+                console.error('Sheets-с хамгийн сүүлийн төлөв татахад алдаа гарлаа:', error);
+                setSyncStatus(`Алдаа: ${error.message || 'тодорхойгүй'}`, 'error');
+                return false;
+            } finally {
+                isFetchingSheetState = false;
+            }
+        }
+
+        function startSheetPolling() {
+            if (sheetsPollTimer) {
+                clearInterval(sheetsPollTimer);
+            }
+
+            sheetsPollTimer = setInterval(() => {
+                fetchLatestSheetState();
+            }, SHEETS_POLL_INTERVAL_MS);
+        }
+
+        function getNumericTextContent(elementId, fallbackValue = 0) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                return fallbackValue;
+            }
+
+            const normalizedValue = String(element.textContent || '').replace(/[^\d-]/g, '').trim();
+            const parsedValue = Number(normalizedValue);
+            return Number.isFinite(parsedValue) ? parsedValue : fallbackValue;
+        }
+
+        function buildSheetPayload(newEntry) {
+            const statsSnapshot = getStatsSnapshot();
+            const totalTools = getNumericTextContent('totalTools', statsSnapshot.total);
+            const activeUsageTotal = getNumericTextContent('usageTotal', statsSnapshot.usage);
+            const remainingTotal = getNumericTextContent('remainingTotal', totalTools - activeUsageTotal);
+
+            return {
+                savedAt: new Date().toISOString(),
+                action: 'usage_add',
+                eventType: SHEETS_SYNC_EVENT_TYPE,
+                toolName: newEntry.name,
+                toolNumber: newEntry.number,
+                toolAction: newEntry.action || '',
+                comment: newEntry.comment || '',
+                registrant: newEntry.registrant || '',
+                status: newEntry.deleted ? 'deleted' : 'active',
+                oldNumber: '',
+                newNumber: '',
+                deleted: newEntry.deleted ? 'true' : 'false',
+                eventId: String(newEntry.id),
+                eventDate: newEntry.date,
+                pageName: 'hatyy',
+                pageTitle: document.title || 'Хатуу багаж',
+                totalTools: String(totalTools),
+                usageTotal: String(activeUsageTotal),
+                remainingTotal: String(remainingTotal),
+                usageTotalValue: String(activeUsageTotal),
+                detailsJson: JSON.stringify(newEntry),
+                toolsJson: JSON.stringify(tools),
+                removedItemsJson: JSON.stringify(removedItems),
+                usageDataJson: JSON.stringify(usageData),
+                snapshotJson: JSON.stringify({
+                    tools,
+                    removedItems,
+                    usageData
+                })
+            };
+        }
+
+        async function sendUsageToSheet(newEntry) {
+            const payload = buildSheetPayload(newEntry);
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    keepalive: true
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json().catch(() => null);
+                if (result && result.ok === false) {
+                    throw new Error(result.message || 'Google Sheets хадгалалт амжилтгүй боллоо.');
+                }
+
+                console.log('Sheets рүү амжилттай илгээгдлээ');
+                lastAppliedSheetVersion = getLatestLocalVersion();
+                return true;
+            } catch (error) {
+                console.error('Sheets рүү шууд илгээхэд алдаа гарлаа:', error);
+
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        cache: 'no-cache',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload),
+                        keepalive: true
+                    });
+                    console.log('Sheets рүү no-cors нөөц сувгаар илгээгдлээ');
+                    lastAppliedSheetVersion = getLatestLocalVersion();
+                    return true;
+                } catch (fallbackError) {
+                    console.error('Sheets рүү илгээхэд алдаа гарлаа:', fallbackError);
+                    return false;
+                }
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatDisplayDate(value) {
+            if (!value) {
+                return '-';
+            }
+
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return escapeHtml(value);
+            }
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            let hours = date.getHours();
+            const minutes = date.getMinutes();
+            const suffix = hours >= 12 ? 'PM' : 'AM';
+
+            hours = hours % 12 || 12;
+
+            return `${year}-${month}-${day} ${hours}:${minutes} ${suffix}`;
+        }
+
+        function setSelectedRegistrant(name) {
+            selectedRegistrantName = name.trim();
+            if (!selectedRegistrantBadge) {
+                return;
+            }
+            selectedRegistrantBadge.textContent = selectedRegistrantName || 'QR уншаагүй';
+            selectedRegistrantBadge.className = selectedRegistrantName
+                ? 'rounded-full bg-emerald-50 px-3 py-1 text-emerald-700'
+                : 'rounded-full bg-sky-50 px-3 py-1 text-sky-700';
+        }
+
+        function extractQrName(decodedText) {
+            try {
+                const qrData = JSON.parse(decodedText);
+                return String(qrData.name || qrData.fullName || qrData.employeeName || qrData.employee || '').trim();
+            } catch (error) {
+                return String(decodedText || '').trim();
+            }
+        }
+
+        async function stopQrScanner() {
+            if (qrScannerStopPromise) {
+                return qrScannerStopPromise;
+            }
+
+            if (!html5QrCode) {
+                qrScannerStarting = false;
+                return;
+            }
+
+            const scanner = html5QrCode;
+            html5QrCode = null;
+            qrScannerStarting = false;
+
+            qrScannerStopPromise = (async () => {
+                try {
+                    if (scanner.isScanning) {
+                        await scanner.stop();
+                    }
+                    await scanner.clear();
+                } catch (error) {
+                    console.warn('QR scanner stop error:', error);
+                } finally {
+                    qrScannerStopPromise = null;
+                }
+            })();
+
+            return qrScannerStopPromise;
+        }
+
+        async function closeQrModal() {
+            await stopQrScanner();
+            qrModal.classList.remove('show');
+            qrScanInProgress = false;
+            scanStatus.textContent = '';
+        }
+
+        async function handleQrScanSuccess(decodedText) {
+            if (qrScanInProgress) {
+                return;
+            }
+
+            const scannedName = extractQrName(decodedText);
+            if (!scannedName) {
+                scanStatus.innerHTML = '<span class="text-red-600">QR кодын мэдээллээс нэр олдсонгүй.</span>';
+                return;
+            }
+
+            qrScanInProgress = true;
+            setSelectedRegistrant(scannedName);
+            scanStatus.innerHTML = `<span class="text-emerald-600">QR амжилттай уншигдлаа: <strong>${escapeHtml(scannedName)}</strong></span>`;
+            await closeQrModal();
+        }
+
+        function handleQrScanError() {
+        }
+
+        async function openQrModal() {
+            if (qrScannerStarting || qrScanInProgress) {
+                return;
+            }
+
+            if (qrScannerStopPromise) {
+                await qrScannerStopPromise;
+            }
+
+            qrModal.classList.add('show');
+            scanStatus.textContent = 'Камер асаж байна...';
+            qrScannerStarting = true;
+            html5QrCode = new Html5Qrcode('qrReader');
+
+            try {
+                await html5QrCode.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 260, height: 260 }, aspectRatio: 1.0 },
+                    handleQrScanSuccess,
+                    handleQrScanError
+                );
+                scanStatus.textContent = 'QR кодоо камерт харуулна уу.';
+            } catch (error) {
+                console.error('Camera start error:', error);
+                scanStatus.innerHTML = '<span class="text-red-600">Камер ашиглах боломжгүй байна. Зөвшөөрлөө шалгана уу.</span>';
+                await stopQrScanner();
+            } finally {
+                qrScannerStarting = false;
+            }
+        }
+
+        // ===================================
+        // 2. Тооцоолол болон UI Шинэчлэх
+        // ===================================
+
+        function calculateTotal() {
+            return tools.reduce((total, tool) => {
+                return total + tool.numbers.filter((_, idx) => !removedItems[`${tool.id}-${idx}`]).length;
+            }, 0);
+        }
+
+        function calculateTotalFromState(stateTools, stateRemovedItems) {
+            return stateTools.reduce((total, tool) => {
+                return total + tool.numbers.filter((_, idx) => !stateRemovedItems[`${tool.id}-${idx}`]).length;
+            }, 0);
+        }
+
+        function getStatsSnapshot() {
+            try {
+                const storedTools = JSON.parse(localStorage.getItem('tools'));
+                const storedRemovedItems = JSON.parse(localStorage.getItem('removedItems'));
+                const storedUsageData = JSON.parse(localStorage.getItem('usageData'));
+
+                if (Array.isArray(storedTools)) {
+                    return {
+                        total: calculateTotalFromState(storedTools, storedRemovedItems && typeof storedRemovedItems === 'object' ? storedRemovedItems : {}),
+                        usage: Array.isArray(storedUsageData) ? storedUsageData.filter(item => item && !item.deleted).length : 0
+                    };
+                }
+            } catch (error) {
+                console.warn('localStorage статистик уншихад алдаа гарлаа:', error);
+            }
+
+            return {
+                total: calculateTotal(),
+                usage: usageData.filter(item => !item.deleted).length
+            };
+        }
+
+        function updateStats() {
+            const statsSnapshot = getStatsSnapshot();
+            const total = statsSnapshot.total;
+            const usage = manualUsageTotalOverride != null ? manualUsageTotalOverride : statsSnapshot.usage;
+            const remaining = total - usage;
+
+            document.getElementById('totalTools').textContent = total;
+            if (!isEditingUsageTotal) {
+                document.getElementById('usageTotal').textContent = usage;
+            }
+            document.getElementById('remainingTotal').textContent = remaining;
+
+            // Ашиглалтын хүснэгтийн нийлбэрийг шинэчлэх
+            const usageTableFooter = document.getElementById('usageTableFooter');
+            if (!usageTableFooter) {
+                return;
+            }
+
+            usageTableFooter.innerHTML = `
+                <tr class="bg-gray-100 font-bold">
+                    <td colspan="6" class="border border-gray-300 p-3 text-right">
+                        НИЙТ ашиглалтад:
+                    </td>
+                    <td class="border border-gray-300 p-3 text-center bg-orange-100">
+                        ${usage}
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // Багажны жагсаалтыг зурах
+        function renderToolsTable() {
+            const tbody = document.getElementById('toolsTableBody');
+            const thead = document.getElementById('toolsTableHeader');
+            tbody.innerHTML = '';
+            const activeUsageKeys = getActiveUsageKeySet();
+            const maxColumns = Math.max(10, ...tools.map(tool => tool.numbers.length));
+
+            // Толгой хэсэг (Header)
+            thead.innerHTML = `
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-300 p-3 text-center">Д/д</th>
+                    <th class="border border-gray-300 p-3 text-center">Багажны нэр</th>
+                    <th class="border border-gray-300 p-3 text-center" colspan="${maxColumns}">
+                        Багажны дугаар
+                    </th>
+                    <th class="border border-gray-300 p-3 text-center bg-blue-50">Тоо</th>
+                </tr>
+            `;
+
+            // Мөрүүдийг зурах (Rows)
+            tools.forEach((tool, rowIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+
+                const count = getAvailableCountByTool(tool, activeUsageKeys);
+
+                let rowHTML = `
+                    <td class="border border-gray-300 p-3 text-center">${tool.id}</td>
+                    <td class="border border-gray-300 p-3 font-medium">
+                        <div class="flex items-center justify-between gap-2">
+                            <span>${tool.name}</span>
+                            ${editMode ? `
+                                <span class="flex gap-1">
+                                    <button type="button" onclick="quickRenameTool(${tool.id})" class="rounded bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-200">Нэр</button>
+                                    <button type="button" onclick="quickDeleteTool(${tool.id})" class="rounded bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200">Устгах</button>
+                                </span>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+
+                // Дугаарын нүднүүд (Number Cells)
+                for (let idx = 0; idx < maxColumns; idx++) {
+                    const number = tool.numbers[idx];
+                    const key = `${tool.id}-${idx}`;
+                    const isRemoved = removedItems[key];
+                    const usageKey = `${tool.name}||${number}`;
+                    const isInUse = number && activeUsageKeys.has(usageKey) && !isRemoved;
+                    const classes = ['border', 'border-gray-300', 'p-3', 'text-center', 'number-cell'];
+                    const isEditing = editingCellKey === key;
+                    const canEdit = ALLOW_MANUAL_NUMBER_EDIT && editMode && (!number || !isRemoved);
+                    if (canEdit) {
+                        classes.push('cursor-pointer', 'number-cell--editable');
+                    }
+                    if (!number) {
+                        classes.push('number-cell--empty');
+                    }
+                    if (isRemoved) {
+                        classes.push('number-cell--removed');
+                    }
+                    if (isInUse) {
+                        classes.push('number-cell--in-use');
+                    }
+                    if (isEditing) {
+                        classes.push('number-cell--editing');
+                    }
+                    rowHTML += `
+                        <td 
+                            class="${classes.join(' ')}"
+                            data-tool-id="${tool.id}"
+                            data-number-idx="${idx}"
+                            ${canEdit ? `onclick="startNumberEdit(${tool.id}, ${idx})"` : ''}
+                        >
+                            ${isEditing ? `<input type="text" class="number-input" value="${number || ''}" maxlength="20" data-edit-input="${key}" />` : `
+                                <div class="number-cell__content">
+                                    <span>${number || (editMode ? '+' : '')}</span>
+                                    ${ALLOW_MANUAL_NUMBER_EDIT && editMode && number && !isRemoved ? `<button type="button" class="number-cell__delete" onclick="deleteNumber(${tool.id}, ${idx}, event)">x</button>` : ''}
+                                </div>
+                            `}
+                        </td>
+                    `;
+                }
+
+                // Тоо (Count)
+                rowHTML += `
+                    <td class="border border-gray-300 p-3 text-center font-bold bg-blue-50">
+                        ${count}
+                    </td>
+                `;
+
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+            
+            // Нийлбэр мөр (Footer)
+                        const availableTotal = tools.reduce((total, tool) => total + getAvailableCountByTool(tool, activeUsageKeys), 0);
+            document.getElementById('toolsTableFooter').innerHTML = `
+                <tr class="bg-gray-100 font-bold">
+                    <td colspan="${maxColumns + 2}" class="border border-gray-300 p-3 text-right">
+                        НИЙЛБЭР:
+                    </td>
+                    <td class="border border-gray-300 p-3 text-center bg-blue-100">
+                                    ${availableTotal}
+                    </td>
+                </tr>
+            `;
+
+            // Lucide icons-ийг шинэчлэх
+            lucide.createIcons();
+            attachEditableCellInteractions();
+        }
+
+        function attachEditableCellInteractions() {
+            const cells = document.querySelectorAll('#toolsTableBody .number-cell--editable');
+            cells.forEach(cell => {
+                const removeHighlight = () => cell.classList.remove('number-cell--active');
+                cell.addEventListener('pointerdown', () => {
+                    if (cell.classList.contains('number-cell--editing')) {
+                        return;
+                    }
+                    if (!cell.classList.contains('number-cell--in-use')) {
+                        cell.classList.add('number-cell--active');
+                    }
+                });
+                cell.addEventListener('pointerup', removeHighlight);
+                cell.addEventListener('pointerleave', removeHighlight);
+            });
+
+            if (!editingCellKey) {
+                return;
+            }
+
+            const input = document.querySelector(`[data-edit-input="${editingCellKey}"]`);
+            if (!input) {
+                return;
+            }
+
+            input.focus();
+            input.select();
+            input.addEventListener('click', event => event.stopPropagation());
+            input.addEventListener('dblclick', event => event.stopPropagation());
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    commitNumberEdit();
+                }
+                if (event.key === 'Escape') {
+                    cancelNumberEdit();
+                }
+            });
+            input.addEventListener('blur', () => {
+                if (editingCellKey) {
+                    commitNumberEdit();
+                }
+            });
+        }
+
+        window.startNumberEdit = (toolId, numIdx) => {
+            if (!ALLOW_MANUAL_NUMBER_EDIT || !editMode) return;
+
+            const tool = getToolById(toolId);
+            const currentNumber = tool?.numbers[numIdx];
+            const key = `${toolId}-${numIdx}`;
+            if (!tool || removedItems[key]) {
+                return;
+            }
+
+            if (editingCellKey && editingCellKey !== key) {
+                commitNumberEdit();
+            }
+
+            editingCellKey = key;
+            renderToolsTable();
+        };
+
+        function cancelNumberEdit() {
+            if (!editingCellKey) {
+                return;
+            }
+            editingCellKey = null;
+            renderToolsTable();
+        }
+
+        function commitNumberEdit() {
+            if (!editingCellKey) {
+                return;
+            }
+
+            const [toolIdText, numIdxText] = editingCellKey.split('-');
+            const toolId = Number(toolIdText);
+            const numIdx = Number(numIdxText);
+            const input = document.querySelector(`[data-edit-input="${editingCellKey}"]`);
+            const nextNumber = input ? input.value.trim() : '';
+            const tool = getToolById(toolId);
+            const oldNumber = tool?.numbers[numIdx] || '';
+
+            editingCellKey = null;
+
+            if (!tool) {
+                renderToolsTable();
+                return;
+            }
+
+            if (!nextNumber) {
+                if (oldNumber) {
+                    tool.numbers.splice(numIdx, 1);
+                    removeEditedNumberReferences(tool, oldNumber);
+                    saveState();
+                    updateUI();
+                    return;
+                }
+                renderToolsTable();
+                return;
+            }
+
+            if (nextNumber === oldNumber) {
+                renderToolsTable();
+                return;
+            }
+
+            if (isDuplicateNumber(tool, nextNumber, numIdx)) {
+                alert('Ижил багаж дээр давхардсан дугаар оруулах боломжгүй.');
+                renderToolsTable();
+                return;
+            }
+
+            if (oldNumber) {
+                tool.numbers[numIdx] = nextNumber;
+                syncEditedNumberReferences(tool, oldNumber, nextNumber);
+            } else {
+                tool.numbers.splice(numIdx, 0, nextNumber);
+            }
+            saveState();
+            updateUI();
+        }
+
+        window.deleteNumber = (toolId, numIdx, event) => {
+            event.stopPropagation();
+            if (!ALLOW_MANUAL_NUMBER_EDIT || !editMode) return;
+
+            const tool = getToolById(toolId);
+            const numberToRemove = tool?.numbers[numIdx];
+            if (!tool || !numberToRemove) {
+                return;
+            }
+
+            tool.numbers.splice(numIdx, 1);
+            clearRemovedItemsForTool(tool.id);
+            removeEditedNumberReferences(tool, numberToRemove);
+            saveState();
+            updateUI();
+        };
+
+        window.quickRenameTool = toolId => {
+            if (!ALLOW_MANUAL_NUMBER_EDIT || !editMode) {
+                return;
+            }
+
+            if (!manageToolSelect || !manageToolNameEditInput) {
+                return;
+            }
+
+            manageToolSelect.value = String(toolId);
+            syncManagementNameInput();
+            manageToolNameEditInput.focus();
+            manageToolNameEditInput.select();
+        };
+
+        window.quickDeleteTool = toolId => {
+            if (!ALLOW_MANUAL_NUMBER_EDIT || !editMode) {
+                return;
+            }
+
+            if (!manageToolSelect) {
+                return;
+            }
+
+            manageToolSelect.value = String(toolId);
+            deleteToolFromPanel();
+        };
+
+        // Ашиглалтын бүртгэлийг зурах
+        function renderUsageTable() {
+            const tbody = document.getElementById('usageTableBody');
+            if (!tbody) {
+                return;
+            }
+            tbody.innerHTML = '';
+            const visibleData = getCurrentUsageEntries();
+            if (visibleData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="border border-gray-300 p-8 text-center text-gray-500">
+                            Ашиглалтын мэдээлэл байхгүй байна
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            visibleData.forEach((item, idx) => {
+                tbody.insertAdjacentHTML('beforeend', buildUsageRowMarkup(item, idx));
+            });
+            lucide.createIcons();
+        }
+
+        // Багажийн нэрийг select-д оруулах
+        function populateToolNames() {
+            if (!toolNameSelect) {
+                return;
+            }
+            toolNameSelect.innerHTML = '<option value="">Багажийн нэр</option>';
+            tools.forEach(tool => {
+                const option = document.createElement('option');
+                option.value = tool.name;
+                option.textContent = tool.name;
+                toolNameSelect.appendChild(option);
+            });
+        }
+
+        // Сонгогдсон нэр дээр үндэслэн дугаарыг select-д оруулах
+        function populateToolNumbers() {
+            if (!toolNameSelect || !toolNumberSelect || !addUsageButton) {
+                return;
+            }
+            const selectedName = toolNameSelect.value;
+            toolNumberSelect.innerHTML = '<option value="">Дугаар</option>';
+            toolNumberSelect.disabled = !selectedName;
+            addUsageButton.disabled = DISPLAY_ONLY || !toolNameSelect.value || !toolNumberSelect.value;
+
+            if (selectedName) {
+                const selectedTool = tools.find(t => t.name === selectedName);
+                if (selectedTool) {
+                    const activeUsageKeys = getActiveUsageKeySet();
+                    selectedTool.numbers.forEach((num, idx) => {
+                        const key = `${selectedTool.id}-${idx}`;
+                        const usageKey = `${selectedTool.name}||${num}`;
+                        if (removedItems[key] || activeUsageKeys.has(usageKey)) {
+                            return;
+                        }
+                        const option = document.createElement('option');
+                        option.value = num;
+                        option.textContent = num;
+                        toolNumberSelect.appendChild(option);
+                    });
+                }
+            }
+
+            if (![...toolNumberSelect.options].some(option => option.value === toolNumberSelect.value)) {
+                toolNumberSelect.value = '';
+            }
+            addUsageButton.disabled = DISPLAY_ONLY || !toolNameSelect.value || !toolNumberSelect.value;
+        }
+
+        function populateManagementToolSelects() {
+            if (!manageToolSelect || !manageNumberToolSelect) {
+                return;
+            }
+
+            const previousNameSelection = manageToolSelect.value;
+            const previousNumberToolSelection = manageNumberToolSelect.value;
+
+            manageToolSelect.innerHTML = '<option value="">Багаж сонгох</option>';
+            manageNumberToolSelect.innerHTML = '<option value="">Багаж сонгох</option>';
+
+            tools.forEach(tool => {
+                const optionForName = document.createElement('option');
+                optionForName.value = String(tool.id);
+                optionForName.textContent = `${tool.id}. ${tool.name}`;
+                manageToolSelect.appendChild(optionForName);
+
+                const optionForNumber = document.createElement('option');
+                optionForNumber.value = String(tool.id);
+                optionForNumber.textContent = `${tool.id}. ${tool.name}`;
+                manageNumberToolSelect.appendChild(optionForNumber);
+            });
+
+            if ([...manageToolSelect.options].some(option => option.value === previousNameSelection)) {
+                manageToolSelect.value = previousNameSelection;
+            }
+            if ([...manageNumberToolSelect.options].some(option => option.value === previousNumberToolSelection)) {
+                manageNumberToolSelect.value = previousNumberToolSelection;
+            }
+
+            if (!manageToolSelect.value && tools.length) {
+                manageToolSelect.value = String(tools[0].id);
+            }
+            if (!manageNumberToolSelect.value && tools.length) {
+                manageNumberToolSelect.value = String(tools[0].id);
+            }
+
+            syncManagementNameInput();
+            populateManagementNumberSelect();
+        }
+
+        function syncManagementNameInput() {
+            if (!manageToolSelect || !manageToolNameEditInput) {
+                return;
+            }
+
+            const selectedId = Number(manageToolSelect.value);
+            const selectedTool = getToolById(selectedId);
+            manageToolNameEditInput.value = selectedTool ? selectedTool.name : '';
+        }
+
+        function populateManagementNumberSelect() {
+            if (!manageNumberToolSelect || !manageNumberSelect) {
+                return;
+            }
+
+            const selectedId = Number(manageNumberToolSelect.value);
+            const selectedTool = getToolById(selectedId);
+            const previousNumber = manageNumberSelect.value;
+
+            manageNumberSelect.innerHTML = '<option value="">Дугаар сонгох</option>';
+
+            if (!selectedTool) {
+                if (manageNumberValueInput) {
+                    manageNumberValueInput.value = '';
+                }
+                return;
+            }
+
+            selectedTool.numbers.forEach(number => {
+                const option = document.createElement('option');
+                option.value = number;
+                option.textContent = number;
+                manageNumberSelect.appendChild(option);
+            });
+
+            if ([...manageNumberSelect.options].some(option => option.value === previousNumber)) {
+                manageNumberSelect.value = previousNumber;
+            }
+
+            if (!manageNumberSelect.value && selectedTool.numbers.length) {
+                manageNumberSelect.value = selectedTool.numbers[0];
+            }
+
+            if (manageNumberValueInput) {
+                manageNumberValueInput.value = manageNumberSelect.value || '';
+            }
+        }
+
+        function addToolFromPanel() {
+            const rawName = manageNewToolNameInput ? manageNewToolNameInput.value : '';
+            const nextName = String(rawName || '').trim();
+
+            if (!nextName) {
+                alert('Шинэ багажны нэрээ оруулна уу.');
+                return;
+            }
+
+            const hasDuplicateName = tools.some(tool => tool.name.toLowerCase() === nextName.toLowerCase());
+            if (hasDuplicateName) {
+                alert('Ийм нэртэй багаж бүртгэлтэй байна.');
+                return;
+            }
+
+            const nextId = tools.reduce((maxId, tool) => Math.max(maxId, Number(tool.id) || 0), 0) + 1;
+            tools.push({ id: nextId, name: nextName, numbers: [] });
+
+            if (manageNewToolNameInput) {
+                manageNewToolNameInput.value = '';
+            }
+
+            saveState();
+            updateUI();
+            if (manageToolSelect) {
+                manageToolSelect.value = String(nextId);
+            }
+            if (manageNumberToolSelect) {
+                manageNumberToolSelect.value = String(nextId);
+            }
+            syncManagementNameInput();
+            populateManagementNumberSelect();
+        }
+
+        function renameToolFromPanel() {
+            const selectedToolId = Number(manageToolSelect ? manageToolSelect.value : '');
+            const selectedTool = getToolById(selectedToolId);
+
+            if (!selectedTool) {
+                alert('Засах багаж сонгоно уу.');
+                return;
+            }
+
+            const oldName = selectedTool.name;
+            const nextName = String(manageToolNameEditInput ? manageToolNameEditInput.value : '').trim();
+
+            if (!nextName) {
+                alert('Шинэ нэрээ оруулна уу.');
+                return;
+            }
+
+            const hasDuplicateName = tools.some(tool => tool.id !== selectedTool.id && tool.name.toLowerCase() === nextName.toLowerCase());
+            if (hasDuplicateName) {
+                alert('Ийм нэртэй өөр багаж байна.');
+                return;
+            }
+
+            selectedTool.name = nextName;
+            usageData.forEach(entry => {
+                if (entry.name === oldName) {
+                    entry.name = nextName;
+                }
+            });
+
+            saveState();
+            updateUI();
+            syncManagementNameInput();
+        }
+
+        function deleteToolFromPanel() {
+            const selectedToolId = Number(manageToolSelect ? manageToolSelect.value : '');
+            const selectedTool = getToolById(selectedToolId);
+
+            if (!selectedTool) {
+                alert('Устгах багаж сонгоно уу.');
+                return;
+            }
+
+            const confirmed = window.confirm(`"${selectedTool.name}" багажийг бүрмөсөн устгах уу?`);
+            if (!confirmed) {
+                return;
+            }
+
+            clearRemovedItemsForTool(selectedTool.id);
+            setDeletedStateByToolName(selectedTool.name, true);
+            tools = tools.filter(tool => tool.id !== selectedTool.id);
+
+            saveState();
+            updateUI();
+        }
+
+        function addNumberFromPanel() {
+            const selectedToolId = Number(manageNumberToolSelect ? manageNumberToolSelect.value : '');
+            const selectedTool = getToolById(selectedToolId);
+
+            if (!selectedTool) {
+                alert('Эхлээд багаж сонгоно уу.');
+                return;
+            }
+
+            const nextNumber = String(manageNumberValueInput ? manageNumberValueInput.value : '').trim();
+            if (!nextNumber) {
+                alert('Нэмэх дугаараа оруулна уу.');
+                return;
+            }
+
+            if (selectedTool.numbers.includes(nextNumber)) {
+                alert('Ийм дугаар энэ багаж дээр бүртгэлтэй байна.');
+                return;
+            }
+
+            selectedTool.numbers.push(nextNumber);
+            clearRemovedItemsForTool(selectedTool.id);
+
+            saveState();
+            updateUI();
+            if (manageNumberSelect) {
+                manageNumberSelect.value = nextNumber;
+            }
+            if (manageNumberValueInput) {
+                manageNumberValueInput.value = nextNumber;
+            }
+        }
+
+        function updateNumberFromPanel() {
+            const selectedToolId = Number(manageNumberToolSelect ? manageNumberToolSelect.value : '');
+            const selectedTool = getToolById(selectedToolId);
+            const oldNumber = String(manageNumberSelect ? manageNumberSelect.value : '').trim();
+            const nextNumber = String(manageNumberValueInput ? manageNumberValueInput.value : '').trim();
+
+            if (!selectedTool || !oldNumber) {
+                alert('Засах дугаараа сонгоно уу.');
+                return;
+            }
+
+            if (!nextNumber) {
+                alert('Шинэ дугаараа оруулна уу.');
+                return;
+            }
+
+            const numberIndex = selectedTool.numbers.indexOf(oldNumber);
+            if (numberIndex === -1) {
+                alert('Сонгосон дугаар олдсонгүй.');
+                return;
+            }
+
+            if (nextNumber !== oldNumber && selectedTool.numbers.includes(nextNumber)) {
+                alert('Ижил дугаар оруулах боломжгүй.');
+                return;
+            }
+
+            selectedTool.numbers[numberIndex] = nextNumber;
+            clearRemovedItemsForTool(selectedTool.id);
+            syncEditedNumberReferences(selectedTool, oldNumber, nextNumber);
+
+            saveState();
+            updateUI();
+            if (manageNumberSelect) {
+                manageNumberSelect.value = nextNumber;
+            }
+        }
+
+        function deleteNumberFromPanel() {
+            const selectedToolId = Number(manageNumberToolSelect ? manageNumberToolSelect.value : '');
+            const selectedTool = getToolById(selectedToolId);
+            const numberToRemove = String(manageNumberSelect ? manageNumberSelect.value : '').trim();
+
+            if (!selectedTool || !numberToRemove) {
+                alert('Устгах дугаараа сонгоно уу.');
+                return;
+            }
+
+            const numberIndex = selectedTool.numbers.indexOf(numberToRemove);
+            if (numberIndex === -1) {
+                alert('Сонгосон дугаар олдсонгүй.');
+                return;
+            }
+
+            selectedTool.numbers.splice(numberIndex, 1);
+            clearRemovedItemsForTool(selectedTool.id);
+            removeEditedNumberReferences(selectedTool, numberToRemove);
+
+            saveState();
+            updateUI();
+        }
+
+        function initializeToolManagementPanel() {
+            if (!toolManagementPanel) {
+                return;
+            }
+
+            populateManagementToolSelects();
+
+            manageToolSelect?.addEventListener('change', syncManagementNameInput);
+            manageNumberToolSelect?.addEventListener('change', populateManagementNumberSelect);
+            manageNumberSelect?.addEventListener('change', () => {
+                if (manageNumberValueInput) {
+                    manageNumberValueInput.value = manageNumberSelect.value || '';
+                }
+            });
+
+            manageAddToolBtn?.addEventListener('click', addToolFromPanel);
+            manageRenameToolBtn?.addEventListener('click', renameToolFromPanel);
+            manageDeleteToolBtn?.addEventListener('click', deleteToolFromPanel);
+
+            manageAddNumberBtn?.addEventListener('click', addNumberFromPanel);
+            manageUpdateNumberBtn?.addEventListener('click', updateNumberFromPanel);
+            manageDeleteNumberBtn?.addEventListener('click', deleteNumberFromPanel);
+        }
+        
+        // UI-г бүрэн шинэчлэх
+        function updateUI() {
+            renderToolsTable();
+            renderUsageTable();
+            renderUsageHistory();
+            updateStats();
+            populateToolNames();
+            populateToolNumbers(); // Энэ нь disable-ийг хянана
+            populateManagementToolSelects();
+        }
+
+        function renderUsageHistory() {
+            const historyDivs = [
+                document.getElementById('usageHistoryDuplicate')
+            ].filter(Boolean);
+            if (!historyDivs.length) {
+                return;
+            }
+            if (!usageData.length) {
+                const emptyMarkup = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 p-3">№</th>
+                                    <th class="border border-gray-300 p-3">Нэр</th>
+                                    <th class="border border-gray-300 p-3">Дугаар</th>
+                                    <th class="border border-gray-300 p-3">Зорилго</th>
+                                    <th class="border border-gray-300 p-3">Тайлбар</th>
+                                    <th class="border border-gray-300 p-3">Огноо</th>
+                                    <th class="border border-gray-300 p-3">Бүртгэл</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="border border-gray-300 p-8 text-center text-gray-500">
+                                        Түүх байхгүй байна
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-gray-100 font-bold">
+                                    <td colspan="6" class="border border-gray-300 p-3 text-right">
+                                        НИЙТ түүх:
+                                    </td>
+                                    <td class="border border-gray-300 p-3 text-center bg-sky-100">
+                                        0
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `;
+                historyDivs.forEach(historyDiv => {
+                    historyDiv.innerHTML = emptyMarkup;
+                });
+                return;
+            }
+
+            const sortedEntries = [...usageData].sort((a, b) => getEntryTimestamp(b) - getEntryTimestamp(a));
+
+            let html = `
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 p-3">№</th>
+                                <th class="border border-gray-300 p-3">Нэр</th>
+                                <th class="border border-gray-300 p-3">Дугаар</th>
+                                <th class="border border-gray-300 p-3">Зорилго</th>
+                                <th class="border border-gray-300 p-3">Тайлбар</th>
+                                <th class="border border-gray-300 p-3">Огноо</th>
+                                <th class="border border-gray-300 p-3">Бүртгэл</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            sortedEntries.forEach((entry, idx) => {
+                html += buildUsageRowMarkup(entry, idx);
+            });
+
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gray-100 font-bold">
+                                <td colspan="6" class="border border-gray-300 p-3 text-right">
+                                    НИЙТ түүх:
+                                </td>
+                                <td class="border border-gray-300 p-3 text-center bg-sky-100">
+                                    ${sortedEntries.length}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            historyDivs.forEach(historyDiv => {
+                historyDiv.innerHTML = html;
+            });
+        }
+
+        // ===================================
+        // 3. Үйл явдлыг зохицуулах функцууд
+        // ===================================
+
+        // Багажны дугаар засах эсвэл мөрийн устгалын хуучин төлөвийг сэргээх
+        window.handleDoubleClick = (toolId, numIdx) => {
+            if (!ALLOW_MANUAL_NUMBER_EDIT || !editMode) return;
+
+            const key = `${toolId}-${numIdx}`;
+            if (editingCellKey === key) {
+                cancelNumberEdit();
+                return;
+            }
+            
+            setRemovedItemState(toolId, numIdx, !removedItems[key]);
+            saveState();
+            updateUI();
+        };
+
+        // Ашиглалтын мэдээлэл нэмэх
+        addUsageButton?.addEventListener('click', () => {
+            if (DISPLAY_ONLY) {
+                return;
+            }
+
+            const name = toolNameSelect.value;
+            const number = toolNumberSelect.value;
+            const action = toolActionSelect.value;
+            const comment = toolCommentInput.value;
+
+            if (name && number) {
+                const activeUsageKeys = getActiveUsageKeySet();
+                const selectedTool = tools.find(tool => tool.name === name);
+                const numberIdx = selectedTool ? selectedTool.numbers.indexOf(number) : -1;
+                const isRemoved = selectedTool && numberIdx >= 0 ? removedItems[`${selectedTool.id}-${numberIdx}`] : false;
+                const usageKey = `${name}||${number}`;
+
+                if (!selectedTool || numberIdx === -1 || isRemoved || activeUsageKeys.has(usageKey)) {
+                    alert('Сонгосон дугаар ашиглах боломжгүй байна. Өөр дугаар сонгоно уу.');
+                    populateToolNumbers();
+                    return;
+                }
+
+                const entryId = Date.now();
+                const newEntry = {
+                    id: entryId,
+                    name,
+                    number,
+                    action,
+                    comment,
+                    registrant: selectedRegistrantName,
+                    timestamp: entryId,
+                    date: new Date().toLocaleString('mn-MN')
+                };
+                usageData.unshift(newEntry); // Хамгийн эхэнд нэмэх
+                saveState();
+                sendUsageToSheet(newEntry);
+
+                // Формыг цэвэрлэх
+                toolNameSelect.value = '';
+                toolNumberSelect.value = '';
+                toolActionSelect.value = '';
+                toolCommentInput.value = '';
+                setSelectedRegistrant('');
+
+                updateUI();
+            }
+        });
+
+        // Мөр устгах
+        window.deleteUsageRow = (id) => {
+            if (DISPLAY_ONLY) {
+                return;
+            }
+
+            // Зөвхөн идэвхтэй бүртгэлээс хасна, түүхээс устгахгүй
+            const entry = usageData.find(item => item.id === id);
+            if (entry) {
+                entry.deleted = true;
+                saveState();
+                updateUI();
+            }
+        };
+
+
+        // Засах горим солих
+        const editButton = document.getElementById('toggleEditMode');
+        const editIcon = document.querySelector('.edit-icon');
+        const editText = document.querySelector('.edit-text');
+
+        function updateEditButton() {
+            if (!ALLOW_MANUAL_NUMBER_EDIT) {
+                editButton.classList.add('hidden');
+                toolManagementPanel?.classList.add('hidden');
+                return;
+            }
+
+            editButton.classList.remove('hidden');
+            toolManagementPanel?.classList.toggle('hidden', !editMode);
+
+            if (editMode) {
+                editIcon.setAttribute('data-lucide', 'save');
+                editText.textContent = 'Дуусгах';
+                editButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                editButton.classList.add('bg-orange-600', 'hover:bg-orange-700');
+            } else {
+                editIcon.setAttribute('data-lucide', 'edit-2');
+                editText.textContent = 'Засах';
+                editButton.classList.remove('bg-orange-600', 'hover:bg-orange-700');
+                editButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            }
+            lucide.createIcons();
+        }
+
+        editButton.addEventListener('click', () => {
+            if (!ALLOW_MANUAL_NUMBER_EDIT) {
+                return;
+            }
+
+            if (editingCellKey) {
+                commitNumberEdit();
+            }
+            editMode = !editMode;
+            updateEditButton();
+            renderToolsTable(); // Засах горимоос хамаарч cell-ийн double click-ийг идэвхжүүлнэ
+        });
+
+
+        // Формд өөрчлөлт орохыг хянах
+        toolNameSelect?.addEventListener('change', populateToolNumbers);
+        toolNumberSelect?.addEventListener('change', () => {
+            if (!addUsageButton || !toolNameSelect) {
+                return;
+            }
+            addUsageButton.disabled = DISPLAY_ONLY || !toolNameSelect.value || !toolNumberSelect.value;
+        });
+        usageLogTabButton?.addEventListener('click', () => setActiveUsageView('log'));
+        usageHistoryTabButton?.addEventListener('click', () => setActiveUsageView('history'));
+        if (!DISPLAY_ONLY) {
+            scanQrButton?.addEventListener('click', openQrModal);
+            clearRegistrantButton?.addEventListener('click', () => setSelectedRegistrant(''));
+            document.getElementById('closeQrModal').addEventListener('click', closeQrModal);
+            qrModal.addEventListener('click', event => {
+                if (event.target === qrModal) {
+                    closeQrModal();
+                }
+            });
+        }
+
+        // ===================================
+        // 4. Эхлүүлэх
+        // ===================================
+        
+        // Хуудас ачаалагдахад төлөвийг дуудаж, UI-г үүсгэх
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            lastAppliedSheetVersion = getLatestLocalVersion();
+            setActiveUsageView('log');
+            initializeUsageTotalEditing();
+            initializeToolManagementPanel();
+            updateUI();
+            updateEditButton();
+            setSelectedRegistrant('');
+            setSyncStatus('Мэдээлэл татаж байна...', 'loading');
+            fetchLatestSheetState();
+            startSheetPolling();
+        });
+
+        window.addEventListener('storage', event => {
+            if (!['tools', 'removedItems', 'usageData'].includes(event.key)) {
+                return;
+            }
+
+            loadState();
+            lastAppliedSheetVersion = getLatestLocalVersion();
+            updateUI();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                fetchLatestSheetState();
+            }
+        });
+    </script>
+
+</body>
+</html>

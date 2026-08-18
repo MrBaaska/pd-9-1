@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ирц Бүртгэлийн Систем</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0a0e1a;
+  --bg2:      #0f1424;
+  --surface:  #141929;
+  --surface2: #1a2035;
+  --surface3: #212840;
+  --border:   #252d46;
+  --border2:  #2e3a58;
+  --text:     #e8edf8;
+  --text2:    #8a97b8;
+  --text3:    #566070;
+  --accent:   #4f8ef7;
+  --accent2:  #2563eb;
+  --accentg:  linear-gradient(135deg,#4f8ef7,#7c5cfc);
+  --work:     #22d3a5;
+  --sick:     #f75b5b;
+  --absent:   #64748b;
+  --leave:    #fbbf24;
+  --rest:     #ec4899;
+  --overtime: #a78bfa;
+  --vacation: #38bdf8;
+  --business: #fb923c;
+  --other:    #94a3b8;
+  --sidebar-w: 64px;
+  --radius:   10px;
+  --radius-lg:16px;
+  --shadow:   0 12px 40px rgba(0,0,0,0.5);
+  --glow:     0 0 24px rgba(79,142,247,0.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;
+  width:var(--sidebar-w);
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;
+  z-index:100;
+  padding:12px 0;
+  gap:4px;
+}
+.sidebar-logo{
+  width:40px;height:40px;
+  background:var(--accentg);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  margin-bottom:12px;
+  box-shadow:0 4px 16px rgba(79,142,247,0.35);
+  flex-shrink:0;
+}
+.nav-divider{
+  width:32px;height:1px;
+  background:var(--border);
+  margin:6px 0;
+}
+.nav-item{
+  position:relative;
+  width:44px;height:44px;
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  font-size:20px;
+  color:var(--text2);
+  transition:all 0.2s;
+  border:1px solid transparent;
+  flex-shrink:0;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{
+  background:rgba(79,142,247,0.15);
+  color:var(--accent);
+  border-color:rgba(79,142,247,0.3);
+}
+.nav-item::after{
+  content:attr(data-tip);
+  position:absolute;left:calc(100% + 10px);
+  background:var(--surface3);
+  border:1px solid var(--border2);
+  color:var(--text);
+  font-size:12px;font-weight:600;
+  padding:5px 10px;border-radius:8px;
+  white-space:nowrap;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.15s;
+  z-index:200;
+  font-family:'Outfit',sans-serif;
+}
+.nav-item:hover::after{opacity:1;}
+.nav-item .badge{
+  position:absolute;top:6px;right:6px;
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--accent);
+  border:2px solid var(--surface);
+}
+.sidebar-bottom{margin-top:auto;}
+
+/* MAIN */
+.main{
+  margin-left:var(--sidebar-w);
+  min-height:100vh;
+  display:flex;flex-direction:column;
+}
+.topbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
+  height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.page-title{font-size:15px;font-weight:700;color:var(--text);}
+.date-badge{
+  background:rgba(79,142,247,0.1);
+  border:1px solid rgba(79,142,247,0.25);
+  border-radius:8px;padding:4px 12px;
+  font-size:12px;font-weight:600;color:var(--accent);
+  font-family:'JetBrains Mono',monospace;
+}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:8px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  border:1px solid transparent;transition:all 0.15s;
+  font-family:'Outfit',sans-serif;white-space:nowrap;
+}
+.btn-primary{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+.btn-primary:hover{background:var(--accent);border-color:var(--accent);}
+.btn-secondary{background:transparent;color:var(--text2);border-color:var(--border);}
+.btn-secondary:hover{background:var(--surface2);color:var(--text);}
+.btn-danger{background:transparent;color:var(--sick);border-color:rgba(247,91,91,0.35);}
+.btn-danger:hover{background:rgba(247,91,91,0.1);}
+.btn-warning{background:transparent;color:var(--leave);border-color:rgba(251,191,36,0.35);}
+.btn-warning:hover{background:rgba(251,191,36,0.1);}
+.btn-success{background:rgba(34,211,165,0.12);color:var(--work);border-color:rgba(34,211,165,0.35);}
+.btn-success:hover{background:rgba(34,211,165,0.2);}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:6px;}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;font-size:14px;}
+
+.content{padding:24px;flex:1;}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+
+/* STAT CARDS */
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:12px;margin-bottom:24px;
+}
+.stat-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  position:relative;overflow:hidden;
+  transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;
+}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:var(--glow);}
+.stat-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+}
+.s-work::before{background:var(--work);}
+.s-sick::before{background:var(--sick);}
+.s-absent::before{background:var(--absent);}
+.s-leave::before{background:var(--leave);}
+.s-rest::before{background:var(--rest);}
+.s-overtime::before{background:var(--overtime);}
+.s-vacation::before{background:var(--vacation);}
+.s-business::before{background:var(--business);}
+.s-other::before{background:var(--other);}
+
+.stat-icon{font-size:18px;margin-bottom:8px;}
+.stat-label{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:4px;}
+.stat-num{font-size:30px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1;}
+.s-work .stat-num{color:var(--work);}
+.s-sick .stat-num{color:var(--sick);}
+.s-absent .stat-num{color:var(--absent);}
+.s-leave .stat-num{color:var(--leave);}
+.s-rest .stat-num{color:var(--rest);}
+.s-overtime .stat-num{color:var(--overtime);}
+.s-vacation .stat-num{color:var(--vacation);}
+.s-business .stat-num{color:var(--business);}
+.s-other .stat-num{color:var(--other);}
+
+.stat-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:8px;padding-top:8px;
+  border-top:1px solid var(--border);
+  font-size:10px;font-weight:600;
+}
+.stat-req{color:var(--text3);}
+.stat-req span{color:var(--text2);font-family:'JetBrains Mono',monospace;}
+.stat-short{color:var(--sick);}
+.stat-ok{color:var(--work);}
+
+/* SECTION */
+.section{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);margin-bottom:20px;overflow:hidden;
+}
+.section-header{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;
+}
+.section-title{
+  font-size:18px;
+  font-weight:800;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.section-title .icon{font-size:20px;}
+
+/* INPUTS */
+input[type=date],input[type=text],input[type=number],select.styled{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);
+  padding:6px 12px;font-size:13px;font-weight:500;
+  font-family:'Outfit',sans-serif;outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+}
+input[type=date]:focus,input[type=text]:focus,input[type=number]:focus,select.styled:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.12);
+}
+input[type=date]{font-family:'JetBrains Mono',monospace;}
+.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.date-nav-btn{
+  width:30px;height:30px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text2);cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;flex-shrink:0;
+}
+.date-nav-btn:hover{background:var(--surface3);color:var(--text);}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{
+  background:var(--surface2);color:var(--text2);font-weight:600;
+  padding:10px 16px;text-align:left;font-size:11px;
+  text-transform:uppercase;letter-spacing:0.6px;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.data-table td{padding:11px 16px;border-bottom:1px solid rgba(37,45,70,0.7);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tbody tr{transition:background 0.1s;}
+.data-table tbody tr:hover{background:rgba(255,255,255,0.025);}
+.scroll-x{overflow-x:auto;}
+
+/* STATUS SELECT */
+.status-select{
+  padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;font-family:'Outfit',sans-serif;
+  transition:opacity 0.15s;
+}
+.status-select:hover{opacity:0.85;}
+.ss-work    {background:rgba(34,211,165,0.12);color:var(--work);}
+.ss-sick    {background:rgba(247,91,91,0.12);color:var(--sick);}
+.ss-absent  {background:rgba(100,116,139,0.18);color:var(--absent);}
+.ss-leave   {background:rgba(251,191,36,0.12);color:var(--leave);}
+.ss-rest    {background:rgba(236,72,153,0.12);color:var(--rest);}
+.ss-overtime{background:rgba(167,139,250,0.12);color:var(--overtime);}
+.ss-vacation{background:rgba(56,189,248,0.12);color:var(--vacation);}
+.ss-business{background:rgba(251,146,60,0.12);color:var(--business);}
+.ss-other   {background:rgba(148,163,184,0.12);color:var(--other);}
+.ss-empty   {background:rgba(138,151,184,0.12);color:var(--text2);}
+
+/* EMPLOYEE ROW */
+.emp-name{font-weight:600;color:var(--text);}
+.emp-pos{font-size:11px;color:var(--text3);margin-top:1px;}
+.emp-avatar{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;flex-shrink:0;
+}
+.gender-badge{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:11px;font-weight:600;
+}
+.gender-m{background:rgba(79,142,247,0.1);color:var(--accent);}
+.gender-f{background:rgba(167,139,250,0.1);color:var(--overtime);}
+.num-badge{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);}
+.action-btns{display:flex;gap:4px;}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px;border-bottom:1px solid var(--border);}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* MONTHLY VIEW */
+.month-grid{padding:16px 20px;}
+.month-emp-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:12px;overflow:hidden;
+}
+.month-emp-header{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background 0.15s;
+}
+.month-emp-header:hover{background:rgba(255,255,255,0.03);}
+.month-emp-name{font-size:13px;font-weight:700;}
+.month-emp-pos{font-size:11px;color:var(--text3);}
+.month-stats-strip{
+  display:flex;flex-wrap:wrap;gap:4px;
+  margin-left:auto;
+}
+.mstat{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--surface3);border-radius:6px;
+  padding:3px 7px;font-size:11px;font-weight:600;
+  font-family:'JetBrains Mono',monospace;
+}
+.month-calendar{
+  padding:12px 16px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+.cal-day-header{
+  text-align:center;font-size:9px;font-weight:700;
+  color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.5px;padding:4px 0;
+}
+.cal-day{
+  aspect-ratio:1;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;
+  color:#fff;cursor:default;
+  transition:transform 0.1s;
+  font-family:'JetBrains Mono',monospace;
+}
+.cal-day:hover{transform:scale(1.15);z-index:2;position:relative;}
+.cal-day.empty{background:transparent;color:var(--text3);}
+.cal-day.weekend{background:rgba(255,255,255,0.04);color:var(--text3);}
+.cal-day.d-work    {background:rgba(34,211,165,0.7);}
+.cal-day.d-sick    {background:rgba(247,91,91,0.7);}
+.cal-day.d-absent  {background:rgba(100,116,139,0.5);}
+.cal-day.d-leave   {background:rgba(251,191,36,0.7);}
+.cal-day.d-rest    {background:rgba(236,72,153,0.7);}
+.cal-day.d-overtime{background:rgba(167,139,250,0.7);}
+.cal-day.d-vacation{background:rgba(56,189,248,0.7);}
+.cal-day.d-business{background:rgba(251,146,60,0.7);}
+.cal-day.d-other   {background:rgba(148,163,184,0.5);}
+
+/* YEARLY VIEW */
+.year-overview{padding:16px 20px;}
+.year-month-blocks{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  padding:16px;border-bottom:1px solid var(--border);
+}
+.ymblock{
+  background:var(--surface3);border-radius:10px;padding:14px;
+  transition:border-color 0.15s;border:1px solid transparent;
+}
+.ymblock:hover{border-color:var(--border2);}
+.ymblock-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+.ymblock-bars{display:flex;flex-direction:column;gap:4px;}
+.ymbar-row{display:flex;align-items:center;gap:6px;}
+.ymbar-label{font-size:10px;color:var(--text3);width:55px;flex-shrink:0;}
+.ymbar-track{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.ymbar-fill{height:100%;border-radius:3px;transition:width 0.6s;}
+.ymbar-cnt{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;width:16px;text-align:right;flex-shrink:0;}
+
+.year-emp-header{
+  display:flex;align-items:center;gap:16px;
+  padding:20px;border-bottom:1px solid var(--border);
+}
+.year-summary-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+  gap:10px;padding:16px;border-bottom:1px solid var(--border);
+}
+.yscard{text-align:center;}
+.yscard-num{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.yscard-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+
+/* HISTORY VIEW */
+.history-entry{
+  padding:14px 20px;border-bottom:1px solid rgba(37,45,70,0.5);
+  display:flex;align-items:flex-start;gap:14px;
+}
+.history-entry:last-child{border-bottom:none;}
+.history-date-badge{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:6px 10px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--accent);font-weight:600;min-width:90px;
+  text-align:center;flex-shrink:0;
+}
+.history-bars{flex:1;}
+.history-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.history-bar-label{font-size:11px;color:var(--text2);width:90px;flex-shrink:0;}
+.history-bar-track{flex:1;height:7px;background:var(--surface3);border-radius:4px;overflow:hidden;}
+.history-bar-fill{height:100%;border-radius:4px;transition:width 0.5s;}
+.history-bar-count{font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;width:22px;text-align:right;}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+  padding:16px;
+}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius-lg);width:440px;max-width:100%;
+  box-shadow:var(--shadow);
+  transform:scale(0.95) translateY(10px);
+  transition:transform 0.2s;
+}
+.modal-overlay.show .modal{transform:scale(1) translateY(0);}
+.modal-header{
+  padding:18px 20px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-header h3{font-size:15px;font-weight:700;}
+.modal-close{cursor:pointer;color:var(--text2);font-size:18px;line-height:1;padding:4px 8px;border-radius:6px;background:none;border:none;transition:all 0.15s;}
+.modal-close:hover{color:var(--text);background:var(--surface2);}
+.modal-body{padding:20px;}
+.form-row{margin-bottom:14px;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.6px;}
+.form-input{width:100%;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.modal-lg{width:640px;}
+
+/* EMPLOYEE DETAIL */
+.emp-detail-header{padding:20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);}
+.emp-detail-info h2{font-size:18px;font-weight:700;}
+.emp-detail-info p{font-size:13px;color:var(--text2);}
+.emp-year-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding:16px;border-bottom:1px solid var(--border);}
+.year-stat{text-align:center;}
+.year-stat-num{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.year-stat-label{font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--work);color:#fff;
+  padding:10px 18px;border-radius:10px;
+  font-size:13px;font-weight:600;
+  box-shadow:0 4px 20px rgba(0,0,0,0.35);
+  transform:translateY(60px);opacity:0;
+  transition:all 0.3s;z-index:500;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* EMPTY STATE */
+.empty-state{padding:40px 20px;text-align:center;color:var(--text3);}
+.empty-state .icon{font-size:36px;margin-bottom:12px;}
+.empty-state p{font-size:13px;}
+
+/* REQUIRED STAFF BAR */
+.req-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:rgba(79,142,247,0.06);
+  border-bottom:1px solid var(--border);font-size:12px;
+  flex-wrap:wrap;gap:8px;
+}
+.req-item{display:flex;align-items:center;gap:6px;}
+.req-label{color:var(--text2);font-weight:500;}
+.req-value{font-weight:700;font-family:'JetBrains Mono',monospace;}
+.req-shortage{color:var(--sick);}
+.req-ok{color:var(--work);}
+
+/* SUMMARY TABLE */
+.month-summary-cards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:10px;padding:16px;border-bottom:1px solid var(--border);
+}
+.mscard{
+  background:var(--surface3);border-radius:10px;padding:12px;
+  display:flex;align-items:center;gap:10px;
+}
+.mscard-icon{font-size:18px;}
+.mscard-label{font-size:10px;color:var(--text2);font-weight:500;}
+.mscard-num{font-size:20px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+
+@media(max-width:768px){
+  .sidebar{width:52px;}
+  :root{--sidebar-w:52px;}
+  .main{margin-left:52px;}
+  .topbar{padding:0 12px;}
+  .content{padding:12px;}
+  .year-month-blocks{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){
+  .year-month-blocks{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="nav-item active" data-tip="Өдрийн ирц" onclick="switchView('daily')">📋<span class="badge"></span></div>
+  <div class="nav-item" data-tip="Нэгдсэн бүртгэл" onclick="switchView('summary')">📑</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar" style="display:none">
+    <div class="topbar-left" style="display:none">
+      <div class="page-title" id="page-title">Өдрийн ирц бүртгэл</div>
+      <div class="date-badge" id="today-badge"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="openReqModal()">⚙ Орон тоо</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- DAILY VIEW -->
+    <div class="view active" id="view-daily">
+      <div class="stats-row" id="stats-grid" style="display:none"></div>
+      <div class="section">
+        <div class="section-header">
+          <div style="flex:1;display:flex;justify-content:center;order:2;">
+            <div class="section-title" style="text-align:center;"> <span class="icon">📋</span> ИРЦ БҮРТГЭЛ</div>
+          </div>
+          <div class="filter-row" style="order:1;">
+            <button class="date-nav-btn" onclick="shiftDate(-1)">‹</button>
+            <input type="date" id="date-picker">
+            <button class="date-nav-btn" onclick="shiftDate(1)">›</button>
+            <button class="btn btn-sm btn-secondary" onclick="goToday()" style="display:none">Өнөөдөр</button>
+            <button class="btn btn-sm btn-success" onclick="saveCurrentDay()" style="display:none">💾 Хадгалах</button>
+          </div>
+          <button class="btn btn-primary" onclick="openAddModal()" style="order:3;">＋ Ажилтан нэмэх</button>
+        </div>
+        <div class="legend">
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--work)"></div>Ажилд</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--sick)"></div>Өвчтэй</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--absent)"></div>Тасалсан</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--leave)"></div>Чөлөөтэй</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--rest)"></div>Амарсан</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--overtime)"></div>Илүү цаг</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--vacation)"></div>Амралт</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--business)"></div>Томилолт</div>
+          <div class="legend-item" style="display:none"><div class="legend-dot" style="background:var(--other)"></div>Бусад</div>
+        </div>
+        <div class="req-bar" id="req-bar" style="display:none"></div>
+        <div class="scroll-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:40px">№</th>
+                <th>Ажилтан</th>
+                <th>Тушаал</th>
+                <th>Нас</th>
+                <th>Жил</th>
+                <th>Хүйс</th>
+                <th style="width:200px">Ирцийн төлөв</th>
+                <th style="width:110px">Үйлдэл</th>
+              </tr>
+            </thead>
+            <tbody id="daily-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY VIEW -->
+    <div class="view" id="view-summary">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title"><span class="icon">📑</span> Нэгдсэн бүртгэл</div>
+          <div class="filter-row">
+            <button class="date-nav-btn" onclick="shiftSummaryMonth(-1)">‹</button>
+            <select id="summary-month-select" class="styled" style="font-size:14px;font-weight:700;min-width:140px;text-align:center;"></select>
+            <button class="date-nav-btn" onclick="shiftSummaryMonth(1)">›</button>
+          </div>
+        </div>
+        <div class="scroll-x">
+          <table class="data-table" id="summary-table" style="border:2px solid var(--border);border-collapse:collapse;">
+            <thead>
+              <tr id="summary-header-days">
+                <th style="border-right:2px solid var(--border)">Д/д</th>
+                <th style="border-right:2px solid var(--border)">Албан тушаал</th>
+                <th style="border-right:2px solid var(--border)">Овог нэр</th>
+                <th style="border-right:2px solid var(--border)">Нас</th>
+                <th style="border-right:2px solid var(--border)">Жил</th>
+                <th style="border-right:2px solid var(--border)">Хүйс</th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Хадгалагдлаа</div>
+
+<!-- ADD/EDIT EMPLOYEE MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Ажилтан нэмэх</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="form-label">Овог нэр</label>
+        <input type="text" id="f-name" class="form-input" placeholder="Ж: Б. Болд">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Албан тушаал</label>
+        <input type="text" id="f-pos" class="form-input" placeholder="Ж: Диспетчер">
+      </div>
+      <div class="form-row-2">
+        <div class="form-row">
+          <label class="form-label">Нас</label>
+          <input type="number" id="f-age" class="form-input" min="18" max="70" placeholder="30">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Ажилласан жил</label>
+          <input type="number" id="f-exp" class="form-input" min="0" max="50" placeholder="5">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Хүйс</label>
+        <select class="styled form-input" id="f-gender">
+          <option value="Эр">Эр</option>
+          <option value="Эм">Эм</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Болих</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE DETAIL MODAL -->
+<div class="modal-overlay" id="emp-detail-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Ажилтны мэдээлэл</h3>
+      <button class="modal-close" onclick="closeEmpDetail()">✕</button>
+    </div>
+    <div id="emp-detail-content" style="max-height:75vh;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEmpDetail()">Хаах</button>
+    </div>
+  </div>
+</div>
+
+<!-- REQUIRED STAFF MODAL -->
+<div class="modal-overlay" id="req-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Орон тооны тохиргоо</h3>
+      <button class="modal-close" onclick="closeReqModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Хэрэгтэй ажилтны тоог тохируулна уу. Систем тухайн өдрийн дутуу орон тоог автоматаар харуулна.</p>
+      <div class="form-row">
+        <label class="form-label">Байх ёстой орон тоо (нийт)</label>
+        <input type="number" id="req-total" class="form-input" min="0" placeholder="20">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Хамгийн доод тоо (ажилд ирэх)</label>
+        <input type="number" id="req-min" class="form-input" min="0" placeholder="15">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeReqModal()">Болих</button>
+      <button class="btn btn-primary" onclick="saveReq()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════
+const STATUS_LIST   = ["ажилд","өвчтэй","тасалсан","чөлөөтэй","амарсан","илүү цаг","ээлжийн амралт","томилолт","бусад"];
+const STATUS_LABELS = {"ажилд":"Ажилд","өвчтэй":"Өвчтэй","тасалсан":"Тасалсан","чөлөөтэй":"Чөлөөтэй","амарсан":"Амарсан","илүү цаг":"Илүү цаг","ээлжийн амралт":"Ээлжийн амралт","томилолт":"Томилолт","бусад":"Бусад"};
+const STATUS_KEYS   = ["work","sick","absent","leave","rest","overtime","vacation","business","other"];
+const STATUS_MAP    = {"ажилд":"work","өвчтэй":"sick","тасалсан":"absent","чөлөөтэй":"leave","амарсан":"rest","илүү цаг":"overtime","ээлжийн амралт":"vacation","томилолт":"business","бусад":"other"};
+const STATUS_CSS    = {"ажилд":"ss-work","өвчтэй":"ss-sick","тасалсан":"ss-absent","чөлөөтэй":"ss-leave","амарсан":"ss-rest","илүү цаг":"ss-overtime","ээлжийн амралт":"ss-vacation","томилолт":"ss-business","бусад":"ss-other"};
+const DOT_CSS       = {"ажилд":"d-work","өвчтэй":"d-sick","тасалсан":"d-absent","чөлөөтэй":"d-leave","амарсан":"d-rest","илүү цаг":"d-overtime","ээлжийн амралт":"d-vacation","томилолт":"d-business","бусад":"d-other"};
+const STAT_COLORS   = {work:"var(--work)",sick:"var(--sick)",absent:"var(--absent)",leave:"var(--leave)",rest:"var(--rest)",overtime:"var(--overtime)",vacation:"var(--vacation)",business:"var(--business)",other:"var(--other)"};
+const STAT_ICONS    = {work:"✅",sick:"🤒",absent:"🚫",leave:"🏃",rest:"😴",overtime:"⏰",vacation:"🏖️",business:"✈️",other:"📌"};
+const STAT_LABELS   = {work:"Ажилд",sick:"Өвчтэй",absent:"Тасалсан",leave:"Чөлөөтэй",rest:"Амарсан",overtime:"Илүү цаг",vacation:"Ээлжийн амралт",business:"Томилолт",other:"Бусад"};
+const MONTHS_MN     = ["1-р сар","2-р сар","3-р сар","4-р сар","5-р сар","6-р сар","7-р сар","8-р сар","9-р сар","10-р сар","11-р сар","12-р сар"];
+const DAY_NAMES     = ["Ня","Да","Мя","Лх","Пү","Ба","Бя"];
+
+// Summary columns definition
+const SUMMARY_COLS = [
+  {key:'өвчтэй',    label:'Өвчтэй',    color:'var(--sick)'},
+  {key:'тасалсан',  label:'Тасалсан',  color:'var(--absent)'},
+  {key:'чөлөөтэй',  label:'Чөлөөтэй',  color:'var(--leave)'},
+  {key:'амарсан',   label:'Амарсан',   color:'var(--rest)'},
+  {key:'илүү цаг',  label:'Илүү цаг',  color:'var(--overtime)'},
+  {key:'ээлжийн амралт', label:'Ээлжийн амралт', color:'var(--vacation)'},
+  {key:'томилолт',  label:'Томилолт',  color:'var(--business)'},
+  {key:'бусад',     label:'Бусад',     color:'var(--other)'}
+];
+
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
+const DEFAULT_EMPLOYEES = [
+  {id:1,  position:"Ахлах диспетчер",           name:"Б. Бат-Эрдэнэ",   age:42, experience:15, gender:"Эр"},
+  {id:2,  position:"Диспетчер",                  name:"Л. Болд",          age:35, experience:8,  gender:"Эр"},
+  {id:3,  position:"Дохиолол холбооны инженер",  name:"Г. Сүхбат",        age:29, experience:4,  gender:"Эр"},
+  {id:4,  position:"Зам шалгагч",                name:"Ц. Оюунчимэг",     age:38, experience:11, gender:"Эм"},
+  {id:5,  position:"Диспетчер",                  name:"М. Төмөр",         age:31, experience:6,  gender:"Эр"},
+  {id:6,  position:"Хяналтын инженер",           name:"П. Саруул",        age:45, experience:18, gender:"Эм"},
+  {id:7,  position:"Техникч",                    name:"Ж. Жавхлан",       age:26, experience:2,  gender:"Эр"},
+  {id:8,  position:"Оператор",                   name:"Э. Нарангарав",    age:33, experience:7,  gender:"Эм"},
+  {id:9,  position:"Ахлах замчин",               name:"Н. Баярхүү",       age:50, experience:22, gender:"Эр"},
+  {id:10, position:"Замчин",                     name:"Д. Ганболд",       age:24, experience:1,  gender:"Эр"},
+  {id:11, position:"Диспетчер",                  name:"С. Энхмаа",        age:28, experience:3,  gender:"Эм"},
+  {id:12, position:"Дохиочин",                   name:"Б. Зоригт",        age:37, experience:9,  gender:"Эр"},
+  {id:13, position:"Галт тэрэгний найруулагч",   name:"О. Батбаяр",       age:40, experience:13, gender:"Эр"},
+  {id:14, position:"Станцийн жижүүр",            name:"А. Алтанцэцэг",   age:34, experience:8,  gender:"Эм"},
+  {id:15, position:"Хэсгийн ахлагч",             name:"Т. Мөнх-Эрдэнэ",  age:47, experience:20, gender:"Эр"},
+  {id:16, position:"Хөдөлмөрийн аюулгүй байдал", name:"Г. Уянга",        age:32, experience:5,  gender:"Эм"},
+  {id:17, position:"Оператор",                   name:"Б. Төгсбилэг",    age:27, experience:3,  gender:"Эр"},
+  {id:18, position:"Техникч",                    name:"Л. Пүрэвсүрэн",   age:53, experience:25, gender:"Эр"},
+  {id:19, position:"Станцийн жижүүр",            name:"Х. Болормаа",      age:39, experience:12, gender:"Эм"},
+  {id:20, position:"Замчин",                     name:"Ч. Давааням",      age:25, experience:2,  gender:"Эр"},
+];
+
+let employees  = JSON.parse(localStorage.getItem('irts_employees')  || 'null') || DEFAULT_EMPLOYEES;
+
+function loadAttendance(){
+  try{
+    const stored=JSON.parse(localStorage.getItem('irts_attendance')||'{}');
+    if(!stored || typeof stored!=='object' || Array.isArray(stored)) return {};
+
+    return Object.keys(stored).reduce((days,dateStr)=>{
+      const day=stored[dateStr];
+      if(day && typeof day==='object' && !Array.isArray(day)){
+        days[dateStr]={...day};
+      }
+      return days;
+    },{});
+  }catch(error){
+    return {};
+  }
+}
+
+let attendance = loadAttendance();
+let reqStaff   = JSON.parse(localStorage.getItem('irts_req')        || 'null') || {total:20, min:15};
+let nextId     = employees.reduce((m,e) => Math.max(m, e.id), 0) + 1;
+let currentView = 'daily';
+
+// Summary month state
+let summaryYear  = new Date().getFullYear();
+let summaryMonth = new Date().getMonth() + 1; // 1-based
+
+// ════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════
+function saveAll(){
+  localStorage.setItem('irts_employees',  JSON.stringify(employees));
+  localStorage.setItem('irts_attendance', JSON.stringify(attendance));
+  localStorage.setItem('irts_req',        JSON.stringify(reqStaff));
+}
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function fmtDate(d){ if(!d)return''; const [y,m,day]=d.split('-'); return `${y}.${m}.${day}`; }
+function getInitial(name){ const p=name.split(' '); return p[p.length-1].charAt(0).toUpperCase(); }
+function getDayStatus(dateStr,empId){
+  const day=attendance[dateStr];
+  return day && Object.prototype.hasOwnProperty.call(day,empId) ? day[empId] : null;
+}
+function getDayAttendance(dateStr){
+  const day=attendance[dateStr];
+  return day && typeof day==='object' && !Array.isArray(day) ? day : {};
+}
+function isWeekend(dateStr){ const d=new Date(dateStr); return d.getDay()===0 || d.getDay()===6; }
+function avatarColor(id){
+  const colors=['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777','#4338ca'];
+  return colors[id % colors.length];
+}
+function showToast(msg, color){
+  const t=document.getElementById('toast');
+  t.textContent='✓ '+(msg||'Хадгалагдлаа');
+  t.style.background=color||'var(--work)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════
+const PAGE_TITLES = {daily:'Өдрийн ирц бүртгэл', summary:'Нэгдсэн бүртгэл'};
+
+function switchView(v){
+  currentView = v;
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const navMap = {daily:0, summary:1};
+  document.querySelectorAll('.nav-item')[navMap[v]]?.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[v];
+  if(v==='daily')   renderDaily();
+  if(v==='summary') renderSummaryTable();
+}
+
+// ════════════════════════════════════════════════════════
+// DATE PICKER
+// ════════════════════════════════════════════════════════
+const datePicker = document.getElementById('date-picker');
+function goToday(){ datePicker.value=todayStr(); renderDaily(); }
+function shiftDate(delta){
+  const d = new Date(datePicker.value || todayStr());
+  d.setDate(d.getDate() + delta);
+  datePicker.value = d.toISOString().split('T')[0];
+  renderDaily();
+}
+datePicker.addEventListener('change', renderDaily);
+
+// ════════════════════════════════════════════════════════
+// REQUIRED STAFF
+// ════════════════════════════════════════════════════════
+function openReqModal(){
+  document.getElementById('req-total').value = reqStaff.total;
+  document.getElementById('req-min').value   = reqStaff.min;
+  document.getElementById('req-modal').classList.add('show');
+}
+function closeReqModal(){ document.getElementById('req-modal').classList.remove('show'); }
+function saveReq(){
+  reqStaff.total = parseInt(document.getElementById('req-total').value) || 20;
+  reqStaff.min   = parseInt(document.getElementById('req-min').value)   || 15;
+  saveAll();
+  closeReqModal();
+  renderDaily();
+  showToast('Орон тоо хадгалагдлаа');
+}
+
+// ════════════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════════════
+function calcStats(dateStr){
+  const counts={work:0,sick:0,absent:0,leave:0,overtime:0,vacation:0,business:0,other:0};
+  const day=attendance[dateStr]||{};
+  employees.forEach(emp=>{
+    const s=day[emp.id]||'ажилд';
+    const k=STATUS_MAP[s]||'other';
+    counts[k]++;
+  });
+  return counts;
+}
+
+function renderStats(dateStr){
+  const counts=calcStats(dateStr);
+  const atWork=counts.work+counts.overtime;
+  const shortage=Math.max(0, reqStaff.min-atWork);
+  const g=document.getElementById('stats-grid');
+  g.innerHTML=STATUS_KEYS.map(k=>`
+    <div class="stat-card s-${k}">
+      <div class="stat-icon">${STAT_ICONS[k]}</div>
+      <div class="stat-label">${STAT_LABELS[k]}</div>
+      <div class="stat-num">${counts[k]}</div>
+      ${(k==='work'||k==='overtime')?`
+      <div class="stat-footer">
+        <div class="stat-req">Байх ёстой: <span>${reqStaff.total}</span></div>
+        <div class="${shortage>0?'stat-short':'stat-ok'}">${shortage>0?`−${shortage} дутуу`:'✓ Хангалттай'}</div>
+      </div>`:''}
+    </div>`).join('');
+
+  const rb=document.getElementById('req-bar');
+  const pct=Math.round(atWork/reqStaff.total*100);
+  rb.innerHTML=`
+    <div class="req-item">
+      <span class="req-label">Ирц хамрагдалт:</span>
+      <span class="req-value" style="color:var(--accent)">${atWork}/${reqStaff.total}</span>
+      <span style="font-size:11px;color:var(--text3)">(${pct}%)</span>
+    </div>
+    <div class="req-item">
+      <span class="req-label">Доод норм:</span>
+      <span class="req-value" style="color:${atWork>=reqStaff.min?'var(--work)':'var(--sick)'}">${reqStaff.min}</span>
+    </div>
+    <div class="req-item">
+      <span class="${shortage>0?'req-shortage':'req-ok'}">${shortage>0?`⚠ ${shortage} орон тоо дутуу байна`:'✓ Доод норм хангагдсан'}</span>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// DAILY VIEW
+// ════════════════════════════════════════════════════════
+function renderDaily(){
+  const date=datePicker.value||todayStr();
+  if(!attendance[date]){
+    attendance[date]={};
+    saveAll();
+  }
+  renderStats(date);
+  const tbody=document.getElementById('daily-tbody');
+  tbody.innerHTML='';
+  employees.forEach((emp,i)=>{
+    const s=attendance[date][emp.id]||'';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="num-badge">${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="emp-avatar" style="background:${avatarColor(emp.id)}">${getInitial(emp.name)}</div>
+          <div class="emp-name">${emp.name}</div>
+        </div>
+      </td>
+      <td><div class="emp-pos">${emp.position}</div></td>
+      <td class="num-badge">${emp.age}</td>
+      <td class="num-badge">${emp.experience} жил</td>
+      <td><span class="gender-badge ${emp.gender==='Эр'?'gender-m':'gender-f'}">${emp.gender}</span></td>
+      <td>
+        <select class="status-select ${STATUS_CSS[s]||'ss-empty'}" data-id="${emp.id}" onchange="changeStatus(this,'${date}')">
+          <option value="" ${s===''?'selected':''}></option>
+          ${STATUS_LIST.map(sl=>`<option value="${sl}" ${sl===s?'selected':''}>${STATUS_LABELS[sl]}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-sm btn-secondary" onclick="openEmpDetail(${emp.id})" title="Дэлгэрэнгүй">📊</button>
+          <button class="btn btn-sm btn-warning" onclick="openEditModal(${emp.id})" title="Засах">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${emp.id})" title="Устгах">🗑</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function changeStatus(sel, dateStr){
+  const id=parseInt(sel.dataset.id);
+  const s=sel.value;
+  sel.className='status-select '+(STATUS_CSS[s]||'ss-empty');
+  attendance[dateStr]={...getDayAttendance(dateStr),[id]:s};
+  saveAll();
+  renderStats(dateStr);
+  showToast('Хадгалагдлаа');
+}
+
+function saveCurrentDay(){
+  const date=datePicker.value||todayStr();
+  if(!attendance[date]) attendance[date]={};
+  saveAll();
+  renderStats(date);
+  showToast(fmtDate(date)+' өдрийн мэдээлэл хадгалагдлаа');
+}
+
+// ════════════════════════════════════════════════════════
+// SUMMARY VIEW
+// ════════════════════════════════════════════════════════
+function initSummaryMonthSelect(){
+  const sel=document.getElementById('summary-month-select');
+  sel.innerHTML='';
+  const now=new Date();
+  const baseY=now.getFullYear();
+  const baseM=now.getMonth()+1;
+  for(let i=-4; i<=7; i++){
+    let d=new Date(baseY, baseM-1+i, 1);
+    let y=d.getFullYear();
+    let m=d.getMonth()+1;
+    const opt=document.createElement('option');
+    opt.value=`${y}-${String(m).padStart(2,'0')}`;
+    opt.textContent=`${y} оны ${m}-р сар`;
+    if(y===summaryYear && m===summaryMonth) opt.selected=true;
+    sel.appendChild(opt);
+  }
+  sel.onchange=function(){
+    const [y,m]=this.value.split('-');
+    summaryYear=parseInt(y);
+    summaryMonth=parseInt(m);
+    renderSummaryTable();
+  };
+}
+
+function shiftSummaryMonth(delta){
+  summaryMonth+=delta;
+  if(summaryMonth<1){summaryMonth=12;summaryYear--;}
+  if(summaryMonth>12){summaryMonth=1;summaryYear++;}
+  // Update select
+  const sel=document.getElementById('summary-month-select');
+  const val=`${summaryYear}-${String(summaryMonth).padStart(2,'0')}`;
+  // Rebuild options if needed
+  let found=false;
+  for(const opt of sel.options){ if(opt.value===val){opt.selected=true;found=true;break;} }
+  if(!found){ initSummaryMonthSelect(); }
+  renderSummaryTable();
+}
+
+function renderSummaryTable(){
+  const year=summaryYear;
+  const month=summaryMonth; // 1-based
+  const daysInMonth=new Date(year, month, 0).getDate();
+  const thead=document.getElementById('summary-header-days');
+  const tbody=document.getElementById('summary-tbody');
+
+  // Rebuild header row with day columns
+  thead.innerHTML=`
+    <th style="border-right:2px solid var(--border)">Д/д</th>
+    <th style="border-right:2px solid var(--border)">Албан тушаал</th>
+    <th style="border-right:2px solid var(--border)">Овог нэр</th>
+    <th style="border-right:2px solid var(--border)">Нас</th>
+    <th style="border-right:2px solid var(--border)">Жил</th>
+    <th style="border-right:2px solid var(--border)">Хүйс</th>
+  `;
+  for(let d=1; d<=daysInMonth; d++){
+    const th=document.createElement('th');
+    th.textContent=d;
+    th.style.borderLeft='1px solid var(--border)';
+    th.style.textAlign='center';
+    th.style.padding='6px 4px';
+    const jsDate=new Date(year, month-1, d);
+    if(jsDate.getDay()===0||jsDate.getDay()===6){
+      th.style.background='rgba(255,235,0,0.12)';
+      th.style.color='var(--leave)';
+    }
+    thead.appendChild(th);
+  }
+  // Summary column headers
+  SUMMARY_COLS.forEach(col=>{
+    const th=document.createElement('th');
+    th.textContent=col.label;
+    th.style.background=col.color;
+    th.style.color='#fff';
+    th.style.borderLeft='2px solid var(--border)';
+    th.style.textAlign='center';
+    thead.appendChild(th);
+  });
+
+  tbody.innerHTML='';
+
+  // Employee rows
+  employees.forEach((emp, idx)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="border-right:2px solid var(--border);text-align:center">${idx+1}</td>
+      <td style="border-right:2px solid var(--border)">${emp.position||''}</td>
+      <td style="border-right:2px solid var(--border);font-weight:600">${emp.name||''}</td>
+      <td style="border-right:2px solid var(--border);text-align:center">${emp.age||''}</td>
+      <td style="border-right:2px solid var(--border);text-align:center">${emp.experience||''}</td>
+      <td style="border-right:2px solid var(--border);text-align:center">${emp.gender||''}</td>
+    `;
+    const empStatusCount={};
+    SUMMARY_COLS.forEach(col=>{ empStatusCount[col.key]=0; });
+
+    for(let d=1; d<=daysInMonth; d++){
+      const dateStr=`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const status=(attendance[dateStr]&&attendance[dateStr][emp.id])||'';
+      const jsDate=new Date(year, month-1, d);
+      const isWe=jsDate.getDay()===0||jsDate.getDay()===6;
+      const td=document.createElement('td');
+      td.style.borderLeft='1px solid var(--border)';
+      td.style.textAlign='center';
+      td.style.fontSize='11px';
+      td.style.padding='4px 2px';
+      if(isWe && status===''){
+        td.style.background='rgba(255,235,0,0.08)';
+        td.textContent='';
+      } else if(status==='ажилд'){
+        td.style.background='rgba(34,211,165,0.08)';
+        td.textContent='А';
+        td.style.color='var(--work)';
+      } else if(status===''){
+        td.textContent='';
+      } else {
+        // show first char of status
+        const k=STATUS_MAP[status]||'other';
+        const label=STATUS_LABELS[status]||'';
+        if(!label){
+          td.textContent='';
+          tr.appendChild(td);
+          continue;
+        }
+        td.style.color=STAT_COLORS[k].replace('var(','').replace(')','');
+        td.style.color=STAT_COLORS[k];
+        td.textContent=label.charAt(0);
+        if(empStatusCount.hasOwnProperty(status)) empStatusCount[status]++;
+      }
+      tr.appendChild(td);
+    }
+    // Summary cells
+    SUMMARY_COLS.forEach(col=>{
+      const td=document.createElement('td');
+      td.style.borderLeft='2px solid var(--border)';
+      td.style.textAlign='center';
+      td.style.fontWeight='700';
+      td.style.fontFamily="'JetBrains Mono',monospace";
+      const cnt=empStatusCount[col.key]||0;
+      if(cnt>0){
+        td.style.background=col.color;
+        td.style.color='#fff';
+        td.textContent=cnt;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // Totals row
+  const trTotal=document.createElement('tr');
+  trTotal.style.fontWeight='800';
+  trTotal.innerHTML=`<td colspan="6" style="text-align:right;border-right:2px solid var(--border);padding:8px 12px;color:var(--text2)">Нийт ирц</td>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr=`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const jsDate=new Date(year, month-1, d);
+    const isWe=jsDate.getDay()===0||jsDate.getDay()===6;
+    const td=document.createElement('td');
+    td.style.borderLeft='1px solid var(--border)';
+    td.style.textAlign='center';
+    td.style.fontSize='11px';
+    td.style.padding='4px 2px';
+    if(isWe){
+      td.style.background='rgba(255,235,0,0.08)';
+    }
+    let cnt=0;
+    if(attendance[dateStr]){
+      employees.forEach(emp=>{
+        const s=attendance[dateStr][emp.id]||'';
+        if(s==='ажилд'||s==='илүү цаг') cnt++;
+      });
+    }
+    if(cnt>0){
+      td.style.color='var(--work)';
+      td.style.fontWeight='700';
+      td.textContent=cnt;
+    }
+    trTotal.appendChild(td);
+  }
+  // Summary totals for each column
+  SUMMARY_COLS.forEach(col=>{
+    let total=0;
+    employees.forEach(emp=>{
+      for(let d=1;d<=daysInMonth;d++){
+        const dateStr=`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if((attendance[dateStr]&&attendance[dateStr][emp.id])===col.key) total++;
+      }
+    });
+    const td=document.createElement('td');
+    td.style.borderLeft='2px solid var(--border)';
+    td.style.textAlign='center';
+    td.style.fontWeight='800';
+    td.style.fontFamily="'JetBrains Mono',monospace";
+    if(total>0){
+      td.style.background=col.color;
+      td.style.color='#fff';
+      td.textContent=total;
+    }
+    trTotal.appendChild(td);
+  });
+  tbody.appendChild(trTotal);
+
+  // Add per-day status summary rows (e.g. өвчтэй, чөлөөтэй, томилолт ...)
+  SUMMARY_COLS.forEach(col => {
+    const tr = document.createElement('tr');
+    tr.style.fontWeight = '600';
+    tr.innerHTML = `<td colspan="6" style="text-align:right;border-right:2px solid var(--border);padding:8px 12px;color:${col.color}">${col.label}</td>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      let cnt = 0;
+      if (attendance[dateStr]) {
+        employees.forEach(emp => {
+          const s = attendance[dateStr][emp.id] || '';
+          if (s === col.key) cnt++;
+        });
+      }
+      const td = document.createElement('td');
+      td.style.borderLeft = '1px solid var(--border)';
+      td.style.textAlign = 'center';
+      td.style.fontSize = '11px';
+      td.style.padding = '4px 2px';
+      td.style.color = col.color;
+      if (cnt > 0) td.textContent = cnt;
+      tr.appendChild(td);
+    }
+    // Add empty summary cells for alignment
+    SUMMARY_COLS.forEach(() => {
+      const td = document.createElement('td');
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// ADD / EDIT / DELETE EMPLOYEE
+// ════════════════════════════════════════════════════════
+let editingEmpId=null;
+
+function openAddModal(){
+  editingEmpId=null;
+  document.getElementById('modal-title').textContent='Ажилтан нэмэх';
+  ['f-name','f-pos','f-age','f-exp'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-gender').value='Эр';
+  document.getElementById('add-modal').classList.add('show');
+}
+
+function openEditModal(id){
+  const emp=employees.find(e=>e.id===id);
+  if(!emp) return;
+  editingEmpId=id;
+  document.getElementById('modal-title').textContent='Ажилтны мэдээлэл засах';
+  document.getElementById('f-name').value=emp.name;
+  document.getElementById('f-pos').value=emp.position;
+  document.getElementById('f-age').value=emp.age;
+  document.getElementById('f-exp').value=emp.experience;
+  document.getElementById('f-gender').value=emp.gender;
+  document.getElementById('add-modal').classList.add('show');
+}
+
+function closeModal(){ document.getElementById('add-modal').classList.remove('show'); }
+
+function saveEmployee(){
+  const name=document.getElementById('f-name').value.trim();
+  const pos=document.getElementById('f-pos').value.trim();
+  const age=parseInt(document.getElementById('f-age').value)||25;
+  const exp=parseInt(document.getElementById('f-exp').value)||0;
+  const gender=document.getElementById('f-gender').value;
+  if(!name||!pos){ showToast('Нэр болон тушаалыг бөглөнө үү','var(--sick)'); return; }
+  if(editingEmpId){
+    const idx=employees.findIndex(e=>e.id===editingEmpId);
+    if(idx!==-1){
+      employees[idx]={...employees[idx], name, position:pos, age, experience:exp, gender};
+    }
+  } else {
+    employees.push({id:nextId++, position:pos, name, age, experience:exp, gender});
+  }
+  saveAll();
+  closeModal();
+  showToast(editingEmpId?'Засагдлаа':'Ажилтан нэмэгдлээ');
+  renderDaily();
+  if(currentView==='summary') renderSummaryTable();
+}
+
+function deleteEmployee(id){
+  if(!confirm('Энэ ажилтны бүртгэлийг устгах уу?')) return;
+  employees=employees.filter(e=>e.id!==id);
+  saveAll();
+  renderDaily();
+  if(currentView==='summary') renderSummaryTable();
+  showToast('Устгагдлаа','var(--sick)');
+}
+
+// ════════════════════════════════════════════════════════
+// EMPLOYEE DETAIL MODAL
+// ════════════════════════════════════════════════════════
+function openEmpDetail(id){
+  const emp=employees.find(e=>e.id===id);
+  if(!emp) return;
+  const y=new Date().getFullYear();
+  const mn=new Date().getMonth();
+  const days=new Date(y,mn+1,0).getDate();
+  const firstDay=new Date(y,mn,1).getDay();
+
+  // Yearly totals
+  const totals={work:0,sick:0,absent:0,leave:0,overtime:0,vacation:0,business:0,other:0};
+  for(let m=0;m<12;m++){
+    const md=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=md;d++){
+      const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if(!isWeekend(ds)){
+        const s=getDayStatus(ds,emp.id);
+        const k=STATUS_MAP[s||'ажилд']||'other';
+        totals[k]++;
+      }
+    }
+  }
+
+  // Mini calendar
+  const dayHeaderHTML=DAY_NAMES.map(d=>`<div class="cal-day-header">${d}</div>`).join('');
+  let calCells='';
+  for(let i=0;i<firstDay;i++) calCells+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(mn+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isWe=isWeekend(ds);
+    const s=getDayStatus(ds,emp.id);
+    let cls='cal-day';
+    let tip=`${d}-ны өдөр`;
+    if(isWe&&!s){cls+=' weekend';tip+=': Амралт';}
+    else if(s){cls+=' '+(DOT_CSS[s]||'d-other');tip+=': '+STATUS_LABELS[s];}
+    else if(!isWe){cls+=' d-work';}
+    calCells+=`<div class="${cls}" title="${tip}">${d}</div>`;
+  }
+
+  document.getElementById('emp-detail-content').innerHTML=`
+    <div class="year-emp-header">
+      <div class="emp-avatar" style="background:${avatarColor(emp.id)};width:52px;height:52px;font-size:20px">${getInitial(emp.name)}</div>
+      <div>
+        <h2 style="font-size:18px;font-weight:800">${emp.name}</h2>
+        <p style="font-size:13px;color:var(--text2)">${emp.position} · ${emp.age} нас · ${emp.experience} жил · ${emp.gender}</p>
+      </div>
+    </div>
+    <div class="year-summary-grid">
+      ${STATUS_KEYS.map(k=>`<div class="yscard"><div class="yscard-num" style="color:${STAT_COLORS[k]}">${totals[k]}</div><div class="yscard-label">${STAT_LABELS[k]}</div></div>`).join('')}
+    </div>
+    <div style="padding:16px 20px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">${MONTHS_MN[mn]} — өдрийн ирц</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+        ${dayHeaderHTML}${calCells}
+      </div>
+    </div>`;
+  document.getElementById('emp-detail-modal').classList.add('show');
+}
+
+function closeEmpDetail(){ document.getElementById('emp-detail-modal').classList.remove('show'); }
+
+// ════════════════════════════════════════════════════════
+// TODAY BADGE
+// ════════════════════════════════════════════════════════
+function updateTodayBadge(){
+  const d=new Date();
+  const days=['Ням','Даваа','Мягмар','Лхагва','Пүрэв','Баасан','Бямба'];
+  document.getElementById('today-badge').textContent=
+    `${days[d.getDay()]}  ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+function init(){
+  datePicker.value=todayStr();
+  updateTodayBadge();
+  initSummaryMonthSelect();
+  renderDaily();
+}
+init();
+</script>
+</body>
+</html>

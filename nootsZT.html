@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>нөөц зам төмөр</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="nn.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-area">
+                <i class="fa-solid fa-train-subway"></i>
+                <div>
+                    <h1>нөөц зам төмрийн судалгаа</h1>
+                    <p>нөөц зам төмрийн судалгаа</p>
+                </div>
+            </div>
+            <div class="autosave-status" id="autosaveStatus">
+                <i class="fa-solid fa-cloud-arrow-up"></i> <span>Хадгалагдсан</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="card form-card">
+                <h2><i class="fa-solid fa-pen-to-square"></i> <span id="formTitle">Шинэ бүртгэл нэмэх</span></h2>
+                <form id="railForm">
+                    <input type="hidden" id="editIndex" value="-1">
+                    
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label style="text-align: center;">Км</label>
+                            <input type="number" id="km" required placeholder="Жишээ: 531">
+                        </div>
+                        <div class="input-group">
+                            <label style="text-align: center;">Пк</label>
+                            <input type="number" id="pk" required placeholder="Жишээ: 6">
+                        </div>
+                        <div class="input-group">
+                            <label style="text-align: center;">Үе</label>
+                            <input type="number" id="ye" required placeholder="Жишээ: 21">
+                        </div>
+                        <div class="input-group">
+                            <label style="text-align: center;">Марк</label>
+                            <select id="mark" required>
+                                <option value="" disabled selected>Марк сонгох</option>
+                                <option value="Р-43">Р-43</option>
+                                <option value="Р-50">Р-50</option>
+                                <option value="Р-65">Р-65</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label style="text-align: center;">Зам төмрийн урт (м)</label>
+                            <select id="length" required>
+                                <option value="" disabled selected>Урт сонгох</option>
+                                <option value="25">25 м</option>
+                                <option value="24.92">24.92 м</option>
+                                <option value="24.84">24.84 м</option>
+                                <option value="12.5">12.5 м</option>
+                                <option value="12.46">12.46 м</option>
+                                <option value="12.42">12.42 м</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label style="text-align: center;">Үйлдвэрлэсэн он</label>
+                            <input type="text" id="year" required placeholder="Жишээ: 1988 А">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Тайлбар</label>
+                            <input type="text" id="note" placeholder="Нэмэлт мэдээлэл...">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="saveBtn"><i class="fa-solid fa-plus"></i> Нэмэх</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;"><i class="fa-solid fa-xmark"></i> Болих</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="card table-card">
+                <div class="table-header">
+                    <h2><i class="fa-solid fa-table-list"></i> Бүртгэгдсэн өгөгдлүүд</h2>
+                    <span class="badge" id="rowCount">Нийт: 0</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="railTable">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Д/Д</th>
+                                <th colspan="3">Байршил</th>
+                                <th rowspan="2">Марк</th>
+                                <th rowspan="2">Зам төмрийн урт</th>
+                                <th rowspan="2">Үйлдвэрлэсэн он</th>
+                                <th rowspan="2">Тайлбар</th>
+                                <th rowspan="2">Үйлдэл</th>
+                            </tr>
+                            <tr>
+                                <th>Км</th>
+                                <th>Пк</th>
+                                <th>Үе</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            </tbody>
+                    </table>
+                </div>
+                <div class="summary-panel" id="summaryPanel">
+                    <div class="summary-header">
+                        <h3><i class="fa-solid fa-chart-column"></i> Марк, уртын нэгтгэл</h3>
+                        <span class="summary-note">Мөрөөр марк, баганаар урт</span>
+                    </div>
+                    <div class="summary-table-wrap" id="summaryTableWrap"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // LocalStorage key & Default Data (Хэрэв өгөгдөл байхгүй бол таны зургийн дагуу анхны өгөгдлийг оруулах)
+const STORAGE_KEY = 'rail_registry_data';
+
+let railData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
+    { km: 531, pk: 6, ye: 21, mark: 'Р-50', length: '25', year: '1988 А', note: '' },
+    { km: 532, pk: 5, ye: 18, mark: 'Р-50', length: '1', year: '1980 А', note: '' }
+];
+
+const railForm = document.getElementById('railForm');
+const tableBody = document.getElementById('tableBody');
+const rowCount = document.getElementById('rowCount');
+const autosaveStatus = document.getElementById('autosaveStatus');
+const formTitle = document.getElementById('formTitle');
+const saveBtn = document.getElementById('saveBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const editIndex = document.getElementById('editIndex');
+const summaryTableWrap = document.getElementById('summaryTableWrap');
+
+// Input fields
+const kmInput = document.getElementById('km');
+const pkInput = document.getElementById('pk');
+const yeInput = document.getElementById('ye');
+const markInput = document.getElementById('mark');
+const lengthInput = document.getElementById('length');
+const yearInput = document.getElementById('year');
+const noteInput = document.getElementById('note');
+
+// Render Table on load
+document.addEventListener('DOMContentLoaded', () => {
+    renderTable();
+});
+
+// Save / Autosave Function
+function triggerAutosave() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(railData));
+    
+    // Visual indicator update animation
+    autosaveStatus.style.opacity = '0.3';
+    setTimeout(() => {
+        autosaveStatus.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> <span>Автоматаар хадгалагдлаа</span>`;
+        autosaveStatus.style.opacity = '1';
+    }, 200);
+}
+
+// Render Table Function
+function renderTable() {
+    tableBody.innerHTML = '';
+    
+    if (railData.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-light); padding: 24px;">Бүртгэл хоосон байна.</td></tr>`;
+        rowCount.textContent = `Нийт: 0`;
+        renderSummary();
+        return;
+    }
+
+    const sortedData = railData
+        .map((item, index) => ({ item, index }))
+        .sort((a, b) => {
+            const kmDiff = Number(a.item.km) - Number(b.item.km);
+            if (kmDiff !== 0) return kmDiff;
+
+            const pkDiff = Number(a.item.pk) - Number(b.item.pk);
+            if (pkDiff !== 0) return pkDiff;
+
+            return Number(a.item.ye) - Number(b.item.ye);
+        });
+
+    sortedData.forEach(({ item, index }, displayIndex) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${displayIndex + 1}</td>
+            <td>${item.km}</td>
+            <td>${item.pk}</td>
+            <td>${item.ye}</td>
+            <td><strong>${item.mark}</strong></td>
+            <td>${item.length} м</td>
+            <td>${item.year}</td>
+            <td>${item.note || '-'}</td>
+            <td class="actions-cell">
+                <button class="btn btn-icon btn-edit" onclick="editRow(${index})" title="Засах"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-icon btn-delete" onclick="deleteRow(${index})" title="Устгах"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    rowCount.textContent = `Нийт: ${railData.length}`;
+    renderSummary();
+}
+
+function renderSummary() {
+    const marks = ['Р-43', 'Р-50', 'Р-65'];
+    const lengths = ['25', '24.92', '24.84', '12.5', '12.46', '12.42'];
+
+    const summaryMap = new Map();
+
+    marks.forEach((mark) => {
+        summaryMap.set(mark, new Map(lengths.map((length) => [length, 0])));
+    });
+
+    railData.forEach((item) => {
+        if (!summaryMap.has(item.mark)) {
+            summaryMap.set(item.mark, new Map(lengths.map((length) => [length, 0])));
+        }
+
+        const markMap = summaryMap.get(item.mark);
+        const currentCount = markMap.get(String(item.length)) || 0;
+        markMap.set(String(item.length), currentCount + 1);
+    });
+
+    const summaryRows = Array.from(summaryMap.entries())
+        .filter(([, lengthMap]) => Array.from(lengthMap.values()).some((count) => count > 0))
+        .map(([mark, lengthMap]) => {
+            const cells = lengths.map((length) => `<td>${lengthMap.get(length) || 0}</td>`).join('');
+            const total = lengths.reduce((sum, length) => sum + (lengthMap.get(length) || 0), 0);
+
+            return `<tr><th>${mark}</th>${cells}<th>${total}</th></tr>`;
+        });
+
+    if (summaryRows.length === 0) {
+        summaryTableWrap.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-light);">Нэгтгэх өгөгдөл алга байна.</div>`;
+        return;
+    }
+
+    summaryTableWrap.innerHTML = `
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Марк</th>
+                    <th>25 м</th>
+                    <th>24.92 м</th>
+                    <th>24.84 м</th>
+                    <th>12.5 м</th>
+                    <th>12.46 м</th>
+                    <th>12.42 м</th>
+                    <th>Нийт</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${summaryRows.join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// Form Submit (Add or Update)
+railForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const newItem = {
+        km: kmInput.value,
+        pk: pkInput.value,
+        ye: yeInput.value,
+        mark: markInput.value,
+        length: lengthInput.value,
+        year: yearInput.value,
+        note: noteInput.value
+    };
+
+    const idx = parseInt(editIndex.value);
+
+    if (idx === -1) {
+        // Нэмэх
+        railData.push(newItem);
+    } else {
+        // Засварлах
+        railData[idx] = newItem;
+        resetFormState();
+    }
+
+    renderTable();
+    triggerAutosave();
+    railForm.reset();
+});
+
+// Edit Row
+function editRow(index) {
+    const item = railData[index];
+    kmInput.value = item.km;
+    pkInput.value = item.pk;
+    yeInput.value = item.ye;
+    markInput.value = item.mark;
+    lengthInput.value = item.length;
+    yearInput.value = item.year;
+    noteInput.value = item.note;
+
+    editIndex.value = index;
+    formTitle.textContent = 'Бүртгэл засварлах';
+    saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Хадгалах`;
+    cancelBtn.style.display = 'inline-flex';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Cancel Edit
+cancelBtn.addEventListener('click', () => {
+    resetFormState();
+    railForm.reset();
+});
+
+function resetFormState() {
+    editIndex.value = '-1';
+    formTitle.textContent = 'Шинэ бүртгэл нэмэх';
+    saveBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Нэмэх`;
+    cancelBtn.style.display = 'none';
+}
+
+// Delete Row
+function deleteRow(index) {
+    if (confirm('Энэхүү бүртгэлийг устгахдаа итгэлтэй байна уу?')) {
+        railData.splice(index, 1);
+        renderTable();
+        triggerAutosave();
+        
+        // Хэрэв засаж байсан мөрөө устгавал формыг цэвэрлэх
+        if (parseInt(editIndex.value) === index) {
+            resetFormState();
+            railForm.reset();
+        }
+    }
+}
+    </script>
+</body>
+</html>

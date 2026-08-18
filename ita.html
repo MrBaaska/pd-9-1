@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бүртгэлийн Хяналтын Систем Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+Mongolian&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #0a0c10;
+            --surface: #111318;
+            --surface2: #161a22;
+            --surface3: #1c2130;
+            --border: #252c3d;
+            --border2: #2e3a52;
+            --primary: #00d4ff;
+            --primary-dim: rgba(0,212,255,0.12);
+            --primary-glow: rgba(0,212,255,0.35);
+            --accent: #ff6b35;
+            --accent-dim: rgba(255,107,53,0.12);
+            --success: #00e676;
+            --success-dim: rgba(0,230,118,0.12);
+            --warning: #ffd740;
+            --warning-dim: rgba(255,215,64,0.12);
+            --purple: #b47fff;
+            --purple-dim: rgba(180,127,255,0.12);
+            --text: #e8edf5;
+            --text2: #8b97b0;
+            --text3: #4a566e;
+            --font-head: 'Rajdhani', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-head), sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 24px 60px;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: var(--font-head);
+            font-size: clamp(1.4rem, 3vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .header h1 span { color: var(--primary); }
+
+        .header-line {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+            margin-top: 16px;
+            opacity: 0.6;
+        }
+
+        /* ── STAT CARDS ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 22px 24px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+        .stat-card.c-blue::before { background: var(--primary); }
+        .stat-card.c-orange::before { background: var(--accent); }
+        .stat-card.c-green::before { background: var(--success); }
+        .stat-card.c-purple::before { background: var(--purple); }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .stat-value {
+            font-size: 3.4rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #ffffff;
+        }
+        .c-blue .stat-value { color: #ffffff; }
+        .c-orange .stat-value { color: #ffffff; }
+        .c-green .stat-value { color: #ffffff; }
+        .c-purple .stat-value { color: #ffffff; }
+
+        /* ── GRID MAIN ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        /* ── CHART ── */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+        .panel-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+        .panel-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text2);
+            text-transform: uppercase;
+        }
+
+        .panel-body { padding: 24px; }
+
+        .chart-wrap {
+            position: relative;
+            height: 360px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .month-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 14px 0 18px;
+        }
+
+        .month-summary-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            min-height: 74px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .month-summary-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--text2);
+            text-transform: uppercase;
+            line-height: 1.4;
+        }
+
+        .month-summary-value {
+            font-family: var(--font-head);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .month-summary-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .month-summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+        }
+
+        .month-summary-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text2);
+            min-width: 0;
+        }
+
+        .month-summary-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: 0 0 8px;
+        }
+
+        .month-summary-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .month-summary-count {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .month-summary-empty {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text3);
+            padding: 12px 0;
+        }
+
+        /* ── FORM ── */
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--text3);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .field label span { color: var(--primary); }
+
+        .field input, .field select, .field textarea {
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-family: var(--font-head);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            width: 100%;
+        }
+        .field textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-dim);
+        }
+
+        select option { background: #1c2130; }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 22px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-head);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: white;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .btn:hover::after { opacity: 0.08; }
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        .btn-primary:hover { box-shadow: 0 0 30px var(--primary-glow); }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        .btn-secondary:hover { box-shadow: 0 0 20px var(--primary-glow); }
+
+        .btn-danger {
+            background: rgba(255, 107, 53, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(255, 107, 53, 0.35);
+        }
+        .btn-danger:hover { box-shadow: 0 0 20px rgba(255, 107, 53, 0.2); }
+
+        .btn-soft {
+            background: var(--surface3);
+            color: var(--text2);
+            border: 1px solid var(--border2);
+        }
+        .btn-soft:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead tr {
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border2);
+        }
+
+        th {
+            padding: 13px 14px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--text3);
+            text-transform: uppercase;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text2);
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        tbody tr:hover td {
+            background: rgba(0,212,255,0.04);
+            color: var(--text);
+        }
+
+        td.name-cell {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        td.desc-cell {
+            text-align: left;
+            white-space: pre-line;
+            color: var(--text2);
+            font-size: 12.5px;
+            max-width: 280px;
+        }
+
+        .num-cell {
+            font-family: var(--font-mono);
+            color: var(--text3);
+        }
+
+        /* ── BADGE ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 2px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        .badge-green { background: var(--success-dim); color: var(--success); border: 1px solid rgba(0,230,118,0.25); }
+        .badge-blue  { background: var(--primary-dim); color: var(--primary); border: 1px solid rgba(0,212,255,0.25); }
+
+        /* ── ACTION BUTTONS ── */
+        .action-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text3);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 5px 9px;
+            transition: all 0.2s;
+            margin: 0 2px;
+        }
+        .action-btn:hover.edit { border-color: var(--primary); color: var(--primary); }
+        .action-btn:hover.del  { border-color: var(--accent); color: var(--accent); }
+
+        /* ── MODAL ── */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.open { display: flex; }
+
+        .modal-box {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 32px;
+            width: 90%;
+            max-width: 440px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 18px;
+            background: none;
+            border: none;
+            color: var(--text3);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--accent); }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 22px;
+            text-transform: uppercase;
+        }
+
+        .qr-area {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .verify-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .helper-text {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text3);
+            letter-spacing: 1px;
+            line-height: 1.5;
+        }
+
+        .scan-region {
+            width: 100%;
+            min-height: 280px;
+            border: 1px solid var(--border2);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #0b0e14;
+        }
+
+        .scan-status {
+            margin-top: 14px;
+            min-height: 18px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--text2);
+            text-align: center;
+        }
+
+        .staff-tools {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .staff-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .staff-actions .btn:last-child {
+            grid-column: 1 / -1;
+        }
+
+        .staff-status {
+            min-height: 18px;
+            margin-top: 12px;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text3);
+        }
+        .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+        .empty-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 500px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .btn { font-size: 12px; padding: 9px 14px; }
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            .form-panel, body::before { display: none !important; }
+            .table-wrap { border: 1px solid #ccc; }
+        }
+
+        /* ── SCROLL ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>📋 ЗАМЫН ХЭСЭГТ <span>ҮЗЛЭГ ХИЙСЭН</span> УДИРДАХ АЖИЛТНЫ БҮРТГЭЛ</h1>
+        <div class="header-line"></div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+        <div class="stat-card c-blue">
+            <div class="stat-label">Хяналтын нийт үзлэг /удаа/</div>
+            <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card c-green">
+            <div class="stat-label">Өнөөдрийн</div>
+            <div class="stat-value" id="statToday">0</div>
+        </div>
+        <div class="stat-card c-orange">
+            <div class="stat-label">Энэ сарын</div>
+            <div class="stat-value" id="statMonth">0</div>
+        </div>
+        <div class="stat-card c-purple">
+            <div class="stat-label">Илэрсэн нийт үл тохирол</div>
+            <div class="stat-value" id="statTypes">0</div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID: Chart + Form -->
+    <div class="main-grid">
+        <!-- Chart Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-dot" style="background: var(--primary);"></div>
+                <span class="panel-title">Үзлэгийн статистик</span>
+            </div>
+            <div class="panel-body">
+                <div class="chart-wrap">
+                    <canvas id="statChart"></canvas>
+                </div>
+                <div class="chart-wrap" style="margin-top:32px;">
+                    <span style="font-family:var(--font-mono);font-size:12px;color:var(--text2);margin-left:8px;">Сар бүрийн үзүүлэлт</span>
+                    <div id="monthSummary" class="month-summary-grid"></div>
+                    <canvas id="monthChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Panel -->
+        <div class="panel form-panel">
+            <div class="panel-header">
+                <div class="panel-dot" style="background: var(--accent);"></div>
+                <span class="panel-title">Шинэ бүртгэл</span>
+            </div>
+            <div class="panel-body">
+                <div class="form-grid">
+                    <div class="field">
+                        <label><span>▸</span> Огноо</label>
+                        <input type="datetime-local" id="dateInput">
+                    </div>
+                    <div class="field">
+                        <label><span>▸</span> Үзлэг хийсэн ажилтан</label>
+                        <select id="nameSelect">
+                            <option value="">— Сонголт —</option>
+                        </select>
+                        <div class="staff-tools">
+                            <div class="helper-text">Албан тушаал, нэрийн жагсаалтыг засварлаж болно.</div>
+                            <button type="button" class="btn btn-soft" onclick="openStaffModal()">✍️ &nbsp;Ажилтан Удирдах</button>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label><span>▸</span> Үзлэгийн төрөл</label>
+                        <select id="goalSelect">
+                            <option value="Шатны Үзлэг">3-н шатны үзлэг</option>
+                            <option value="Ээлжит">Ээлжит</option>
+                            <option value="Ээлжит бус">Ээлжит бус</option>
+                            <option value="Замын албаны">Замын албаны</option>
+                            <option value="Замын даргын">Замын даргын</option>
+                            <option value="Комиссын">Комиссын</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label><span>▸</span> Илэрсэн дутагдал</label>
+                        <textarea id="descInput" placeholder="1. Текст&#10;2. Текст"></textarea>
+                    </div>
+                    <div class="field">
+                        <label><span>▸</span> Үзлэгийг дагалдсан</label>
+                        <select id="sizeSelect">
+                            <option value="ПД">ПД Баасанжаргал</option>
+                            <option value="ПДВ1">ПДБк Нэргүй</option>
+                            <option value="ПДВ2">ПДБр Оргил</option>
+                            <option value="ПДВ3">ПДБс Төгөлдөр</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label><span>▸</span> Баталгаажуулалт</label>
+                        <div class="verify-row">
+                            <span id="verifyBadge" class="badge badge-green">✓ Гараар</span>
+                            <button type="button" class="btn btn-secondary" onclick="openScanModal()">
+                                📷 &nbsp;QR Уншуулж Бүртгэх
+                            </button>
+                        </div>
+                        <div class="helper-text">Гар утасны камераар QR уншуулмагц тухайн ажилтны нэр автоматаар сонгогдож, одоогийн формын утгаар бүртгэгдэнэ.</div>
+                    </div>
+                    <button id="mainBtn" class="btn btn-primary" onclick="saveData()" style="width:100%; justify-content:center; margin-top:4px;">
+                        💾 &nbsp;Өгөгдөл Бүртгэх
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+        <div class="panel-header" style="border-bottom: 1px solid var(--border2);">
+            <div class="panel-dot" style="background: var(--success);"></div>
+            <span class="panel-title">Бүртгэлийн жагсаалт</span>
+            <span id="tableCount" style="margin-left:auto; font-family:var(--font-mono); font-size:10px; color:var(--text3);">0 бичлэг</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th>Д/д</th>
+                        <th>Огноо</th>
+                        <th>Үзлэг хийсэн</th>
+                        <th>Зорилго</th>
+                        <th style="text-align:left;">Илэрсэн үүсгэл</th>
+                        <th>Хөндөө</th>
+                        <th>Баталгаажуулалт</th>
+                        <th>Үйлдэл</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                        <tr class="empty-row">
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-icon">📋</div>
+                                <div class="empty-label">Бүртгэл байхгүй байна</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- QR MODAL -->
+<div id="qrModal" class="modal" onclick="handleModalClick(event)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeQRModal()">✕</button>
+        <div class="modal-title">📱 Ажилтны QR Код</div>
+        <div class="field" style="margin-bottom: 16px;">
+            <label><span>▸</span> Ажилтан сонгох</label>
+            <select id="qrStaffSelect">
+                <option value="">— Сонгоно уу —</option>
+            </select>
+        </div>
+        <div class="qr-area" id="qrcode"></div>
+        <p style="font-family:var(--font-mono); font-size:10px; color:var(--text3); letter-spacing:1px; text-align:center; margin-bottom:16px;">
+            QR КОДЫГ УНШУУЛАН БҮРТГЭЛ ХИЙНЭ ҮҮ
+        </p>
+        <button onclick="downloadQR()" class="btn btn-primary" style="width:100%; justify-content:center;">
+            💾 &nbsp;QR Зураг Татах
+        </button>
+    </div>
+</div>
+
+<div id="scanModal" class="modal" onclick="handleScanModalClick(event)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeScanModal()">✕</button>
+        <div class="modal-title">📷 QR Уншуулах</div>
+        <div class="helper-text" style="margin-bottom: 16px; text-align: center;">
+            Гар утасны арын камераар ажилтны QR кодыг уншуулна уу.
+        </div>
+        <div id="scanReader" class="scan-region"></div>
+        <div id="scanStatus" class="scan-status">Камер ачаалж байна...</div>
+    </div>
+</div>
+
+<div id="staffModal" class="modal" onclick="handleStaffModalClick(event)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeStaffModal()">✕</button>
+        <div class="modal-title">👤 Ажилтны Жагсаалт</div>
+        <div class="field">
+            <label><span>▸</span> Засах ажилтан</label>
+            <select id="staffManageSelect">
+                <option value="">— Шинэ ажилтан нэмэх —</option>
+            </select>
+        </div>
+        <div class="field" style="margin-top: 14px;">
+            <label><span>▸</span> Албан тушаал</label>
+            <input type="text" id="staffRoleInput" placeholder="Жишээ: ПЧ, ЗамПЧ, ПЧД">
+        </div>
+        <div class="field" style="margin-top: 14px;">
+            <label><span>▸</span> Нэр</label>
+            <input type="text" id="staffNameInput" placeholder="Ажилтны нэр">
+        </div>
+        <div class="staff-actions">
+            <button type="button" class="btn btn-primary" onclick="saveStaffMember()">💾 &nbsp;Хадгалах</button>
+            <button type="button" class="btn btn-danger" onclick="deleteStaffMember()">🗑️ &nbsp;Устгах</button>
+            <button type="button" class="btn btn-soft" onclick="resetStaffForm()">↺ &nbsp;Шинэ Мөр</button>
+        </div>
+        <div id="staffStatus" class="helper-text staff-status"></div>
+    </div>
+</div>
+
+<script>
+    const { jsPDF } = window.jspdf;
+    let entries = [];
+    let staffOptions = [];
+    let editingId = null;
+    let myChart = null;
+    let qrCodeInstance = null;
+    let selectedVerification = 'Гараар';
+    let qrScanner = null;
+    let scanInProgress = false;
+
+    const COLORS = ['#00d4ff','#ff6b35','#00e676','#ffd740','#b47fff','#ff4081','#64ffda'];
+    const DEFAULT_STAFF_OPTIONS = [
+        { id: 'staff-1', role: 'ПЧ', name: 'Оргодол' },
+        { id: 'staff-2', role: 'ЗамПЧ', name: 'Болдбаатар' },
+        { id: 'staff-3', role: 'ПЧД', name: 'Оргил' },
+        { id: 'staff-4', role: 'ПЧИС', name: 'Нэмхүү' },
+        { id: 'staff-5', role: 'ПЧИ-1', name: 'Анхбаяр' },
+        { id: 'staff-6', role: 'ПЧИ-2', name: 'Нэмдорж' },
+        { id: 'staff-7', role: 'ПЧВТ', name: 'Сүхбат' },
+        { id: 'staff-8', role: 'ПЧИоб', name: 'Ганбаатар' }
+    ];
+    const STORAGE_KEYS = {
+        entries: 'logs_pro_v2',
+        draft: 'logs_pro_v2_draft',
+        staff: 'logs_pro_v2_staff'
+    };
+
+    function staffLabel(staff) {
+        return [staff.role, staff.name].filter(Boolean).join(' ').trim();
+    }
+
+    function saveStaffOptions() {
+        localStorage.setItem(STORAGE_KEYS.staff, JSON.stringify(staffOptions));
+    }
+
+    function loadStaffOptions() {
+        const saved = localStorage.getItem(STORAGE_KEYS.staff);
+        if (!saved) {
+            staffOptions = DEFAULT_STAFF_OPTIONS.map((staff) => ({ ...staff }));
+            saveStaffOptions();
+            return;
+        }
+
+        try {
+            const parsed = JSON.parse(saved);
+            staffOptions = Array.isArray(parsed) && parsed.length ? parsed : DEFAULT_STAFF_OPTIONS.map((staff) => ({ ...staff }));
+        } catch (error) {
+            staffOptions = DEFAULT_STAFF_OPTIONS.map((staff) => ({ ...staff }));
+        }
+    }
+
+    function renderStaffOptions() {
+        const nameSelect = document.getElementById('nameSelect');
+        const qrSelect = document.getElementById('qrStaffSelect');
+        const manageSelect = document.getElementById('staffManageSelect');
+        const currentName = nameSelect ? nameSelect.value : '';
+        const currentQr = qrSelect ? qrSelect.value : '';
+        const currentManage = manageSelect ? manageSelect.value : '';
+
+        if (nameSelect) {
+            nameSelect.innerHTML = '<option value="">— Сонголт —</option>';
+            staffOptions.forEach((staff) => {
+                nameSelect.insertAdjacentHTML('beforeend', `<option value="${staff.name}">${staffLabel(staff)}</option>`);
+            });
+            nameSelect.value = staffOptions.some((staff) => staff.name === currentName) ? currentName : '';
+        }
+
+        if (qrSelect) {
+            qrSelect.innerHTML = '<option value="">— Сонгоно уу —</option>';
+            staffOptions.forEach((staff) => {
+                qrSelect.insertAdjacentHTML('beforeend', `<option value="${staff.name}">${staffLabel(staff)}</option>`);
+            });
+            qrSelect.value = staffOptions.some((staff) => staff.name === currentQr) ? currentQr : '';
+        }
+
+        if (manageSelect) {
+            manageSelect.innerHTML = '<option value="">— Шинэ ажилтан нэмэх —</option>';
+            staffOptions.forEach((staff) => {
+                manageSelect.insertAdjacentHTML('beforeend', `<option value="${staff.id}">${staffLabel(staff)}</option>`);
+            });
+            manageSelect.value = staffOptions.some((staff) => staff.id === currentManage) ? currentManage : '';
+        }
+    }
+
+    function setStaffStatus(message, isError = false) {
+        const status = document.getElementById('staffStatus');
+        status.textContent = message;
+        status.style.color = isError ? 'var(--accent)' : 'var(--text2)';
+    }
+
+    function fillStaffForm(staffId) {
+        const staff = staffOptions.find((item) => item.id === staffId);
+        document.getElementById('staffRoleInput').value = staff ? staff.role : '';
+        document.getElementById('staffNameInput').value = staff ? staff.name : '';
+        setStaffStatus(staff ? 'Ажилтны мэдээллийг засварлаж болно.' : '');
+    }
+
+    function resetStaffForm() {
+        document.getElementById('staffManageSelect').value = '';
+        document.getElementById('staffRoleInput').value = '';
+        document.getElementById('staffNameInput').value = '';
+        setStaffStatus('Шинэ ажилтан нэмэхэд бэлэн.');
+    }
+
+    function openStaffModal() {
+        renderStaffOptions();
+        document.getElementById('staffModal').classList.add('open');
+        resetStaffForm();
+    }
+
+    function closeStaffModal() {
+        document.getElementById('staffModal').classList.remove('open');
+    }
+
+    function handleStaffModalClick(e) {
+        if (e.target === document.getElementById('staffModal')) closeStaffModal();
+    }
+
+    function syncRenamedStaff(oldName, newName) {
+        if (oldName === newName) return;
+
+        if (document.getElementById('nameSelect').value === oldName) {
+            document.getElementById('nameSelect').value = newName;
+        }
+
+        if (document.getElementById('qrStaffSelect').value === oldName) {
+            document.getElementById('qrStaffSelect').value = newName;
+        }
+
+        entries = entries.map((entry) => entry.name === oldName ? { ...entry, name: newName } : entry);
+
+        const draftRaw = localStorage.getItem(STORAGE_KEYS.draft);
+        if (draftRaw) {
+            try {
+                const draft = JSON.parse(draftRaw);
+                if (draft.name === oldName) {
+                    draft.name = newName;
+                    localStorage.setItem(STORAGE_KEYS.draft, JSON.stringify(draft));
+                }
+            } catch (error) {
+            }
+        }
+    }
+
+    function saveStaffMember() {
+        const selectedId = document.getElementById('staffManageSelect').value;
+        const role = document.getElementById('staffRoleInput').value.trim();
+        const name = document.getElementById('staffNameInput').value.trim();
+
+        if (!role || !name) {
+            setStaffStatus('Албан тушаал болон нэрийг хоёуланг нь оруулна уу.', true);
+            return;
+        }
+
+        const duplicate = staffOptions.find((staff) => staff.name === name && staff.id !== selectedId);
+        if (duplicate) {
+            setStaffStatus('Ижил нэртэй ажилтан аль хэдийн байна.', true);
+            return;
+        }
+
+        if (selectedId) {
+            const current = staffOptions.find((staff) => staff.id === selectedId);
+            const oldName = current ? current.name : name;
+            staffOptions = staffOptions.map((staff) => staff.id === selectedId ? { ...staff, role, name } : staff);
+            syncRenamedStaff(oldName, name);
+            setStaffStatus('Ажилтны мэдээлэл шинэчлэгдлээ.');
+        } else {
+            const newStaff = { id: `staff-${Date.now()}`, role, name };
+            staffOptions.push(newStaff);
+            setStaffStatus('Шинэ ажилтан нэмэгдлээ.');
+        }
+
+        saveStaffOptions();
+        saveToStorage();
+        renderStaffOptions();
+        document.getElementById('staffManageSelect').value = selectedId || staffOptions[staffOptions.length - 1].id;
+        fillStaffForm(document.getElementById('staffManageSelect').value);
+        saveDraft();
+        renderTable();
+        updateStats();
+    }
+
+    function deleteStaffMember() {
+        const selectedId = document.getElementById('staffManageSelect').value;
+        if (!selectedId) {
+            setStaffStatus('Устгах ажилтнаа сонгоно уу.', true);
+            return;
+        }
+
+        const staff = staffOptions.find((item) => item.id === selectedId);
+        if (!staff) return;
+
+        if (!confirm(`${staffLabel(staff)} ажилтныг жагсаалтаас устгах уу?`)) {
+            return;
+        }
+
+        staffOptions = staffOptions.filter((item) => item.id !== selectedId);
+        if (document.getElementById('nameSelect').value === staff.name) {
+            document.getElementById('nameSelect').value = '';
+        }
+        if (document.getElementById('qrStaffSelect').value === staff.name) {
+            document.getElementById('qrStaffSelect').value = '';
+        }
+        saveStaffOptions();
+        renderStaffOptions();
+        resetStaffForm();
+        saveDraft();
+        setStaffStatus('Ажилтан жагсаалтаас устгагдлаа.');
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem(STORAGE_KEYS.entries);
+        if (!saved) {
+            entries = [];
+            return;
+        }
+
+        try {
+            const parsed = JSON.parse(saved);
+            entries = Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            entries = [];
+        }
+    }
+
+    function saveToStorage() {
+        localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify(entries));
+    }
+
+    function getFormState() {
+        return {
+            date: document.getElementById('dateInput').value,
+            name: document.getElementById('nameSelect').value,
+            goal: document.getElementById('goalSelect').value,
+            desc: document.getElementById('descInput').value,
+            size: document.getElementById('sizeSelect').value,
+            verified: selectedVerification,
+            editingId
+        };
+    }
+
+    function saveDraft() {
+        localStorage.setItem(STORAGE_KEYS.draft, JSON.stringify(getFormState()));
+    }
+
+    function clearDraft() {
+        localStorage.removeItem(STORAGE_KEYS.draft);
+    }
+
+    function loadDraft() {
+        const savedDraft = localStorage.getItem(STORAGE_KEYS.draft);
+        if (!savedDraft) {
+            document.getElementById('dateInput').value = new Date().toISOString().slice(0, 16);
+            return;
+        }
+
+        try {
+            const draft = JSON.parse(savedDraft);
+            document.getElementById('dateInput').value = draft.date || new Date().toISOString().slice(0, 16);
+            document.getElementById('nameSelect').value = draft.name || '';
+            document.getElementById('goalSelect').value = draft.goal || document.getElementById('goalSelect').value;
+            document.getElementById('descInput').value = draft.desc || '';
+            document.getElementById('sizeSelect').value = draft.size || document.getElementById('sizeSelect').value;
+            document.getElementById('nameSelect').value = staffOptions.some((staff) => staff.name === draft.name) ? draft.name : '';
+            editingId = draft.editingId || null;
+            selectedVerification = draft.verified || 'Гараар';
+        } catch (error) {
+            document.getElementById('dateInput').value = new Date().toISOString().slice(0, 16);
+            selectedVerification = 'Гараар';
+        }
+    }
+
+    function attachAutosaveListeners() {
+        ['dateInput', 'nameSelect', 'goalSelect', 'descInput', 'sizeSelect'].forEach((id) => {
+            const eventName = id === 'descInput' ? 'input' : 'change';
+            document.getElementById(id).addEventListener(eventName, saveDraft);
+            if (eventName !== 'input') {
+                document.getElementById(id).addEventListener('input', saveDraft);
+            }
+        });
+    }
+
+    function updateVerificationBadge() {
+        const badge = document.getElementById('verifyBadge');
+        if (!badge) return;
+        const isQr = selectedVerification.includes('QR');
+        badge.className = `badge ${isQr ? 'badge-blue' : 'badge-green'}`;
+        badge.textContent = `${isQr ? '📱' : '✓'} ${selectedVerification}`;
+    }
+
+    function resetVerification() {
+        selectedVerification = 'Гараар';
+        updateVerificationBadge();
+        saveDraft();
+    }
+
+    function saveData() {
+        const entry = {
+            id: editingId || Date.now(),
+            date: document.getElementById("dateInput").value.replace('T', ' '),
+            name: document.getElementById("nameSelect").value,
+            goal: document.getElementById("goalSelect").value,
+            desc: document.getElementById("descInput").value,
+            size: document.getElementById("sizeSelect").value,
+            verified: selectedVerification
+        };
+
+        if (!entry.name) { alert("Ажилтны нэр сонгоно уу!"); return; }
+
+        if (editingId) {
+            entries = entries.map(e => e.id === editingId ? entry : e);
+            editingId = null;
+            document.getElementById("mainBtn").innerHTML = '💾 &nbsp;Өгөгдөл Бүртгэх';
+        } else {
+            entries.push(entry);
+        }
+
+        renderApp();
+        document.getElementById("descInput").value = "";
+        editingId = null;
+        document.getElementById('nameSelect').value = '';
+        document.getElementById('dateInput').value = new Date().toISOString().slice(0, 16);
+        resetVerification();
+        clearDraft();
+    }
+
+    function renderApp() {
+        saveToStorage();
+        updateStats();
+        renderTable();
+        updateChart();
+    }
+
+    function getEntryDatePrefix(entry, length) {
+        const rawDate = String(entry?.date || '').replace('T', ' ').trim();
+        return rawDate.slice(0, length);
+    }
+
+    function setStatValue(id, value) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.textContent = String(value);
+    }
+
+    function updateStats() {
+        const today = new Date().toISOString().slice(0, 10);
+        const month = new Date().toISOString().slice(0, 7);
+        const safeEntries = Array.isArray(entries) ? entries : [];
+        const totalCount = safeEntries.length;
+        const todayCount = safeEntries.filter((entry) => getEntryDatePrefix(entry, 10) === today).length;
+        const monthCount = safeEntries.filter((entry) => getEntryDatePrefix(entry, 7) === month).length;
+        const types = safeEntries.reduce((sum, e) => {
+            if (!e.desc) return sum;
+            const count = e.desc.split('\n').filter(line => /^\d+\./.test(line.trim())).length;
+            return sum + count;
+        }, 0);
+
+        setStatValue('statTotal', totalCount);
+        setStatValue('statToday', todayCount);
+        setStatValue('statMonth', monthCount);
+        setStatValue('statTypes', types);
+
+        const tableCount = document.getElementById('tableCount');
+        if (tableCount) {
+            tableCount.textContent = totalCount + ' бичлэг';
+        }
+    }
+
+    const goalColors = {
+        'Шатны Үзлэг': '#00d4ff',
+        'Ээлжит': '#00e676',
+        'Ээлжит бус': '#ffd740',
+        'Замын албаны': '#ff6b35',
+        'Замын даргын': '#b47fff',
+        'Комиссын': '#ff4081'
+    };
+
+    function goalBadge(goal) {
+        const c = goalColors[goal] || '#8b97b0';
+        return `<span class="badge badge-blue" style="background:${c}22; color:${c}; border-color:${c}44;">${goal}</span>`;
+    }
+
+    function verificationBadge(verified) {
+        const isQr = String(verified || '').includes('QR');
+        const badgeClass = isQr ? 'badge-blue' : 'badge-green';
+        const icon = isQr ? '📱' : '✓';
+        return `<span class="badge ${badgeClass}">${icon} ${verified}</span>`;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById("tableBody");
+        if (entries.length === 0) {
+            tbody.innerHTML = `<tr class="empty-row"><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-label">Бүртгэл байхгүй байна</div></div></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = "";
+        entries.forEach((item, index) => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="num-cell">${String(index + 1).padStart(2, '0')}</td>
+                <td style="font-family:var(--font-mono);font-size:11px;white-space:nowrap;">${item.date}</td>
+                <td class="name-cell">${item.name}</td>
+                <td>${goalBadge(item.goal)}</td>
+                <td class="desc-cell">${item.desc || '—'}</td>
+                <td style="font-size:12px;">${item.size}</td>
+                <td>${verificationBadge(item.verified)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="action-btn edit" onclick="editEntry(${item.id})" title="Засах">✏️</button>
+                    <button class="action-btn del" onclick="deleteEntry(${item.id})" title="Устгах">🗑️</button>
+                </td>
+            `;
+        });
+    }
+
+    const centerLabelPlugin = {
+        id: 'centerLabel',
+        afterDraw(chart) {
+            if (chart.config.type !== 'doughnut') return;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            const cx = (chartArea.left + chartArea.right) / 2;
+            const cy = (chartArea.top + chartArea.bottom) / 2;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 2rem Rajdhani, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(total, cx, cy - 10);
+            ctx.font = '9px IBM Plex Mono, monospace';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('НИЙТ', cx, cy + 14);
+            ctx.restore();
+        }
+    };
+
+    const segmentCountPlugin = {
+        id: 'segmentCount',
+        afterDatasetsDraw(chart) {
+            if (chart.config.type !== 'doughnut') return;
+            const { ctx } = chart;
+            const dataset = chart.data.datasets[0];
+            const meta = chart.getDatasetMeta(0);
+            ctx.save();
+            ctx.font = 'bold 13px IBM Plex Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            meta.data.forEach((arc, i) => {
+                const value = dataset.data[i];
+                if (!value) return;
+                const center = arc.getCenterPoint();
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(value, center.x, center.y);
+            });
+            ctx.restore();
+        }
+    };
+
+    function renderMonthSummary(monthLabels, monthValues, monthDetails) {
+        const container = document.getElementById('monthSummary');
+        if (!container) return;
+
+        if (!monthLabels.length) {
+            container.innerHTML = '<div class="month-summary-empty">Сарын өгөгдөл байхгүй байна.</div>';
+            return;
+        }
+
+        container.innerHTML = monthLabels.map((label, index) => `
+            <div class="month-summary-card">
+                <div class="month-summary-label">${label}</div>
+                <div class="month-summary-value">${monthValues[index]}</div>
+                <div class="month-summary-breakdown">${(monthDetails[index] || []).map((item) => `
+                    <div class="month-summary-row">
+                        <div class="month-summary-type">
+                            <span class="month-summary-dot" style="background:${item.color};"></span>
+                            <span class="month-summary-name">${item.goal}</span>
+                        </div>
+                        <span class="month-summary-count">${item.count}</span>
+                    </div>
+                `).join('')}</div>
+            </div>
+        `).join('');
+    }
+
+    function updateChart() {
+        // Doughnut chart (by goal)
+        const stats = entries.reduce((acc, curr) => {
+            acc[curr.goal] = (acc[curr.goal] || 0) + 1;
+            return acc;
+        }, {});
+
+        if (Object.keys(stats).length === 0) {
+            if (myChart) { myChart.destroy(); myChart = null; }
+            // Clear month chart too
+            if (window.monthChart) { window.monthChart.destroy(); window.monthChart = null; }
+            renderMonthSummary([], []);
+            return;
+        }
+
+        const labels = Object.keys(stats);
+        const values = Object.values(stats);
+        const total = values.reduce((a, b) => a + b, 0);
+        const colors = labels.map((l, i) => goalColors[l] || COLORS[i % COLORS.length]);
+
+        const data = {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors.map(c => c + '33'),
+                borderColor: colors,
+                borderWidth: 2,
+                hoverOffset: 12,
+                hoverBorderWidth: 3
+            }]
+        };
+
+        if (myChart) myChart.destroy();
+        const ctx = document.getElementById('statChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '58%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        align: 'center',
+                        labels: {
+                            generateLabels(chart) {
+                                const d = chart.data;
+                                if (!d.labels.length || !d.datasets.length) return [];
+                                const t = d.datasets[0].data.reduce((a, b) => a + b, 0);
+                                return d.labels.map((label, i) => {
+                                    const val = d.datasets[0].data[i];
+                                    const pct = t > 0 ? ((val / t) * 100).toFixed(0) : 0;
+                                    const clr = d.datasets[0].borderColor[i];
+                                    return {
+                                        text: `${label}  ${val} (${pct}%)`,
+                                        fillStyle: clr,
+                                        strokeStyle: clr,
+                                        lineWidth: 2,
+                                        fontColor: '#ffffff',
+                                        color: '#ffffff',
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            },
+                            color: '#ffffff',
+                            font: { family: 'IBM Plex Mono', size: 13, weight: '600' },
+                            padding: 18,
+                            usePointStyle: true,
+                            pointStyleWidth: 14,
+                            boxWidth: 14,
+                            boxHeight: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#161a22',
+                        borderColor: '#252c3d',
+                        borderWidth: 1,
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        cornerRadius: 6,
+                        padding: 12,
+                        callbacks: {
+                            label(context) {
+                                const val = context.parsed;
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return `  ${context.label}: ${val} бүртгэл (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [centerLabelPlugin, segmentCountPlugin]
+        });
+
+        // --- Monthly bar chart ---
+        // Group by year-month
+        const monthStats = {};
+        const monthGoalStats = {};
+        entries.forEach(e => {
+            const ym = (e.date || '').slice(0, 7); // yyyy-mm
+            if (!ym) return;
+            monthStats[ym] = (monthStats[ym] || 0) + 1;
+            monthGoalStats[ym] = monthGoalStats[ym] || {};
+            monthGoalStats[ym][e.goal] = (monthGoalStats[ym][e.goal] || 0) + 1;
+        });
+        const monthLabels = Object.keys(monthStats).sort();
+        const monthValues = monthLabels.map(m => monthStats[m]);
+
+        // Assign a unique color for each month
+        const monthBarColors = monthLabels.map((_, i) => COLORS[i % COLORS.length] + 'cc');
+        const monthBorderColors = monthLabels.map((_, i) => COLORS[i % COLORS.length]);
+
+        // Mongolian month names for better display
+        const mnMonths = ['1-р сар','2-р сар','3-р сар','4-р сар','5-р сар','6-р сар','7-р сар','8-р сар','9-р сар','10-р сар','11-р сар','12-р сар'];
+        const monthLabelsDisplay = monthLabels.map(m => {
+            const [y, mo] = m.split('-');
+            return `${y} оны ${mnMonths[parseInt(mo,10)-1]}`;
+        });
+        const monthDetails = monthLabels.map((monthKey) => Object.entries(monthGoalStats[monthKey] || {})
+            .sort((a, b) => b[1] - a[1])
+            .map(([goal, count]) => ({
+                goal,
+                count,
+                color: goalColors[goal] || '#8b97b0'
+            }))
+        );
+        renderMonthSummary(monthLabelsDisplay, monthValues, monthDetails);
+
+        // Destroy previous chart if exists
+        if (window.monthChart) window.monthChart.destroy();
+        const monthCtx = document.getElementById('monthChart').getContext('2d');
+        window.monthChart = new Chart(monthCtx, {
+            type: 'bar',
+            data: {
+                labels: monthLabelsDisplay,
+                datasets: [{
+                    label: 'Үзлэгийн тоо',
+                    data: monthValues,
+                    backgroundColor: monthBarColors,
+                    borderColor: monthBorderColors,
+                    borderWidth: 3,
+                    borderRadius: 16,
+                    maxBarThickness: 38,
+                    hoverBackgroundColor: monthBorderColors,
+                    hoverBorderColor: '#ffd740',
+                    hoverBorderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#161a22',
+                        borderColor: '#252c3d',
+                        borderWidth: 1,
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        cornerRadius: 6,
+                        padding: 12,
+                        callbacks: {
+                            title: ctx => ctx[0].label,
+                            label: ctx => `  ${ctx.parsed.y} үзлэг`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#e8edf5', font: { family: 'IBM Plex Mono', size: 13, weight: 'bold' } },
+                        grid: { color: '#252c3d' },
+                        border: { color: '#252c3d' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e8edf5', font: { family: 'IBM Plex Mono', size: 13 }, stepSize: 1 },
+                        grid: { color: '#252c3d' },
+                        border: { color: '#252c3d' }
+                    }
+                },
+                animation: {
+                    duration: 900,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+
+    function editEntry(id) {
+        const item = entries.find(e => e.id === id);
+        document.getElementById("dateInput").value = item.date.replace(' ', 'T');
+        document.getElementById("nameSelect").value = item.name;
+        document.getElementById("goalSelect").value = item.goal;
+        document.getElementById("descInput").value = item.desc;
+        document.getElementById("sizeSelect").value = item.size;
+        editingId = id;
+        selectedVerification = item.verified || 'Гараар';
+        updateVerificationBadge();
+        document.getElementById("mainBtn").innerHTML = '🔄 &nbsp;Шинэчлэх';
+        saveDraft();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteEntry(id) {
+        if (confirm("Устгахдаа итгэлтэй байна уу?")) {
+            entries = entries.filter(e => e.id !== id);
+            renderApp();
+        }
+    }
+
+    function exportPDF() {
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Zamyn Uzlegiin Tailan", 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Ognoо: ${new Date().toLocaleDateString('mn-MN')}`, 14, 28);
+        const tableData = entries.map((item, index) => [
+            index + 1, item.date, item.name, item.goal, item.desc, item.size, item.verified
+        ]);
+        doc.autoTable({
+            head: [['D/d', 'Date', 'Staff', 'Goal', 'Description', 'Companion', 'Status']],
+            body: tableData,
+            startY: 35,
+            theme: 'grid',
+            headStyles: { fillColor: [0, 212, 255], textColor: [0, 0, 0] },
+            styles: { fontSize: 8, cellPadding: 3 },
+            columnStyles: { 4: { cellWidth: 50 } }
+        });
+        doc.save(`uzleg_tailan_${new Date().toISOString().slice(0, 10)}.pdf`);
+    }
+
+    function printPage() { window.print(); }
+
+    function showQRModal() {
+        document.getElementById('qrModal').classList.add('open');
+        document.getElementById('qrStaffSelect').value = '';
+        document.getElementById('qrcode').innerHTML = '';
+    }
+
+    function closeQRModal() {
+        document.getElementById('qrModal').classList.remove('open');
+    }
+
+    function handleModalClick(e) {
+        if (e.target === document.getElementById('qrModal')) closeQRModal();
+    }
+
+    function handleScanModalClick(e) {
+        if (e.target === document.getElementById('scanModal')) closeScanModal();
+    }
+
+    function setScanStatus(message, isError = false) {
+        const status = document.getElementById('scanStatus');
+        status.textContent = message;
+        status.style.color = isError ? 'var(--accent)' : 'var(--text2)';
+    }
+
+    function findStaffValue(rawValue) {
+        const value = String(rawValue || '').trim();
+        const exact = staffOptions.find((staff) => staff.name === value);
+        if (exact) return exact.name;
+        const byLabel = staffOptions.find((staff) => staffLabel(staff).includes(value));
+        return byLabel ? byLabel.name : '';
+    }
+
+    async function handleScanSuccess(decodedText) {
+        if (scanInProgress) return;
+        scanInProgress = true;
+
+        const staffValue = findStaffValue(decodedText);
+        if (!staffValue) {
+            setScanStatus('Танигдсан QR код бүртгэлтэй ажилтантай таарсангүй.', true);
+            scanInProgress = false;
+            return;
+        }
+
+        document.getElementById('nameSelect').value = staffValue;
+        selectedVerification = 'QR камераар';
+        updateVerificationBadge();
+        saveDraft();
+        setScanStatus(`Уншсан ажилтан: ${staffValue}`);
+
+        await stopScan();
+        closeScanModal(false);
+        saveData();
+        scanInProgress = false;
+    }
+
+    async function startScan() {
+        if (qrScanner) {
+            await stopScan();
+        }
+
+        qrScanner = new Html5Qrcode('scanReader');
+        setScanStatus('Камер нээж байна...');
+
+        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+        try {
+            await qrScanner.start({ facingMode: 'environment' }, config, handleScanSuccess);
+            setScanStatus('QR кодыг камерын хүрээнд оруулна уу.');
+        } catch (error) {
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                if (!cameras.length) throw error;
+                await qrScanner.start(cameras[0].id, config, handleScanSuccess);
+                setScanStatus('QR кодыг камерын хүрээнд оруулна уу.');
+            } catch (cameraError) {
+                setScanStatus('Камер ажиллуулж чадсангүй. Browser camera permission шаардлагатай.', true);
+            }
+        }
+    }
+
+    async function stopScan() {
+        if (!qrScanner) return;
+        try {
+            if (qrScanner.isScanning) {
+                await qrScanner.stop();
+            }
+        } catch (error) {
+        }
+        try {
+            await qrScanner.clear();
+        } catch (error) {
+        }
+        qrScanner = null;
+    }
+
+    function openScanModal() {
+        document.getElementById('scanModal').classList.add('open');
+        scanInProgress = false;
+        setScanStatus('Камер ачаалж байна...');
+        startScan();
+    }
+
+    function closeScanModal(shouldStop = true) {
+        document.getElementById('scanModal').classList.remove('open');
+        if (shouldStop) {
+            stopScan();
+        }
+    }
+
+    document.getElementById('qrStaffSelect').addEventListener('change', function () {
+        const staffName = this.value;
+        if (staffName) {
+            document.getElementById('qrcode').innerHTML = '';
+            qrCodeInstance = new QRCode(document.getElementById('qrcode'), {
+                text: staffName,
+                width: 200,
+                height: 200,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+    });
+
+    document.getElementById('staffManageSelect').addEventListener('change', function () {
+        fillStaffForm(this.value);
+    });
+
+    function downloadQR() {
+        const staffName = document.getElementById('qrStaffSelect').value;
+        if (!staffName) { alert('Ажилтан сонгоно уу!'); return; }
+        const canvas = document.querySelector('#qrcode canvas');
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = `QR_${staffName}_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    }
+
+    window.onload = () => {
+        loadStaffOptions();
+        renderStaffOptions();
+        loadData();
+        loadDraft();
+        attachAutosaveListeners();
+        updateVerificationBadge();
+        if (editingId) {
+            document.getElementById("mainBtn").innerHTML = '🔄 &nbsp;Шинэчлэх';
+        }
+        renderApp();
+    };
+</script>
+</body>
+</html>

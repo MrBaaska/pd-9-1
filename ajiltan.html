@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ажилтнуудын бүртгэл</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --text-dark: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-dark); 
+            padding: 20px; 
+            line-height: 1.6; 
+        }
+
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+
+        header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+
+        header h1 { 
+            color: var(--primary-color); 
+            margin-bottom: 5px; 
+            font-size: 2em;
+        }
+
+        header p {
+            color: #64748b;
+            font-size: 1.1em;
+        }
+
+        .search-wrapper { 
+            position: relative; 
+            margin-bottom: 25px; 
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #searchInput { 
+            width: 100%; 
+            padding: 16px 20px; 
+            border-radius: 12px; 
+            border: 2px solid var(--border-color); 
+            font-size: 18px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            outline: none; 
+            transition: 0.3s;
+        }
+
+        #searchInput:focus { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); 
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 2px solid var(--border-color);
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .autocomplete-items div {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #f8fafc;
+        }
+
+        .autocomplete-items div strong {
+            color: var(--primary-color);
+        }
+
+        .detail-card { 
+            background: linear-gradient(180deg, #ffffff, #f1f5f9); 
+            padding: 30px; 
+            border-radius: 22px; 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 20px 35px -15px rgba(15, 23, 42, 0.35); 
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .detail-card.active {
+            display: block;
+        }
+
+        .detail-card h2 { 
+            color: var(--primary-color); 
+            border-bottom: 2px solid #f1f5f9; 
+            padding-bottom: 15px; 
+            margin-bottom: 20px; 
+            font-size: 1.8em;
+        }
+
+        .info-grid { 
+            margin-top: 20px;
+            padding: 18px;
+            display: grid; 
+            grid-template-columns: repeat(3, minmax(220px, 1fr)); 
+            gap: 16px; 
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(15, 23, 42, 0.02));
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+        }
+
+        .info-item { 
+            display: flex; 
+            flex-direction: column; 
+            padding: 14px 16px; 
+            border-radius: 14px;
+            background: white;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 10px 20px -10px rgba(15, 23, 42, 0.35);
+        }
+
+        .label { 
+            font-size: 12px; 
+            color: #475569; 
+            font-weight: 700; 
+            letter-spacing: 0.08em;
+            text-transform: uppercase; 
+            margin-bottom: 6px;
+        }
+
+        .info-item span.value { 
+            font-size: 14px; 
+            color: #0f172a; 
+            font-weight: 600; 
+            line-height: 1.4;
+        }
+
+        .employees-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .main-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .analytics-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 35px -15px rgba(15, 23, 42, 0.4);
+        }
+
+        .analytics-header h3 {
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            font-size: 1.3em;
+        }
+
+        .analytics-header p {
+            color: #475569;
+            font-size: 0.9em;
+            margin-bottom: 18px;
+        }
+
+        .chart-card {
+            margin-bottom: 18px;
+        }
+
+        .chart-card h4 {
+            font-size: 1em;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .chart-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 120px auto;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-label {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .chart-bar-track {
+            position: relative;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+        }
+
+        .chart-value {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .employee-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .employee-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .employee-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .employee-card__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .delete-button {
+            border: none;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .delete-button:hover {
+            background: #fecaca;
+        }
+
+        .employee-card .job {
+            color: #64748b;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+        }
+
+        .employee-card .quick-info {
+            font-size: 0.9em;
+            color: #475569;
+            line-height: 1.8;
+        }
+
+        .empty-state { 
+            text-align: center; 
+            color: #94a3b8; 
+            padding: 50px 20px; 
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .back-button:hover {
+            background: #1d4ed8;
+        }
+
+        .scoreboard-section {
+            margin-top: 40px;
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 35px -15px rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(226, 232, 240, 0.7);
+        }
+
+        .scoreboard-section h2 {
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-size: 1.6em;
+        }
+
+        .scoreboard-section p {
+            color: #475569;
+            font-size: 0.95em;
+            margin-bottom: 18px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .scoreboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            min-width: 950px;
+        }
+
+        .scoreboard-table th,
+        .scoreboard-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px 8px;
+            text-align: center;
+            background: white;
+        }
+
+        .scoreboard-table th:nth-child(n+4):nth-child(-n+15),
+        .scoreboard-table td:nth-child(n+4):nth-child(-n+15) {
+            width: 36px;
+            min-width: 36px;
+            padding: 4px 2px;
+        }
+
+        .master-value {
+            font-weight: 600;
+            color: #065f46;
+        }
+
+        .name-ovog {
+            color: rgba(15, 23, 42, 0.45);
+            font-weight: 500;
+        }
+
+        .scoreboard-table th {
+            background: #f1f5f9;
+            font-weight: 700;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.75em;
+        }
+
+        .scoreboard-table td.name-cell {
+            text-align: left;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .score-input {
+            width: 60px;
+            padding: 6px 4px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.9em;
+            background: #f8fafc;
+        }
+
+        .score-input:focus {
+            outline: 2px solid rgba(37, 99, 235, 0.4);
+            background: white;
+        }
+
+        .total-cell {
+            font-weight: 700;
+            color: #2563eb;
+        }
+
+        .score-row {
+            transition: background 0.3s;
+        }
+
+        .leader-row.rank-1 {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .leader-row.rank-2 {
+            background: rgba(226, 232, 240, 0.8);
+        }
+
+        .leader-row.rank-3 {
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        .leaderboard-summary {
+            margin-top: 28px;
+            border-radius: 18px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            padding: 18px 20px;
+            background: #fbfdff;
+            box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.6);
+        }
+
+        .leaderboard-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .leaderboard-summary-header span {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .leaderboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .leader-card {
+            border-radius: 14px;
+            padding: 12px 14px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 8px 16px -10px rgba(15, 23, 42, 0.4);
+        }
+
+        .leader-card h4 {
+            margin: 0;
+            font-size: 1.05em;
+            color: #111827;
+        }
+
+        .leader-card small {
+            color: #475569;
+        }
+
+        .leader-card .leader-score {
+            font-weight: 700;
+            color: #2563eb;
+            font-size: 1.1em;
+        }
+
+        .leader-card.rank-1 {
+            border-color: rgba(245, 158, 11, 0.6);
+            background: linear-gradient(180deg, rgba(254, 243, 199, 0.6), rgba(251, 191, 36, 0.1));
+        }
+
+        .leader-card.rank-2 {
+            border-color: rgba(148, 163, 184, 0.7);
+        }
+
+        .leader-card.rank-3 {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: linear-gradient(180deg, rgba(191, 219, 254, 0.6), rgba(59, 130, 246, 0.08));
+        }
+
+        .summary-placeholder {
+            color: #64748b;
+            text-align: center;
+            font-size: 0.9em;
+            padding: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .employees-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-panel {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ЗАМЫН  1-Р ХЭСГИЙН АЖИЛЧДЫН СУДАЛГАА, БҮРТГЭЛ</h1>
+            <p id="employeeCountText">Нийт 0 ажилтны мэдээллийн сан</p>
+        </header>
+
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="🔍 Ажилтны нэрээр хайх..." autocomplete="off">
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+        </div>
+
+        <div class="content-grid">
+            <div class="main-column">
+                <div id="detailView" class="detail-card">
+                    <button class="back-button" onclick="showAllEmployees()">← Бүх ажилтан руу буцах</button>
+                    <div id="employeeDetail"></div>
+                </div>
+
+                <div id="mainActions" style="margin-bottom:20px;text-align:right">
+                    <button id="addEmployeeBtn" style="background:var(--primary-color);color:white;padding:10px 24px;border:none;border-radius:8px;font-size:16px;cursor:pointer;">+ Шинэ ажилтан</button>
+                </div>
+
+                <div id="allEmployees" class="employees-grid"></div>
+            </div>
+
+            <aside id="analyticsPanel" class="analytics-panel">
+                <div class="analytics-header">
+                    <h3>Графикын хуваарилалт</h3>
+            
+                </div>
+                <div class="chart-card">
+                    <h4>Хүйс</h4>
+                    <div id="genderChart" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <h4>Насны бүлэг (10 жил)</h4>
+                    <div id="ageChart" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <h4>Боловсролын ангилал</h4>
+                    <div id="educationChart" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <h4>Мэргэжил / Албан тушаал</h4>
+                    <div id="jobChart" class="chart-body"></div>
+                </div>
+                <div class="chart-card">
+                    <h4>Шагнал</h4>
+                    <div id="awardChart" class="chart-body"></div>
+                </div>
+            </aside>
+        </div>
+        <section class="scoreboard-section">
+            <h2 style="text-align: center;">Сар бүрийн ажлын гүйцэтгэл</h2>
+            <p>ПД, ПДБ нарын нэгдсэн саналаар ажилчдад сар бүр 1-10 оноо өгч үнэлэх ба хэсгийн мастерын оноо нийт бригадын дундаж оноогоор, бригадын дарга нарын оноо хариуцсан ажилчдын гүйцэтгэлээр үнэлэгдэнэ.</p>
+            <div class="leaderboard-summary" id="leaderboardSummary">
+                <div class="leaderboard-summary-header">
+                    <span>Оноогоор тэргүүлж буй шилдэг 3 ажилтан</span>
+                </div>
+                <div class="leaderboard-cards" id="leaderboardCards">
+                    <div class="summary-placeholder">Оноогоор тэргүүлэгчид автоматаар гарна...</div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="scoreboard-table">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Ажилтан</th>
+                            <th>Албан тушаал</th>
+                            <th>1 сар</th>
+                            <th>2 сар</th>
+                            <th>3 сар</th>
+                            <th>4 сар</th>
+                            <th>5 сар</th>
+                            <th>6 сар</th>
+                            <th>7 сар</th>
+                            <th>8 сар</th>
+                            <th>9 сар</th>
+                            <th>10 сар</th>
+                            <th>11 сар</th>
+                            <th>12 сар</th>
+                            <th>Нийт</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboardBody">
+                        <tr>
+                            <td colspan="16">Онлайн бүртгэлтэй ажилтнууд автоматаар жагсаалт хэлбэрээр харагдана.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'ubtz-employee-registry';
+        const storedEmployees = (function getStored() {
+            try {
+                const value = localStorage.getItem(STORAGE_KEY);
+                return value ? JSON.parse(value) : null;
+            } catch (err) {
+                console.warn('Unable to parse stored employees', err);
+                return null;
+            }
+        })();
+
+        const defaultEmployees = [
+            { rd: "AA850101", last: "Бат", first: "Болд", age: 41, phone: "99112233", address: "БЗД, 13-р хороолол", kids: 2, job: "Мастер", gender: "Эр", edu: "Магистр", place: "Улаанбаатар" },
+            { rd: "ББ900512", last: "Сараа", first: "Туяа", age: 36, phone: "88001122", address: "ХУД, Ривер гарден", kids: 1, job: "Бригадын дарга", gender: "Эм", edu: "Бакалавр", place: "Дархан хот" },
+            { rd: "ВВ950820", last: "Дорж", first: "Ганбаатар", age: 31, phone: "95154575", address: "СХД, 1-р хороолол", kids: 3, job: "Бригадын дарга", gender: "Эр", edu: "Бакалавр", place: "Эрдэнэт хот" },
+            { rd: "ГГ880214", last: "Төмөр", first: "Наран", age: 38, phone: "99080706", address: "ЧД, 5-р сургууль орчим", kids: 0, job: "Бригадын дарга", gender: "Эм", edu: "Магистр", place: "Ховд аймаг" },
+            { rd: "ДД921105", last: "Лхагва", first: "Цэцэг", age: 34, phone: "80112233", address: "БГД, 10-р хороолол", kids: 2, job: "Жолооч", gender: "Эм", edu: "Бакалавр", place: "Сэлэнгэ аймаг" },
+            { rd: "ЕЕ940318", last: "Болд", first: "Эрдэнэ", age: 32, phone: "94005566", address: "БЗД, Офицеруудын ордон", kids: 1, job: "Тор засагч", gender: "Эр", edu: "Дээд", place: "Улаанбаатар" },
+            { rd: "ЖЖ800925", last: "Ган", first: "Тулга", age: 46, phone: "99887766", address: "ХУД, Зайсан", kids: 4, job: "Тор засагч", gender: "Эр", edu: "Бакалавр", place: "Архангай аймаг" },
+            { rd: "ЗЗ870712", last: "Очир", first: "Ану", age: 39, phone: "89102030", address: "СБД, 11-р хороолол", kids: 1, job: "Ахлах замчин", gender: "Эм", edu: "Магистр", place: "Дорнод аймаг" },
+            { rd: "ИИ991201", last: "Баяр", first: "Золбоо", age: 27, phone: "95010203", address: "БЗД, Жуков", kids: 0, job: "Ахлах замчин", gender: "Эр", edu: "Бакалавр", place: "Улаанбаатар" },
+            { rd: "КК910405", last: "Энх", first: "Мишээл", age: 35, phone: "88775544", address: "ЧД, Хайлааст", kids: 2, job: "Ахлах замчин", gender: "Эм", edu: "Дээд", place: "Өмнөговь аймаг" },
+            { rd: "ЛЛ820614", last: "Санж", first: "Батбаяр", age: 44, phone: "99223344", address: "БГД, Гандан", kids: 3, job: "Ахлах замчин", gender: "Эр", edu: "Бүрэн дунд", place: "Завхан аймаг" },
+            { rd: "ММ890122", last: "Пүрэв", first: "Уянга", age: 37, phone: "86112233", address: "ХУД, Нисэх", kids: 2, job: "Ахлах замчин", gender: "Эм", edu: "Дээд", place: "Улаанбаатар" },
+            { rd: "НН931028", last: "Хүрэл", first: "Тэмүүлэн", age: 33, phone: "90090807", address: "СХД, 21-р хороолол", kids: 1, job: "Замчин", gender: "Эр", edu: "Бакалавр", place: "Хэнтий аймаг" },
+            { rd: "ОО861205", last: "Даваа", first: "Мөнх", age: 40, phone: "99334455", address: "БЗД, Шархад", kids: 3, job: "Замчин", gender: "Эр", edu: "Тусгай дунд", place: "Увс аймаг" },
+            { rd: "ПП960214", last: "Гал", first: "Солонго", age: 30, phone: "85443322", address: "СБД, 7-р хороолол", kids: 0, job: "Замчин", gender: "Эм", edu: "Дээд", place: "Булган аймаг" },
+            { rd: "РР830830", last: "Жамц", first: "Бадрах", age: 43, phone: "99556677", address: "БГД, 25-р эмийн сан", kids: 2, job: "Замчин", gender: "Эр", edu: "Бүрэн дунд", place: "Баянхонгор аймаг" },
+            { rd: "СС970519", last: "Даш", first: "Цолмон", age: 29, phone: "94112233", address: "ХУД, Яармаг", kids: 1, job: "Замчин", gender: "Эм", edu: "Бакалавр", place: "Төв аймаг" },
+            { rd: "ТТ920911", last: "Мөнх", first: "Төгс", age: 34, phone: "88990011", address: "СХД, Баянхошуу", kids: 2, job: "Замчин", gender: "Эр", edu: "Дээд", place: "Улаанбаатар" },
+            { rd: "УУ880424", last: "Эрдэнэ", first: "Оюун", age: 38, phone: "99008877", address: "БЗД, КТМС орчим", kids: 3, job: "Шинэ ажилтан", gender: "Эм", edu: "Магистр", place: "Хөвсгөл аймаг" },
+            { rd: "ФФ950606", last: "Ариун", first: "Мэргэн", age: 31, phone: "95857565", address: "СБД, 100 айл", kids: 1, job: "Шинэ ажилтан", gender: "Эр", edu: "Тусгай дунд", place: "Улаанбаатар" }
+        ];
+        const employees = storedEmployees && Array.isArray(storedEmployees) && storedEmployees.length > 0
+            ? storedEmployees
+            : defaultEmployees;
+
+        const bloodTypeOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+        function persistEmployees() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
+            } catch (err) {
+                console.warn('Unable to persist employees', err);
+            }
+        }
+        employees.forEach((emp, index) => {
+            if (!('uniformSize' in emp)) emp.uniformSize = 'M';
+            if (!('awards' in emp)) emp.awards = 'Үнэлгээний шагналгүй';
+            if (!('penalties' in emp)) emp.penalties = 'Шийтгэлгүй';
+            if (!('skills' in emp)) emp.skills = 'Ур чадвар тодорхойгүй';
+            if (!('gender' in emp)) emp.gender = 'Эр';
+            if (!('railYears' in emp)) {
+                const computedYears = typeof emp.age === 'number' ? Math.max(1, emp.age - 20) : 1;
+                emp.railYears = computedYears;
+            }
+            if (!('email' in emp)) {
+                const normalizedRd = (emp.rd || (`emp${index + 1}`)).toLowerCase().replace(/\s+/g, '');
+                emp.email = `${normalizedRd}@ubtz.mn`;
+            }
+            if (!('bloodType' in emp)) {
+                emp.bloodType = bloodTypeOptions[index % bloodTypeOptions.length];
+            }
+            if (!('emergencyPhone' in emp)) {
+                emp.emergencyPhone = (99110000 + index).toString();
+            }
+            if (!('scoreKey' in emp)) {
+                const fallback = (emp.rd || `${emp.last}-${emp.first}-${index}`).toString();
+                emp.scoreKey = fallback.trim().replace(/\s+/g, '-');
+            }
+        });
+        persistEmployees();
+
+        const genderChartEl = document.getElementById('genderChart');
+        const ageChartEl = document.getElementById('ageChart');
+        const educationChartEl = document.getElementById('educationChart');
+        const jobChartEl = document.getElementById('jobChart');
+        const awardChartEl = document.getElementById('awardChart');
+        const analyticsPanel = document.getElementById('analyticsPanel');
+        const SCOREBOARD_KEY = 'ubtz-employee-scoreboard';
+        const monthLabels = Array.from({ length: 12 }, (_, index) => `${index + 1} сар`);
+        const scoreboardBody = document.getElementById('scoreboardBody');
+        const storedScores = (function getStoredScores() {
+            try {
+                const raw = localStorage.getItem(SCOREBOARD_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (err) {
+                console.warn('Unable to parse scoreboard data', err);
+                return {};
+            }
+        })();
+        const scoreboardData = storedScores && typeof storedScores === 'object' ? storedScores : {};
+        const leaderboardCardsEl = document.getElementById('leaderboardCards');
+        const employeeCountText = document.getElementById('employeeCountText');
+
+        // Бүх ажилтнуудыг харуулах
+        function toggleAnalyticsPanel(show) {
+            if (!analyticsPanel) return;
+            analyticsPanel.style.display = show ? '' : 'none';
+        }
+
+        function updateEmployeeCount() {
+            if (!employeeCountText) return;
+            employeeCountText.textContent = `Нийт ${employees.length} ажилтны мэдээллийн сан`;
+        }
+
+        function showAllEmployees() {
+            const grid = document.getElementById('allEmployees');
+            const detailView = document.getElementById('detailView');
+            const searchInput = document.getElementById('searchInput');
+            const mainActions = document.getElementById('mainActions');
+
+            searchInput.value = '';
+            detailView.classList.remove('active');
+            grid.style.display = 'grid';
+            if (mainActions) mainActions.style.display = 'block';
+            toggleAnalyticsPanel(true);
+            updateEmployeeCount();
+
+            grid.innerHTML = employees.map(emp => `
+                <div class="employee-card" onclick="showEmployeeDetail('${emp.first}')">
+                    <div class="employee-card__header">
+                        <h3>${emp.last} ${emp.first}</h3>
+                        <button class="delete-button" type="button" onclick="deleteEmployee('${emp.scoreKey}', event)">Устгах</button>
+                    </div>
+                    <div class="job">${emp.job}</div>
+                    <div class="quick-info">
+                        📞 ${emp.phone}<br>
+                        🎂 ${emp.age} нас<br>
+                        📍 ${emp.place}
+                    </div>
+                </div>
+            `).join('');
+            renderAnalytics();
+            renderScoreboard();
+        }
+
+        function renderAnalytics() {
+            renderChartRows(genderChartEl, getGenderData());
+            renderChartRows(ageChartEl, getAgeGroupData());
+            renderChartRows(educationChartEl, getEducationData());
+            renderChartRows(jobChartEl, getJobData());
+            renderChartRows(awardChartEl, getAwardStatusData());
+        }
+
+        function renderChartRows(container, data) {
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="chart-row"><span class="chart-label">Өгөгдөл олдсонгүй</span></div>';
+                return;
+            }
+            const maxValue = Math.max(...data.map(item => item.count), 1);
+            container.innerHTML = data.map(item => `
+                <div class="chart-row">
+                    <span class="chart-label">${item.label}</span>
+                    <div class="chart-bar-track">
+                        <span class="chart-bar" style="width:${(item.count / maxValue) * 100}%"></span>
+                    </div>
+                    <span class="chart-value">${item.count}</span>
+                </div>
+            `).join('');
+        }
+
+        function getGenderData() {
+            const counts = { Эр: 0, Эм: 0 };
+            employees.forEach(emp => {
+                const key = emp.gender === 'Эм' ? 'Эм' : 'Эр';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            return [
+                { label: 'Эр', count: counts['Эр'] },
+                { label: 'Эм', count: counts['Эм'] }
+            ];
+        }
+
+        function getAgeGroupData() {
+            const buckets = {};
+            employees.forEach(emp => {
+                const age = parseInt(emp.age, 10);
+                if (isNaN(age)) return;
+                const start = Math.floor(age / 10) * 10;
+                const label = `${start}-${start + 9}`;
+                buckets[label] = (buckets[label] || 0) + 1;
+            });
+            return Object.keys(buckets)
+                .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+                .map(label => ({ label, count: buckets[label] }));
+        }
+
+        function getJobData() {
+            const buckets = {};
+            employees.forEach(emp => {
+                const label = emp.job ? emp.job.trim() : 'Тодорхойгүй';
+                buckets[label] = (buckets[label] || 0) + 1;
+            });
+            return Object.entries(buckets)
+                .map(([label, count]) => ({ label, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function getEducationData() {
+            const buckets = {};
+            employees.forEach(emp => {
+                const label = emp.edu ? emp.edu.trim() : 'Тодорхойгүй';
+                buckets[label] = (buckets[label] || 0) + 1;
+            });
+            return Object.entries(buckets)
+                .map(([label, count]) => ({ label, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function getAwardStatusData() {
+            const counts = { 'Шагнагдсан': 0, 'Шагнагдаагүй': 0 };
+            employees.forEach(emp => {
+                const text = String(emp.awards || '').trim().toLowerCase();
+                const tokens = text.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+                const noAward = text === '' || text === '--' || tokens.includes('гүй');
+                const key = noAward ? 'Шагнагдаагүй' : 'Шагнагдсан';
+                counts[key] += 1;
+            });
+            return [
+                { label: 'Шагнагдсан', count: counts['Шагнагдсан'] },
+                { label: 'Шагнагдаагүй', count: counts['Шагнагдаагүй'] }
+            ];
+        }
+
+        // Ажилтны дэлгэрэнгүй мэдээллийг харуулах
+        function showEmployeeDetail(firstName) {
+            const emp = employees.find(e => e.first === firstName);
+            if (!emp) return;
+
+            const detailView = document.getElementById('detailView');
+            const employeeDetail = document.getElementById('employeeDetail');
+            const grid = document.getElementById('allEmployees');
+            const mainActions = document.getElementById('mainActions');
+
+            grid.style.display = 'none';
+            detailView.classList.add('active');
+            if (mainActions) mainActions.style.display = 'none';
+            toggleAnalyticsPanel(false);
+
+            // Show view mode with edit button
+            employeeDetail.innerHTML = `
+                <h2>${emp.last} овогтой ${emp.first}</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Регистрийн дугаар</span>
+                        <span class="value">${emp.rd}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нас</span>
+                        <span class="value">${emp.age}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нийт ажилласан жил</span>
+                        <span class="value">${emp.railYears ? emp.railYears + ' жил' : 'Тодорхойгүй'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Утас</span>
+                        <span class="value">${emp.phone}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Цахим хаяг</span>
+                        <span class="value">${emp.email || 'Тодорхойгүй'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Яаралтай үед ярих утас</span>
+                        <span class="value">${emp.emergencyPhone || 'Тодорхойгүй'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Албан тушаал</span>
+                        <span class="value">${emp.job}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хүйс</span>
+                        <span class="value">${emp.gender}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Боловсрол</span>
+                        <span class="value">${emp.edu}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хүүхэд</span>
+                        <span class="value">${emp.kids}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Төрсөн газар</span>
+                        <span class="value">${emp.place}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Гэрийн хаяг</span>
+                        <span class="value">${emp.address}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хувцасны размер <br> (зун/өвөл)</span>
+                        <span class="value">${emp.clothesSize || 'Тодорхойгүй'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Гутлын размер <br> (зун/өвөл)</span>
+                        <span class="value">${emp.uniformSize}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Шагнал, урамшуулал</span>
+                        <span class="value">${emp.awards}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Спорт, урлагийн <br> цол/зэрэг/медаль</span>
+                        <span class="value">${emp.penalties}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нэмэлт ур чадвар</span>
+                        <span class="value">${emp.skills}</span>
+                    </div>
+                </div>
+                <div style="margin-top:20px;text-align:right">
+                    <button id="editBtn" style="background:var(--primary-color);color:white;padding:8px 20px;border:none;border-radius:8px;font-size:15px;cursor:pointer;">Засах</button>
+                    <button id="deleteBtn" style="margin-left:10px;background:#dc2626;color:white;padding:8px 20px;border:none;border-radius:8px;font-size:15px;cursor:pointer;">Устгах</button>
+                </div>
+            `;
+
+            document.getElementById('editBtn').onclick = function() {
+                showEditEmployeeForm(emp);
+            };
+            document.getElementById('deleteBtn').onclick = function() {
+                deleteEmployee(emp.scoreKey);
+            };
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteEmployee(scoreKey, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            const employeeIndex = employees.findIndex(emp => getEmployeeScoreKey(emp) === scoreKey);
+            if (employeeIndex === -1) {
+                return;
+            }
+
+            const employee = employees[employeeIndex];
+            const confirmed = confirm(`${employee.last || ''} ${employee.first || ''} ажилтныг бүртгэлээс хасах уу?`);
+            if (!confirmed) {
+                return;
+            }
+
+            employees.splice(employeeIndex, 1);
+            delete scoreboardData[scoreKey];
+            persistEmployees();
+            persistScoreboard();
+            document.getElementById('detailView').classList.remove('active');
+            showAllEmployees();
+        }
+
+        // Edit form for employee
+        function showEditEmployeeForm(emp) {
+            const employeeDetail = document.getElementById('employeeDetail');
+            employeeDetail.innerHTML = `
+                <h2><input type="text" id="editLast" value="${emp.last}" style="width:120px"> овогтой <input type="text" id="editFirst" value="${emp.first}" style="width:120px"></h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Регистрийн дугаар</span>
+                        <input type="text" id="editRd" value="${emp.rd}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нас</span>
+                        <input type="number" id="editAge" value="${emp.age}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нийт ажилласан хугацаа</span>
+                        <input type="number" id="editRailYears" value="${emp.railYears || ''}" class="value" min="0">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Утас</span>
+                        <input type="text" id="editPhone" value="${emp.phone}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Цахим хаяг</span>
+                        <input type="email" id="editEmail" value="${emp.email || ''}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Яаралтай үед ярих утас</span>
+                        <input type="text" id="editEmergencyPhone" value="${emp.emergencyPhone || ''}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Албан тушаал</span>
+                        <input type="text" id="editJob" value="${emp.job}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хүйс</span>
+                        <select id="editGender" class="value">
+                            <option value="Эр" ${emp.gender === 'Эр' ? 'selected' : ''}>Эр</option>
+                            <option value="Эм" ${emp.gender === 'Эм' ? 'selected' : ''}>Эм</option>
+                        </select>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Боловсрол</span>
+                        <input type="text" id="editEdu" value="${emp.edu}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хүүхэд</span>
+                        <input type="number" id="editKids" value="${emp.kids}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Төрсөн газар</span>
+                        <input type="text" id="editPlace" value="${emp.place}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Гэрийн хаяг</span>
+                        <input type="text" id="editAddress" value="${emp.address}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Цусны бүлэг</span>
+                        <input type="text" id="editBloodType" value="${emp.bloodType || ''}" class="value" placeholder="Жишээ: A+">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хувцасны размер <br> (зун/өвөл)</span>
+                        <input type="text" id="editClothesSize" value="${emp.clothesSize || ''}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Гутлын размер <br> (зун/өвөл)</span>
+                        <input type="text" id="editUniformSize" value="${emp.uniformSize || ''}" class="value">
+                    </div>
+                   
+                    <div class="info-item">
+                        <span class="label">Шагнал, урамшуулал</span>
+                        <input type="text" id="editAwards" value="${emp.awards}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Спорт, урлагийн <br> цол/зэрэг/медаль</span>
+                        <input type="text" id="editPenalties" value="${emp.penalties}" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нэмэлт ур чадвар</span>
+                        <input type="text" id="editSkills" value="${emp.skills}" class="value">
+                    </div>
+                </div>
+                <div style="margin-top:20px;">
+                    <button id="saveBtn" style="background:var(--primary-color);color:white;padding:10px 24px;border:none;border-radius:8px;font-size:16px;cursor:pointer;">Хадгалах</button>
+                    <button id="cancelBtn" style="margin-left:10px;padding:10px 24px;border-radius:8px;font-size:16px;cursor:pointer;">Болих</button>
+                </div>
+            `;
+            document.getElementById('saveBtn').onclick = function() {
+                emp.last = document.getElementById('editLast').value;
+                emp.first = document.getElementById('editFirst').value;
+                emp.rd = document.getElementById('editRd').value;
+                emp.age = parseInt(document.getElementById('editAge').value, 10);
+                emp.phone = document.getElementById('editPhone').value;
+                emp.email = document.getElementById('editEmail').value;
+                emp.emergencyPhone = document.getElementById('editEmergencyPhone').value;
+                emp.railYears = document.getElementById('editRailYears').value;
+                emp.job = document.getElementById('editJob').value;
+                emp.gender = document.getElementById('editGender').value;
+                emp.edu = document.getElementById('editEdu').value;
+                emp.kids = parseInt(document.getElementById('editKids').value, 10);
+                emp.place = document.getElementById('editPlace').value;
+                emp.address = document.getElementById('editAddress').value;
+                emp.bloodType = document.getElementById('editBloodType').value;
+                emp.clothesSize = document.getElementById('editClothesSize').value;
+                emp.uniformSize = document.getElementById('editUniformSize').value;
+                emp.awards = document.getElementById('editAwards').value;
+                emp.penalties = document.getElementById('editPenalties').value;
+                emp.skills = document.getElementById('editSkills').value;
+                persistEmployees();
+                showEmployeeDetail(emp.first);
+                showAllEmployees();
+            };
+            document.getElementById('cancelBtn').onclick = function() {
+                showEmployeeDetail(emp.first);
+            };
+        }
+
+        // Add new employee form
+        function showAddEmployeeForm() {
+            const detailView = document.getElementById('detailView');
+            const employeeDetail = document.getElementById('employeeDetail');
+            const grid = document.getElementById('allEmployees');
+            grid.style.display = 'none';
+            detailView.classList.add('active');
+            toggleAnalyticsPanel(false);
+            employeeDetail.innerHTML = `
+                <h2><input type="text" id="addLast" placeholder="Овог" style="width:120px"> овогтой <input type="text" id="addFirst" placeholder="Нэр" style="width:120px"></h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Регистрийн дугаар</span>
+                        <input type="text" id="addRd" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Нас</span>
+                        <input type="number" id="addAge" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Ажилласан хугацаа</span>
+                        <input type="number" id="addRailYears" class="value" min="0" placeholder="Жил">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Утас</span>
+                        <input type="text" id="addPhone" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Цахим хаяг</span>
+                        <input type="email" id="addEmail" class="value" placeholder="example@ubtz.mn">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Яаралтай үед ярих утас</span>
+                        <input type="text" id="addEmergencyPhone" class="value" placeholder="9911xxxx">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Мэргэжил / Албан тушаал</span>
+                        <input type="text" id="addJob" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хүйс</span>
+                        <select id="addGender" class="value">
+                            <option value="Эр">Эр</option>
+                            <option value="Эм">Эм</option>
+                        </select>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Боловсрол</span>
+                        <input type="text" id="addEdu" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хүүхэд</span>
+                        <input type="number" id="addKids" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Төрсөн газар</span>
+                        <input type="text" id="addPlace" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Гэрийн хаяг</span>
+                        <input type="text" id="addAddress" class="value">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Цусны бүлэг</span>
+                        <input type="text" id="addBloodType" class="value" placeholder="Жишээ: A+">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Хувцасны хэмжээ (зун/өвөл)</span>
+                        <input type="text" id="addClothesSize" class="value" placeholder="Жишээ: M/L">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Гутлын хэмжээ (зун/өвөл)</span>
+                        <input type="text" id="addUniformSize" class="value" placeholder="Жишээ: M">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Шагнал, урамшуулал</span>
+                        <input type="text" id="addAwards" class="value" placeholder="Жишээ: Сар шидэт шагнал">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Спорт, урлагийн цол/зэрэг</span>
+                        <input type="text" id="addPenalties" class="value" placeholder="Жишээ: Ажил хожимдсон">
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Ур чадвар</span>
+                        <input type="text" id="addSkills" class="value" placeholder="Жишээ: Мужаан/гагнуурчин/цахилгаанчин">
+                    </div>
+                </div>
+                <div style="margin-top:20px;">
+                    <button id="addSaveBtn" style="background:var(--primary-color);color:white;padding:10px 24px;border:none;border-radius:8px;font-size:16px;cursor:pointer;">Хадгалах</button>
+                    <button id="addCancelBtn" style="margin-left:10px;padding:10px 24px;border-radius:8px;font-size:16px;cursor:pointer;">Болих</button>
+                </div>
+            `;
+            document.getElementById('addSaveBtn').onclick = function() {
+                const addRdValue = document.getElementById('addRd').value;
+                const computedEmail = document.getElementById('addEmail').value || `${(addRdValue || ('new' + Date.now())).toLowerCase().replace(/\s+/g, '')}@ubtz.mn`;
+                const emergencyValue = document.getElementById('addEmergencyPhone').value || document.getElementById('addPhone').value;
+                const railYearsValue = document.getElementById('addRailYears').value || '1';
+                const bloodValue = document.getElementById('addBloodType').value || 'A+';
+                const newEmp = {
+                    last: document.getElementById('addLast').value,
+                    first: document.getElementById('addFirst').value,
+                    rd: document.getElementById('addRd').value,
+                    age: parseInt(document.getElementById('addAge').value, 10),
+                    phone: document.getElementById('addPhone').value,
+                    job: document.getElementById('addJob').value,
+                    gender: document.getElementById('addGender').value || 'Эр',
+                    edu: document.getElementById('addEdu').value,
+                    kids: parseInt(document.getElementById('addKids').value, 10),
+                    place: document.getElementById('addPlace').value,
+                    address: document.getElementById('addAddress').value,
+                    clothesSize: document.getElementById('addClothesSize').value || '--',
+                    uniformSize: document.getElementById('addUniformSize').value || 'M',
+                    awards: document.getElementById('addAwards').value || '--',
+                    penalties: document.getElementById('addPenalties').value || '--',
+                    skills: document.getElementById('addSkills').value || '--'
+                };
+                const baseScoreKey = (newEmp.rd || `${newEmp.last}-${newEmp.first}`).trim() || `employee-${Date.now()}`;
+                newEmp.scoreKey = baseScoreKey.replace(/\s+/g, '-');
+                newEmp.railYears = railYearsValue;
+                newEmp.email = computedEmail;
+                newEmp.bloodType = bloodValue;
+                newEmp.emergencyPhone = emergencyValue;
+                employees.push(newEmp);
+                persistEmployees();
+                showAllEmployees();
+                detailView.classList.remove('active');
+            };
+            document.getElementById('addCancelBtn').onclick = function() {
+                showAllEmployees();
+                detailView.classList.remove('active');
+            };
+        }
+
+        // Add employee button event
+        setTimeout(function() {
+            const addBtn = document.getElementById('addEmployeeBtn');
+            if (addBtn) {
+                addBtn.onclick = showAddEmployeeForm;
+            }
+        }, 0);
+
+        // Автомат санал гаргах
+        const searchInput = document.getElementById('searchInput');
+        const autocompleteList = document.getElementById('autocomplete-list');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            autocompleteList.innerHTML = '';
+            
+            if (query === '') {
+                return;
+            }
+
+            const matches = employees.filter(emp => 
+                emp.first.toLowerCase().includes(query) || 
+                emp.last.toLowerCase().includes(query) ||
+                emp.job.toLowerCase().includes(query)
+            );
+
+            if (matches.length > 0) {
+                matches.forEach(emp => {
+                    const div = document.createElement('div');
+                    const fullName = `${emp.last} ${emp.first}`;
+                    const matchIndex = fullName.toLowerCase().indexOf(query);
+                    
+                    if (matchIndex !== -1) {
+                        const beforeMatch = fullName.substring(0, matchIndex);
+                        const match = fullName.substring(matchIndex, matchIndex + query.length);
+                        const afterMatch = fullName.substring(matchIndex + query.length);
+                        div.innerHTML = `${beforeMatch}<strong>${match}</strong>${afterMatch} - ${emp.job}`;
+                    } else {
+                        div.innerHTML = `${fullName} - ${emp.job}`;
+                    }
+                    
+                    div.addEventListener('click', function() {
+                        searchInput.value = emp.first;
+                        autocompleteList.innerHTML = '';
+                        showEmployeeDetail(emp.first);
+                    });
+                    
+                    autocompleteList.appendChild(div);
+                });
+            }
+        });
+
+        // Бусад газар дарахад автомат санал хаах
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput) {
+                autocompleteList.innerHTML = '';
+            }
+        });
+
+        function getJobPriority(jobTitle) {
+            const normalized = (jobTitle || '').trim();
+            const order = {
+                'Мастер': 1,
+                'Бригадын дарга': 2,
+                'Ахлах замчин': 3,
+                'Замчин': 4,
+                'Шинэ ажилтан': 5
+            };
+            return order[normalized] || 6;
+        }
+
+        function getEmployeeScoreKey(emp) {
+            return emp.scoreKey || ((emp.rd || `${emp.last}-${emp.first}`).trim() || 'employee-unknown');
+        }
+
+        function getSortedEmployeesForScores() {
+            return [...employees].sort((a, b) => {
+                const priorityDiff = getJobPriority(a.job) - getJobPriority(b.job);
+                if (priorityDiff !== 0) return priorityDiff;
+                const nameA = `${a.last || ''} ${a.first || ''}`.trim();
+                const nameB = `${b.last || ''} ${b.first || ''}`.trim();
+                return nameA.localeCompare(nameB, 'mn');
+            });
+        }
+
+        function persistScoreboard() {
+            try {
+                localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scoreboardData));
+            } catch (err) {
+                console.warn('Unable to persist scoreboard data', err);
+            }
+        }
+
+        function getScoreValue(scoreKey, monthIndex) {
+            const row = scoreboardData[scoreKey];
+            const stored = row && row[monthIndex];
+            return typeof stored === 'number' ? stored : '';
+        }
+
+        function calculateRowTotal(scoreKey) {
+            const row = scoreboardData[scoreKey];
+            if (!row) return 0;
+            return monthLabels.reduce((sum, _, index) => {
+                const val = row[index];
+                if (typeof val === 'number' && !Number.isNaN(val)) {
+                    return sum + val;
+                }
+                return sum;
+            }, 0);
+        }
+
+        function getScoreValueNumber(scoreKey, monthIndex) {
+            const row = scoreboardData[scoreKey];
+            const stored = row && row[monthIndex];
+            return typeof stored === 'number' ? stored : NaN;
+        }
+
+        function isMaster(emp) {
+            const job = (emp.job || '').trim().toLowerCase();
+            return job === 'мастер';
+        }
+
+        function computeMasterMonthlyAverages(sorted) {
+            const averages = [];
+            for (let index = 0; index < monthLabels.length; index++) {
+                let sum = 0;
+                let count = 0;
+                sorted.forEach(emp => {
+                    if (isMaster(emp)) return;
+                    const value = getScoreValueNumber(getEmployeeScoreKey(emp), index);
+                    if (!Number.isNaN(value)) {
+                        sum += value;
+                        count += 1;
+                    }
+                });
+                if (count === 0) {
+                    averages.push(null);
+                } else {
+                    averages.push(parseFloat((sum / count).toFixed(1)));
+                }
+            }
+            return averages;
+        }
+
+        function sumAverages(averages) {
+            return averages.reduce((sum, value) => {
+                if (typeof value === 'number' && !Number.isNaN(value)) {
+                    return sum + value;
+                }
+                return sum;
+            }, 0);
+        }
+
+        function formatEmployeeName(emp) {
+            const parts = [];
+            if (emp.last) {
+                parts.push(`<span class="name-last">${emp.last}</span>`, '<span class="name-ovog">овогтой</span>');
+            }
+            if (emp.first) {
+                parts.push(`<span class="name-first">${emp.first}</span>`);
+            }
+            const composed = parts.join(' ').replace(/\s+/g, ' ').trim();
+            return composed || '---';
+        }
+
+        function renderScoreboard() {
+            if (!scoreboardBody) return;
+            const sorted = getSortedEmployeesForScores();
+            if (sorted.length === 0) {
+                scoreboardBody.innerHTML = '<tr><td colspan="16">Ажилтны мэдээлэл олдсонгүй.</td></tr>';
+                clearLeaderboardSummary();
+                return;
+            }
+            const masterAverages = computeMasterMonthlyAverages(sorted);
+            const { ranksMap, leaders } = buildLeaderboardData(sorted, masterAverages);
+            scoreboardBody.innerHTML = sorted.map((emp, rowIndex) => {
+                const scoreKey = getEmployeeScoreKey(emp);
+                const isMasterRow = isMaster(emp);
+                const scoreCells = monthLabels.map((label, index) => {
+                    if (isMasterRow) {
+                        const avg = masterAverages[index];
+                        return `
+                            <td class="master-value">${avg === null ? '' : avg}</td>
+                        `;
+                    }
+                    const value = getScoreValue(scoreKey, index);
+                    return `
+                        <td>
+                            <input type="number" min="1" max="10" inputmode="numeric" pattern="[0-9]*"
+                                class="score-input"
+                                data-score-key="${scoreKey}"
+                                data-month="${index}"
+                                value="${value !== '' ? value : ''}">
+                        </td>
+                    `;
+                }).join('');
+                const total = isMasterRow ? sumAverages(masterAverages) : calculateRowTotal(scoreKey);
+                const fullName = formatEmployeeName(emp);
+                const jobTitle = emp.job || 'Тодорхойгүй';
+                const leaderRank = ranksMap[scoreKey];
+                const rowClass = leaderRank ? `score-row leader-row rank-${leaderRank}` : 'score-row';
+                return `
+                    <tr class="${rowClass}" data-score-key="${scoreKey}" ${isMasterRow ? 'data-master="true"' : ''}>
+                        <td>${rowIndex + 1}.</td>
+                        <td class="name-cell">${fullName}</td>
+                        <td>${jobTitle}</td>
+                        ${scoreCells}
+                        <td class="total-cell" data-total-for="${scoreKey}">${total}</td>
+                    </tr>
+                `;
+            }).join('');
+            attachScoreboardListeners();
+            renderLeaderboardSummary(leaders);
+        }
+
+        function buildLeaderboardData(sorted, masterAverages = []) {
+            const leaderboardEntries = sorted.map(emp => {
+                const key = getEmployeeScoreKey(emp);
+                return {
+                    key,
+                    name: formatEmployeeName(emp),
+                    job: emp.job || 'Тодорхойгүй',
+                    total: isMaster(emp) ? sumAverages(masterAverages) : calculateRowTotal(key)
+                };
+            }).filter(entry => entry.total > 0);
+            const ordered = leaderboardEntries.slice().sort((a, b) => b.total - a.total);
+            const ranksMap = {};
+            const leaders = [];
+            ordered.slice(0, 3).forEach((entry, index) => {
+                const rank = index + 1;
+                ranksMap[entry.key] = rank;
+                leaders.push({ ...entry, rank });
+            });
+            return { ranksMap, leaders };
+        }
+
+        function refreshMasterRow(masterAverages) {
+            const masterRow = document.querySelector('tr[data-master="true"]');
+            if (!masterRow) return;
+            const cells = masterRow.querySelectorAll('td.master-value');
+            cells.forEach((cell, index) => {
+                const avg = masterAverages[index];
+                cell.textContent = avg === null ? '' : avg;
+            });
+            const totalCell = masterRow.querySelector('.total-cell');
+            if (totalCell) {
+                totalCell.textContent = sumAverages(masterAverages);
+            }
+        }
+
+        function updateLeaderboardAfterChange() {
+            const sorted = getSortedEmployeesForScores();
+            const masterAverages = computeMasterMonthlyAverages(sorted);
+            refreshMasterRow(masterAverages);
+            const { leaders } = buildLeaderboardData(sorted, masterAverages);
+            renderLeaderboardSummary(leaders);
+        }
+
+        function renderLeaderboardSummary(leaders) {
+            if (!leaderboardCardsEl) return;
+            if (!leaders || leaders.length === 0) {
+                leaderboardCardsEl.innerHTML = '<div class="summary-placeholder">Оноогоор тэргүүлэгчид автоматаар гарна...</div>';
+                return;
+            }
+            leaderboardCardsEl.innerHTML = leaders.map(leader => `
+                <article class="leader-card rank-${leader.rank}">
+                    <div class="leader-rank">#${leader.rank}</div>
+                    <h4>${leader.name}</h4>
+                    <small>${leader.job}</small>
+                    <div class="leader-score">${leader.total} оноо</div>
+                </article>
+            `).join('');
+        }
+
+        function clearLeaderboardSummary() {
+            if (!leaderboardCardsEl) return;
+            leaderboardCardsEl.innerHTML = '<div class="summary-placeholder">Оноогоор тэргүүлэгчид автоматаар гарна...</div>';
+        }
+
+        function attachScoreboardListeners() {
+            const inputs = document.querySelectorAll('.score-input');
+            inputs.forEach(input => {
+                input.addEventListener('input', onScoreInputChange);
+            });
+        }
+
+        function setScoreValue(scoreKey, monthIndex, value) {
+            scoreboardData[scoreKey] = scoreboardData[scoreKey] || {};
+            if (value === null) {
+                delete scoreboardData[scoreKey][monthIndex];
+            } else {
+                scoreboardData[scoreKey][monthIndex] = value;
+            }
+            persistScoreboard();
+        }
+
+        function updateTotalCell(scoreKey) {
+            const totalCell = document.querySelector(`.total-cell[data-total-for="${scoreKey}"]`);
+            if (totalCell) {
+                totalCell.textContent = calculateRowTotal(scoreKey);
+            }
+        }
+
+        function onScoreInputChange(event) {
+            const input = event.target;
+            const scoreKey = input.dataset.scoreKey;
+            const monthIndex = Number(input.dataset.month);
+            if (!scoreKey || Number.isNaN(monthIndex)) return;
+            const trimmed = input.value.trim();
+            if (trimmed === '') {
+                setScoreValue(scoreKey, monthIndex, null);
+                updateTotalCell(scoreKey);
+                updateLeaderboardAfterChange();
+                return;
+            }
+            let numeric = parseInt(trimmed, 10);
+            if (Number.isNaN(numeric)) {
+                input.value = '';
+                setScoreValue(scoreKey, monthIndex, null);
+                updateTotalCell(scoreKey);
+                updateLeaderboardAfterChange();
+                return;
+            }
+            if (numeric < 1) numeric = 1;
+            if (numeric > 10) numeric = 10;
+            if (numeric.toString() !== trimmed) {
+                input.value = numeric;
+            }
+            setScoreValue(scoreKey, monthIndex, numeric);
+            updateTotalCell(scoreKey);
+            updateLeaderboardAfterChange();
+        }
+
+        // Хуудас ачааллагдахад бүх ажилтнуудыг харуулах
+        window.onload = function() {
+            showAllEmployees();
+        };
+    </script>
+</body>
+</html>

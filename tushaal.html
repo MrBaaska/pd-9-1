@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Төмөр замын тушаал</title>
+    <style>
+        :root {
+            --primary-color: #1b365d; /* Төмөр замын цэнхэр өнгө */
+            --secondary-color: #d9534f;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: clamp(12px, 2vw, 24px);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: clamp(20px, 2.5vw, 30px);
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: clamp(1.45rem, 2.2vw, 2rem);
+        }
+
+        header p {
+            margin: 8px 0 0;
+            font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: minmax(360px, 1fr) minmax(0, 1.8fr);
+            gap: 20px;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            padding: clamp(16px, 2vw, 24px);
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .panel-form {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .panel-form::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-form::-webkit-scrollbar-thumb {
+            background: #c7d4e3;
+            border-radius: 999px;
+        }
+
+        #orderForm {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #orderForm button[type="submit"] {
+            position: sticky;
+            bottom: 0;
+            z-index: 3;
+            margin-top: 6px;
+            box-shadow: 0 -6px 12px rgba(255,255,255,0.92);
+        }
+
+        .panel-list {
+            height: 100%;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .order-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .order-card.zam { border-left-color: #004080; }
+        .order-card.alba { border-left-color: #008080; }
+        .order-card.angi { border-left-color: #ff8c00; }
+        .order-card.busad { border-left-color: #6c757d; }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .order-number {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .order-category {
+            background: #e2e8f0;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .order-body p {
+            margin: 5px 0;
+        }
+
+        .order-img {
+            max-width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .order-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .image-hint {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: #566273;
+        }
+
+        .category-summary {
+            margin-top: 16px;
+            padding: 12px;
+            border: 1px solid #d8e0ea;
+            border-radius: 6px;
+            background: #f8fbff;
+        }
+
+        .category-summary h3 {
+            margin: 0 0 8px;
+            color: var(--primary-color);
+            font-size: 0.95rem;
+        }
+
+        .category-summary p {
+            margin: 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .delete-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            width: auto;
+        }
+
+        .image-viewer {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 2000;
+        }
+
+        .image-viewer.active {
+            display: flex;
+        }
+
+        .image-viewer img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        @media (max-width: 700px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .container {
+                min-height: auto;
+            }
+
+            .panel-list {
+                height: auto;
+            }
+
+            .order-list {
+                max-height: 56vh;
+                min-height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Төмөр замын тушаалын бүртгэл</h1>
+        <p>Батлагдсан тушаалыг замын хэсэгт бүртгэн ашиглах</p>
+    </header>
+
+    <div class="image-viewer" id="imageViewer" onclick="closeImageViewer(event)">
+        <img id="imageViewerImage" alt="Томоор харах зураг">
+    </div>
+
+    <div class="container">
+        <div class="panel panel-form">
+            <h2 style="text-align: center;">Мөрдөгдөж буй тушаал, журам, стандартын талаархи мэдээллийг ангилан оруулах</h2>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="category">Ангилал сонгох:</label>
+                    <select id="category" required>
+                        <option value="Замын даргын тушаал">Замын даргын тушаал</option>
+                        <option value="Албаны даргын тушаал">Албаны даргын тушаал</option>
+                        <option value="Ангийн даргын тушаал">Ангийн даргын тушаал</option>
+                        <option value="Бусад тушаал">Бусад тушаал</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderNumber">Тушаалын дугаар:</label>
+                    <input type="text" id="orderNumber" placeholder="Жишээ нь: Б/54, №12" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderDate">Огноо:</label>
+                    <input type="date" id="orderDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderDesc">Товч тайлбар:</label>
+                    <textarea id="orderDesc" placeholder="Тушаалын утга агуулгыг товч бичих..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="orderImage">Баримт бичгийн зураг хавсаргах:</label>
+                    <input type="file" id="orderImage" accept="image/*" multiple required>
+                    <div id="orderImageHint" class="image-hint">Одоогоор зураг сонгоогүй байна.</div>
+                </div>
+
+                <button type="submit">Хадгалах</button>
+            </form>
+
+            <div class="category-summary" id="categorySummary">
+                <h3>Бүртгэгдсэн тушаалууд</h3>
+                <p>Замын даргын тушаал - <strong id="count-zam">0</strong> ш</p>
+                <p>Албаны даргын тушаал - <strong id="count-alba">0</strong> ш</p>
+                <p>Ангийн даргын тушаал - <strong id="count-angi">0</strong> ш</p>
+                <p>Бусад тушаал - <strong id="count-busad">0</strong> ш</p>
+            </div>
+        </div>
+
+        <div class="panel panel-list">
+            <h2>Тушаалын Жагсаалт & Хайлт</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Дугаар болон тайлбараар хайх...">
+            </div>
+
+            <div class="order-list" id="orderList">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Өгөгдлийг LocalStorage-оос авах эсвэл хоосон массив үүсгэх
+        const ORDERS_KEY = 'railway_orders';
+        const DRAFT_KEY = 'railway_order_draft_v1';
+        let orders = JSON.parse(localStorage.getItem(ORDERS_KEY)) || [];
+        let draftImages = [];
+
+        const orderForm = document.getElementById('orderForm');
+        const orderList = document.getElementById('orderList');
+        const searchInput = document.getElementById('searchInput');
+        const orderImageInput = document.getElementById('orderImage');
+        const orderImageHint = document.getElementById('orderImageHint');
+        const imageViewer = document.getElementById('imageViewer');
+        const imageViewerImage = document.getElementById('imageViewerImage');
+
+        function updateImageHint(count, sourceText) {
+            if (!count) {
+                orderImageHint.textContent = 'Одоогоор зураг сонгоогүй байна.';
+                return;
+            }
+            orderImageHint.textContent = `${count} зураг ${sourceText} хадгалагдсан.`;
+        }
+
+        function readFilesAsDataUrls(fileList) {
+            const files = Array.from(fileList || []);
+            return Promise.all(files.map((file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => resolve(event.target.result);
+                reader.onerror = () => reject(new Error('Зураг уншихад алдаа гарлаа.'));
+                reader.readAsDataURL(file);
+            })));
+        }
+
+        function saveDraft() {
+            const draftData = {
+                category: document.getElementById('category').value,
+                orderNumber: document.getElementById('orderNumber').value,
+                orderDate: document.getElementById('orderDate').value,
+                orderDesc: document.getElementById('orderDesc').value,
+                images: draftImages
+            };
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+        }
+
+        function loadDraft() {
+            const rawDraft = localStorage.getItem(DRAFT_KEY);
+            if (!rawDraft) {
+                updateImageHint(0);
+                return;
+            }
+
+            try {
+                const draft = JSON.parse(rawDraft);
+                document.getElementById('category').value = draft.category || document.getElementById('category').value;
+                document.getElementById('orderNumber').value = draft.orderNumber || '';
+                document.getElementById('orderDate').value = draft.orderDate || '';
+                document.getElementById('orderDesc').value = draft.orderDesc || '';
+                draftImages = Array.isArray(draft.images) ? draft.images : [];
+                updateImageHint(draftImages.length, '(autosave-аас)');
+            } catch (error) {
+                draftImages = [];
+                updateImageHint(0);
+            }
+        }
+
+        function clearDraft() {
+            draftImages = [];
+            localStorage.removeItem(DRAFT_KEY);
+            updateImageHint(0);
+        }
+
+        function openImageViewer(src, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            imageViewerImage.src = src;
+            imageViewer.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageViewer(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            imageViewer.classList.remove('active');
+            imageViewerImage.removeAttribute('src');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeImageViewer();
+            }
+        });
+
+        function renderCategorySummary() {
+            const counts = {
+                zam: 0,
+                alba: 0,
+                angi: 0,
+                busad: 0
+            };
+
+            orders.forEach((order) => {
+                if (order.category === 'Замын даргын тушаал') counts.zam += 1;
+                else if (order.category === 'Албаны даргын тушаал') counts.alba += 1;
+                else if (order.category === 'Ангийн даргын тушаал') counts.angi += 1;
+                else counts.busad += 1;
+            });
+
+            document.getElementById('count-zam').textContent = counts.zam;
+            document.getElementById('count-alba').textContent = counts.alba;
+            document.getElementById('count-angi').textContent = counts.angi;
+            document.getElementById('count-busad').textContent = counts.busad;
+        }
+
+        // Форм илгээх үед ажиллах хэсэг
+        orderForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const category = document.getElementById('category').value;
+            const orderNumber = document.getElementById('orderNumber').value;
+            const orderDate = document.getElementById('orderDate').value;
+            const orderDesc = document.getElementById('orderDesc').value;
+            const selectedFiles = orderImageInput.files;
+
+            let images = draftImages;
+            if (selectedFiles.length > 0) {
+                try {
+                    images = await readFilesAsDataUrls(selectedFiles);
+                } catch (error) {
+                    alert('Зураг унших үед алдаа гарлаа. Дахин оролдоно уу.');
+                    return;
+                }
+            }
+
+            if (!images.length) {
+                alert('Дор хаяж 1 зураг оруулна уу.');
+                return;
+            }
+
+            const newOrder = {
+                id: Date.now(),
+                category,
+                orderNumber,
+                orderDate,
+                orderDesc,
+                images,
+                image: images[0] || ''
+            };
+
+            orders.unshift(newOrder);
+            saveAndRender();
+            orderForm.reset();
+            clearDraft();
+        });
+
+        ['category', 'orderNumber', 'orderDate', 'orderDesc'].forEach((id) => {
+            const field = document.getElementById(id);
+            const eventName = field.tagName.toLowerCase() === 'select' ? 'change' : 'input';
+            field.addEventListener(eventName, saveDraft);
+        });
+
+        orderImageInput.addEventListener('change', async function() {
+            if (!orderImageInput.files.length) {
+                return;
+            }
+            try {
+                draftImages = await readFilesAsDataUrls(orderImageInput.files);
+                updateImageHint(draftImages.length, '(autosave-д)');
+                saveDraft();
+            } catch (error) {
+                alert('Зураг унших үед алдаа гарлаа.');
+            }
+        });
+
+        // Өгөгдлийг хадгалах болон дэлгэцэнд гаргах функц
+        function saveAndRender() {
+            localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+            renderCategorySummary();
+            renderOrders(orders);
+        }
+
+        // Жагсаалтыг дэлгэцэнд харуулах
+        function renderOrders(dataToRender) {
+            orderList.innerHTML = '';
+
+            if (dataToRender.length === 0) {
+                orderList.innerHTML = '<p style="text-align: center; color: #777;">Бүртгэлтэй тушаал олдсонгүй.</p>';
+                return;
+            }
+
+            dataToRender.forEach(order => {
+                let cardClass = 'busad';
+                if (order.category === 'Замын даргын тушаал') cardClass = 'zam';
+                else if (order.category === 'Албаны даргын тушаал') cardClass = 'alba';
+                else if (order.category === 'Ангийн даргын тушаал') cardClass = 'angi';
+
+                const card = document.createElement('div');
+                card.className = `order-card ${cardClass}`;
+                card.innerHTML = `
+                    <div class="order-header">
+                        <span class="order-number">${order.orderNumber}</span>
+                        <span class="order-category">${order.category}</span>
+                    </div>
+                    <div class="order-body">
+                        <p><strong>Огноо:</strong> ${order.orderDate}</p>
+                        <p><strong>Тайлбар:</strong> ${order.orderDesc}</p>
+                        ${(() => {
+                            const images = Array.isArray(order.images)
+                                ? order.images
+                                : (order.image ? [order.image] : []);
+                            if (!images.length) return '';
+                            return `<div class="order-images">${images.map((img) => `<img src="${img}" class="order-img" onclick="openImageViewer(this.src)">`).join('')}</div>`;
+                        })()}
+                        <br>
+                        <button class="delete-btn" onclick="deleteOrder(${order.id})">Устгах</button>
+                    </div>
+                `;
+                orderList.appendChild(card);
+            });
+        }
+
+        // Устгах үйлдэл
+        function deleteOrder(id) {
+            if (confirm('Та энэ тушаалыг устгахдаа итгэлтэй байна уу?')) {
+                orders = orders.filter(order => order.id !== id);
+                saveAndRender();
+            }
+        }
+
+        // Хайлтын систем
+        searchInput.addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const filteredOrders = orders.filter(order => 
+                order.orderNumber.toLowerCase().includes(searchText) || 
+                order.orderDesc.toLowerCase().includes(searchText) ||
+                order.category.toLowerCase().includes(searchText)
+            );
+            renderOrders(filteredOrders);
+        });
+
+        // Анх ачаалахад жагсаалтыг болон draft-ийг сэргээх
+        loadDraft();
+        renderCategorySummary();
+        renderOrders(orders);
+    </script>
+</body>
+</html>

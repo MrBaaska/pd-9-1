@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>УБТЗ - Дотоод AI Систем</title>
+    <style>
+        :root {
+            --ubtz-blue: #003366;
+            --ubtz-gold: #ffcc00;
+            --light-bg: #f4f7f6;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background-color: var(--ubtz-blue);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--ubtz-gold);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .chat-container {
+            flex: 1;
+            max-width: 900px;
+            margin: 20px auto;
+            width: 95%;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        #chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .msg {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .ai-msg {
+            background-color: #f0f2f5;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border-left: 5px solid var(--ubtz-blue);
+            color: #333;
+        }
+        .user-msg {
+            background-color: var(--ubtz-blue);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+            background: #fafafa;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            outline: none;
+            font-size: 15px;
+        }
+        input[type="text"]:focus {
+            border-color: var(--ubtz-blue);
+        }
+        button {
+            background-color: var(--ubtz-blue);
+            color: white;
+            border: none;
+            padding: 0 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #002244;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .typing {
+            display: none;
+            font-size: 13px;
+            color: #777;
+            margin: 0 0 10px 25px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2 style="margin:0;">Замын 2-р ангийн дотоодын AI Туслах</h2>
+</header>
+
+<div class="chat-container">
+    <div id="chat-window">
+        <div class="msg ai-msg">
+            Сайн байна уу? Би УБТЗ-ын Замын 2-р ангийн AI туслах байна. 
+            Та замын стандарт, норм, хөдөлмөрийн гэрээ, хамтын гэрээний талаар надаас асуух боломжтой.
+        </div>
+    </div>
+    
+    <div id="typing-indicator" class="typing">AI хариулт бэлдэж байна...</div>
+
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Асуултаа энд бичнэ үү..." onkeypress="checkEnter(event)">
+        <button onclick="sendRequest()">Асуух</button>
+    </div>
+</div>
+
+<script>
+    const MODEL_NAME = 'gemini-2.5-flash';
+    const KNOWLEDGE_FILES = ['busad.md', 'VehGeree.md'];
+    const ENABLE_GEMINI = false;
+    const AI_START_MARKER = '<!-- AI:START -->';
+    const AI_END_MARKER = '<!-- AI:END -->';
+
+    // 1. API KEY СУУЛГАВ
+    const API_KEY = "AIzaSyDxiIr2sIYtv6XzqAsCYF3CTWHcC9_0t0A";
+
+    // 2. МЭДЭЭЛЛИЙН САН (Та энд PDF-ээсээ текстээ нэмж баяжуулж болно)
+    const DATA_SOURCE = `
+        ЗАМЫН СТАНДАРТ:
+        - Замын үндсэн царигийн хэмжээ: 1520 мм.
+        - Хүлцэл: Арчлалтын норм +8 мм, -2 мм.
+        - Гэмтэл: Замын хэмжээ 1548 мм-ээс их эсвэл 1512 мм-ээс бага бол хөдөлгөөнийг шууд зогсооно.
+        - Хурдны хязгаарлалт: Хүлцэл +10 мм-ээс хэтэрсэн тохиолдолд замын байдалд тохируулан хурд хасна.
+
+        ХӨДӨЛМӨРИЙН ГЭРЭЭ БОЛОН ЖУРАМ:
+        - Заалт 2.3.7: Ажилтан техник хэрэгслийн бүрэн бүтэн байдлыг хариуцаж, илэрсэн гэмтлийг нэн даруй диспетчерт мэдээлнэ.
+        - Заалт 3.1.5: Хөдөлмөрийн аюулгүй байдал алдагдсан нөхцөлд ажилтан ажлыг зогсоох эрхтэй.
+        - Ажлын цаг: Ээлжийн ажилчид батлагдсан графикийн дагуу ажиллана.
+        
+        ТЕХНИК АШИГЛАЛТЫН ЖУРАМ (ТАЖ):
+        - Галт тэрэгний хөдөлгөөний аюулгүй байдлыг хангах нь ажилтан бүрийн үндсэн үүрэг мөн.
+    `;
+
+    let knowledgeText = '';
+    let knowledgeChunks = [];
+    let knowledgeClauses = [];
+    let knowledgeLoadPromise = null;
+    let pendingClarification = null;
+    let lastResolvedQuery = '';
+
+    const GENERIC_QUERY_TERMS = new Set([
+        'энэ', 'тэр', 'үүний', 'үүнийг', 'үүнийгээ', 'түүн', 'түүнтэй', 'энэний',
+        'дэлгэрэнгүй', 'тодруул', 'тайлбарла', 'талаар', 'ямар', 'яаж', 'хэд', 'хэн', 'аль'
+    ]);
+
+    const SEARCH_STOP_TERMS = new Set([
+        'гэж', 'гэдэг', 'гэдэг нь', 'нь', 'юм', 'бол', 'вэ', 'уу', 'юу', 'байна', 'байдаг'
+    ]);
+
+    const CLAUSE_REF_REGEX = /\b\d+(?:\.\d+)+\b/gu;
+    const CLAUSE_LINE_REGEX = /^(\d+(?:\.\d+)+)\.\s*(.*)$/u;
+    const ARTICLE_NUMBER_REGEX = /(^|[^\p{L}\p{N}])(\d{1,3})(?:-?р)?\s*зүйл(?=$|[^\p{L}\p{N}])/giu;
+    const NUMERIC_VALUE_REGEX = /[+-]?\d+(?:[.,]\d+)?\s?(?:мм|тэрбум|сая|цаг|өдөр|жил|%)/giu;
+    const DOT_TOKEN = 'clausedotmarker';
+    const CLAUSE_END_TOKEN = 'clauseendmarker';
+    const ARTICLE_ONES_ORDINAL = {
+        1: 'нэгдүгээр',
+        2: 'хоёрдугаар',
+        3: 'гуравдугаар',
+        4: 'дөрөвдүгээр',
+        5: 'тавдугаар',
+        6: 'зургаадугаар',
+        7: 'долдугаар',
+        8: 'наймдугаар',
+        9: 'есдүгээр'
+    };
+    const ARTICLE_TENS_CARDINAL = {
+        10: 'арав',
+        20: 'хорин',
+        30: 'гучин',
+        40: 'дөчин',
+        50: 'тавин',
+        60: 'жаран',
+        70: 'далан',
+        80: 'наян',
+        90: 'ерэн'
+    };
+
+    function normalizeText(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/[\u2018\u2019\u201c\u201d]/g, ' ')
+            .replace(/(\d)\.(?=\d)/g, `$1${DOT_TOKEN}`)
+            .replace(/[^\p{L}\p{N}%]+/gu, ' ')
+            .replace(new RegExp(DOT_TOKEN, 'g'), '.')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function extractTerms(text) {
+        const normalizedTerms = normalizeText(text)
+            .split(' ')
+            .filter(term => (term.length >= 2 || /^\d+$/.test(term)) && !SEARCH_STOP_TERMS.has(term));
+
+        const clauseTerms = extractClauseReferences(text);
+        const articleVariantTerms = getArticleHeadingVariants(text)
+            .flatMap(item => normalizeText(item).split(' '))
+            .filter(term => Boolean(term) && !SEARCH_STOP_TERMS.has(term));
+
+        return Array.from(new Set([...normalizedTerms, ...clauseTerms, ...articleVariantTerms]));
+    }
+
+    function extractClauseReferences(text) {
+        return Array.from(new Set(Array.from(String(text || '').match(CLAUSE_REF_REGEX) || [], item => item.toLowerCase())));
+    }
+
+    function getNormalizedPhrase(text) {
+        const normalized = normalizeText(text);
+        return normalized.length >= 4 ? normalized : '';
+    }
+
+    function getComparablePhrase(text) {
+        return normalizeText(text)
+            .split(' ')
+            .filter(term => Boolean(term) && !SEARCH_STOP_TERMS.has(term))
+            .join(' ')
+            .trim();
+    }
+
+    function getQueryCorePhrases(text) {
+        const variants = new Set();
+        const pushVariant = (value) => {
+            const normalized = normalizeText(value);
+            if (normalized.length >= 3) {
+                variants.add(normalized);
+            }
+        };
+
+        const normalized = normalizeText(text);
+        if (!normalized) {
+            return [];
+        }
+
+        pushVariant(normalized);
+        pushVariant(normalized.replace(/\s+гэж\s+юу(?:\s+вэ)?$/u, ''));
+        pushVariant(normalized.replace(/\s+гэдэг\s+нь\s+юу(?:\s+вэ)?$/u, ''));
+        pushVariant(normalized.replace(/\s+гэдэг\s+юу(?:\s+вэ)?$/u, ''));
+        pushVariant(normalized.replace(/\s+юу(?:\s+вэ)?$/u, ''));
+        pushVariant(normalized.replace(/\s+вэ$/u, ''));
+
+        return Array.from(variants);
+    }
+
+    function getNormalizedTokens(text) {
+        return normalizeText(text)
+            .split(' ')
+            .filter(Boolean);
+    }
+
+    function tokenMatchesTerm(token, term) {
+        return token === term || token.startsWith(term);
+    }
+
+    function countTermMatches(text, term) {
+        return getNormalizedTokens(text).filter(token => tokenMatchesTerm(token, term)).length;
+    }
+
+    function hasTermMatch(text, term) {
+        return countTermMatches(text, term) > 0;
+    }
+
+    function isSingleEditAway(left, right) {
+        if (!left || !right) {
+            return false;
+        }
+
+        if (left === right) {
+            return true;
+        }
+
+        if (Math.abs(left.length - right.length) > 1) {
+            return false;
+        }
+
+        let leftIndex = 0;
+        let rightIndex = 0;
+        let edits = 0;
+
+        while (leftIndex < left.length && rightIndex < right.length) {
+            if (left[leftIndex] === right[rightIndex]) {
+                leftIndex += 1;
+                rightIndex += 1;
+                continue;
+            }
+
+            edits += 1;
+            if (edits > 1) {
+                return false;
+            }
+
+            if (left.length > right.length) {
+                leftIndex += 1;
+            } else if (right.length > left.length) {
+                rightIndex += 1;
+            } else {
+                leftIndex += 1;
+                rightIndex += 1;
+            }
+        }
+
+        if (leftIndex < left.length || rightIndex < right.length) {
+            edits += 1;
+        }
+
+        return edits <= 1;
+    }
+
+    function hasApproximateTermMatch(text, term) {
+        const normalizedTerm = normalizeText(term);
+        if (normalizedTerm.length < 6) {
+            return false;
+        }
+
+        return getNormalizedTokens(text).some(token => isSingleEditAway(token, normalizedTerm));
+    }
+
+    function countApproximateTermMatches(text, term) {
+        const normalizedTerm = normalizeText(term);
+        if (normalizedTerm.length < 6) {
+            return 0;
+        }
+
+        return getNormalizedTokens(text).filter(token => isSingleEditAway(token, normalizedTerm)).length;
+    }
+
+    function stripClausePrefix(text) {
+        return String(text || '').replace(/^\d+(?:\.\d+)+\.\s*/u, '').trim();
+    }
+
+    function matchesQueryPhrase(text, queryPhrases) {
+        const candidates = [
+            normalizeText(text),
+            normalizeText(stripClausePrefix(text))
+        ].filter(Boolean);
+
+        return queryPhrases.some(phrase => candidates.some(candidate => candidate === phrase || candidate.startsWith(`${phrase} `)));
+    }
+
+    function containsQueryPhrase(text, queryPhrases) {
+        const candidates = [
+            normalizeText(text),
+            normalizeText(stripClausePrefix(text))
+        ].filter(Boolean);
+
+        return queryPhrases.some(phrase => phrase.length >= 6 && candidates.some(candidate => candidate.includes(phrase)));
+    }
+
+    function hasOrderedTermMatch(text, terms) {
+        if (!terms.length) {
+            return false;
+        }
+
+        const tokens = getNormalizedTokens(stripClausePrefix(text));
+        let cursor = 0;
+
+        for (const term of terms) {
+            let foundIndex = -1;
+            for (let index = cursor; index < tokens.length; index += 1) {
+                if (tokenMatchesTerm(tokens[index], term)) {
+                    foundIndex = index;
+                    break;
+                }
+            }
+
+            if (foundIndex === -1) {
+                return false;
+            }
+
+            cursor = foundIndex + 1;
+        }
+
+        return true;
+    }
+
+    function numberToMongolianArticleWords(value) {
+        const number = Number(value);
+        if (!Number.isInteger(number) || number < 1 || number >= 100) {
+            return '';
+        }
+
+        if (ARTICLE_ONES_ORDINAL[number]) {
+            return ARTICLE_ONES_ORDINAL[number];
+        }
+
+        if (number === 10) {
+            return 'аравдугаар';
+        }
+
+        if (number > 10 && number < 20) {
+            return `арван ${ARTICLE_ONES_ORDINAL[number - 10]}`;
+        }
+
+        const tens = Math.floor(number / 10) * 10;
+        const ones = number % 10;
+        const tensWord = ARTICLE_TENS_CARDINAL[tens];
+        if (!tensWord) {
+            return '';
+        }
+
+        if (ones === 0) {
+            return `${tensWord}дугаар`;
+        }
+
+        return `${tensWord} ${ARTICLE_ONES_ORDINAL[ones]}`;
+    }
+
+    function getArticleHeadingVariants(text) {
+        const variants = [];
+        const seen = new Set();
+        const pushVariant = (value) => {
+            const normalized = normalizeText(value);
+            if (!normalized || seen.has(normalized)) {
+                return;
+            }
+
+            seen.add(normalized);
+            variants.push(value);
+        };
+
+        pushVariant(String(text || '').trim());
+
+        const matches = String(text || '').matchAll(ARTICLE_NUMBER_REGEX);
+        for (const match of matches) {
+            const articleWords = numberToMongolianArticleWords(match[2]);
+            if (!articleWords) {
+                continue;
+            }
+
+            pushVariant(`${articleWords} зүйл`);
+        }
+
+        return variants;
+    }
+
+    function extractSearchableText(text) {
+        const sourceText = String(text || '');
+        if (!sourceText.includes(AI_START_MARKER) || !sourceText.includes(AI_END_MARKER)) {
+            return sourceText;
+        }
+
+        const segments = [];
+        const pattern = new RegExp(`${AI_START_MARKER}([\\s\\S]*?)${AI_END_MARKER}`, 'g');
+
+        for (const match of sourceText.matchAll(pattern)) {
+            const segment = String(match[1] || '').trim();
+            if (segment) {
+                segments.push(segment);
+            }
+        }
+
+        return segments.join('\n\n');
+    }
+
+    function isEntrySeparatorLine(line) {
+        return /^(-{3,}|={3,}|\*{3,})$/u.test(String(line || '').trim());
+    }
+
+    function isEntryStartLine(line) {
+        const trimmed = String(line || '').trim();
+        return /^#{1,6}\s+/u.test(trimmed)
+            || /^(?:\d+(?:\.\d+)+\.?|\d+[.)])\s+/u.test(trimmed)
+            || /^[-*•]\s+/u.test(trimmed)
+            || /^.{2,80}(?:гэдэг нь|гэж|: )\s*-\s+/u.test(trimmed);
+    }
+
+    function isHeadingLine(line) {
+        return /^#{1,6}\s+/u.test(String(line || '').trim());
+    }
+
+    function buildKnowledgeSections(text) {
+        const searchableText = extractSearchableText(text).replace(/\r\n?/g, '\n');
+        return searchableText
+            .split(/\n\s*(?:-{3,}|={3,}|\*{3,})\s*\n/)
+            .map(block => block.trim())
+            .filter(Boolean);
+    }
+
+    function buildKnowledgeEntries(text) {
+        const rawBlocks = buildKnowledgeSections(text);
+
+        const entries = [];
+
+        rawBlocks.forEach(block => {
+            const lines = block
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean);
+
+            if (!lines.length) {
+                return;
+            }
+
+            let currentEntry = '';
+            lines.forEach(line => {
+                if (isEntrySeparatorLine(line)) {
+                    if (currentEntry) {
+                        entries.push(currentEntry.trim());
+                        currentEntry = '';
+                    }
+                    return;
+                }
+
+                if (!currentEntry) {
+                    currentEntry = line;
+                    return;
+                }
+
+                if (isEntryStartLine(line)) {
+                    entries.push(currentEntry.trim());
+                    currentEntry = line;
+                    return;
+                }
+
+                currentEntry += isHeadingLine(currentEntry) ? `\n${line}` : ` ${line}`;
+            });
+
+            if (currentEntry) {
+                entries.push(currentEntry.trim());
+            }
+        });
+
+        return entries;
+    }
+
+    function parseClauseLine(line) {
+        const match = String(line || '').trim().match(CLAUSE_LINE_REGEX);
+        if (!match) {
+            return null;
+        }
+
+        return {
+            clauseId: match[1],
+            body: match[2] || ''
+        };
+    }
+
+    function buildClauseBlocks(text, source = 'local', chunkId = '') {
+        const lines = String(text || '')
+            .split(/\n+/)
+            .map(line => line.trim())
+            .filter(Boolean);
+
+        const entries = [];
+        lines.forEach(line => {
+            const clauseInfo = parseClauseLine(line);
+            if (clauseInfo) {
+                entries.push({
+                    clauseId: clauseInfo.clauseId,
+                    lines: [line]
+                });
+                return;
+            }
+
+            if (entries.length) {
+                entries[entries.length - 1].lines.push(line);
+            }
+        });
+
+        return entries.map((entry, index) => {
+            const groupedLines = [...entry.lines];
+            for (let cursor = index + 1; cursor < entries.length; cursor += 1) {
+                const candidate = entries[cursor];
+                if (!candidate.clauseId.startsWith(`${entry.clauseId}.`)) {
+                    break;
+                }
+
+                groupedLines.push(...candidate.lines);
+            }
+
+            const textBlock = groupedLines.join('\n').trim();
+            return {
+                id: `${chunkId || source}-${entry.clauseId}`,
+                clauseId: entry.clauseId,
+                chunkId,
+                source,
+                firstLine: entry.lines[0],
+                text: textBlock,
+                normalized: normalizeText(textBlock)
+            };
+        });
+    }
+
+    function chunkKnowledge(text, source = 'local') {
+        return buildKnowledgeSections(text)
+            .map((chunk, index) => ({
+                id: `${source}-${index + 1}`,
+                source,
+                text: chunk,
+                normalized: normalizeText(chunk)
+            }));
+    }
+
+    function splitIntoSentences(text) {
+        return String(text || '')
+            .split(/\n+/)
+            .map(line => line.trim())
+            .filter(Boolean)
+            .flatMap(line => line
+                .split(/\n+/)
+                .flatMap(part => String(part || '')
+                    // Keep numbered clauses attached to their sentence body.
+                    .replace(/(\b\d+(?:\.\d+)+)\.(?=\s)/g, `$1${CLAUSE_END_TOKEN}`)
+                    .split(/(?<=[.!?])\s+/)
+                    .map(sentence => sentence.replace(new RegExp(CLAUSE_END_TOKEN, 'g'), '.'))
+                    .map(sentence => sentence.trim())
+                    .filter(Boolean)
+                )
+            )
+            .filter(sentence => sentence.length >= 8)
+            .map(sentence => ({
+                text: sentence,
+                normalized: normalizeText(sentence)
+            }));
+    }
+
+    async function loadKnowledgeBase() {
+        if (knowledgeLoadPromise) {
+            return knowledgeLoadPromise;
+        }
+
+        knowledgeLoadPromise = (async () => {
+            try {
+                const loadedFiles = await Promise.all(KNOWLEDGE_FILES.map(async fileName => {
+                    const response = await fetch(fileName, { cache: 'no-store' });
+                    if (!response.ok) {
+                        return null;
+                    }
+
+                    const text = (await response.text()).trim();
+                    if (!text) {
+                        return null;
+                    }
+
+                    return { fileName, text };
+                }));
+
+                const availableFiles = loadedFiles.filter(Boolean);
+                if (!availableFiles.length) {
+                    throw new Error('Markdown файлууд ачаалж чадсангүй.');
+                }
+
+                knowledgeText = availableFiles
+                    .map(file => `# ${file.fileName}\n${file.text}`)
+                    .join('\n\n');
+                knowledgeChunks = availableFiles.flatMap(file => chunkKnowledge(file.text, file.fileName));
+                knowledgeClauses = knowledgeChunks.flatMap(chunk => buildClauseBlocks(chunk.text, chunk.source, chunk.id));
+                if (!knowledgeChunks.length) {
+                    throw new Error('Markdown файлууд хоосон байна.');
+                }
+            } catch (error) {
+                knowledgeText = DATA_SOURCE.trim();
+                knowledgeChunks = chunkKnowledge(knowledgeText, 'local');
+                knowledgeClauses = knowledgeChunks.flatMap(chunk => buildClauseBlocks(chunk.text, chunk.source, chunk.id));
+                console.error(error);
+            }
+        })();
+
+        return knowledgeLoadPromise;
+    }
+
+    function scoreChunk(queryTerms, chunk, normalizedQuery = '') {
+        let score = 0;
+        let matchedTerms = 0;
+        const queryPhrases = getQueryCorePhrases(normalizedQuery || queryTerms.join(' '));
+
+        queryTerms.forEach(term => {
+            const occurrences = countTermMatches(chunk.normalized, term);
+            if (!occurrences) {
+                return;
+            }
+
+            matchedTerms += 1;
+            score += /^\d+$/.test(term) ? 6 : 3;
+            score += Math.min(occurrences, 4);
+        });
+
+        if (matchedTerms >= 2) {
+            score += 4;
+        }
+
+        if (normalizedQuery && chunk.normalized.includes(normalizedQuery)) {
+            score += 14;
+        }
+
+        if (queryPhrases.length && matchesQueryPhrase(chunk.normalized, queryPhrases)) {
+            score += 18;
+        }
+
+        return score;
+    }
+
+    function scoreSentence(queryTerms, sentence, normalizedQuery = '') {
+        let score = 0;
+        let matchedTerms = 0;
+        const queryPhrases = getQueryCorePhrases(normalizedQuery || queryTerms.join(' '));
+
+        queryTerms.forEach(term => {
+            const occurrences = countTermMatches(sentence.normalized, term);
+            if (!occurrences) {
+                return;
+            }
+
+            matchedTerms += 1;
+            score += /^\d+$/.test(term) ? 7 : 4;
+            score += Math.min(occurrences, 3);
+        });
+
+        if (matchedTerms >= 2) {
+            score += 4;
+        }
+
+        if (normalizedQuery && sentence.normalized.includes(normalizedQuery)) {
+            score += 10;
+        }
+
+        if (queryPhrases.length && matchesQueryPhrase(sentence.normalized, queryPhrases)) {
+            score += 22;
+        }
+
+        return score;
+    }
+
+    function selectRelevantSentences(query, maxSentences = 4) {
+        const queryTerms = extractTerms(query);
+        const normalizedQuery = getNormalizedPhrase(query);
+        const meaningfulTerms = queryTerms.filter(term => !GENERIC_QUERY_TERMS.has(term));
+        if (!queryTerms.length) {
+            return [];
+        }
+
+        const ranked = knowledgeChunks
+            .flatMap(chunk => splitIntoSentences(chunk.text).map(sentence => ({
+                chunkId: chunk.id,
+                source: chunk.source,
+                text: sentence.text,
+                normalized: sentence.normalized,
+                score: scoreSentence(queryTerms, sentence, normalizedQuery) + Math.min(scoreChunk(queryTerms, chunk, normalizedQuery), 4)
+            })))
+            .filter(sentence => {
+                if (sentence.score <= 0) {
+                    return false;
+                }
+
+                if (!meaningfulTerms.length) {
+                    return true;
+                }
+
+                const matchedMeaningfulTerms = meaningfulTerms.filter(term => hasTermMatch(sentence.normalized, term)).length;
+                return matchedMeaningfulTerms === meaningfulTerms.length
+                    || (matchedMeaningfulTerms >= 1 && sentence.normalized.includes(normalizedQuery));
+            })
+            .sort((left, right) => right.score - left.score || left.chunkId - right.chunkId);
+
+        const selected = [];
+        const seen = new Set();
+        ranked.forEach(sentence => {
+            if (selected.length >= maxSentences) {
+                return;
+            }
+
+            if (seen.has(sentence.normalized)) {
+                return;
+            }
+
+            seen.add(sentence.normalized);
+            selected.push(sentence);
+        });
+
+        return selected;
+    }
+
+    function summarizeCandidateText(text, maxLength = 96) {
+        const cleaned = String(text || '')
+            .replace(/^[-•]\s*/u, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (cleaned.length <= maxLength) {
+            return cleaned;
+        }
+
+        return `${cleaned.slice(0, maxLength).trimEnd()}...`;
+    }
+
+    function summarizeChunk(chunk, maxLength = 96) {
+        const firstLine = String(chunk?.text || '')
+            .split(/\n+/)
+            .map(line => line.trim())
+            .find(Boolean) || '';
+
+        return summarizeCandidateText(firstLine, maxLength);
+    }
+
+    function summarizeKnowledgeItem(item, maxLength = 96) {
+        return summarizeCandidateText(item?.firstLine || item?.text || '', maxLength);
+    }
+
+    function getClarificationOptions(query, relevantChunks, maxOptions = Number.POSITIVE_INFINITY) {
+        const meaningfulTerms = extractTerms(query).filter(term => !GENERIC_QUERY_TERMS.has(term));
+        const isBroadQuery = meaningfulTerms.length <= 2;
+        if (meaningfulTerms.length === 0 || relevantChunks.length < 2) {
+            return [];
+        }
+
+        const topScore = relevantChunks[0]?.score || 0;
+        if (topScore < 6) {
+            return [];
+        }
+
+        const clauseMode = relevantChunks.some(item => Boolean(item?.clauseId));
+        const scoreWindow = clauseMode
+            ? (isBroadQuery ? 25 : 12)
+            : (isBroadQuery ? 18 : 3);
+
+        const candidates = [];
+        const seen = new Set();
+
+        relevantChunks.forEach(chunk => {
+            if (candidates.length >= maxOptions) {
+                return;
+            }
+
+            if (!chunk?.text) {
+                return;
+            }
+
+            if ((topScore - chunk.score) > scoreWindow) {
+                return;
+            }
+
+            const summary = summarizeKnowledgeItem(chunk);
+            const summaryKey = normalizeText(summary);
+            if (!summaryKey || seen.has(summaryKey)) {
+                return;
+            }
+
+            seen.add(summaryKey);
+            candidates.push({
+                text: summary,
+                fullText: chunk.text.trim(),
+                score: chunk.score,
+                chunkId: chunk.id,
+                clauseId: chunk.clauseId || '',
+                queryText: chunk.firstLine || summary
+            });
+        });
+
+        if (candidates.length < 2) {
+            return [];
+        }
+
+        if (!clauseMode && !isBroadQuery && (candidates[0].score - candidates[candidates.length - 1].score) > 3) {
+            return [];
+        }
+
+        return candidates;
+    }
+
+    function shouldAskBroadQueryClarification(query, clarificationOptions = []) {
+        const meaningfulTerms = extractTerms(query).filter(term => !GENERIC_QUERY_TERMS.has(term));
+        return meaningfulTerms.length <= 2
+            && !extractClauseReferences(query).length
+            && clarificationOptions.length >= 2;
+    }
+
+    function getClarificationPrompt(query, options = []) {
+        const trimmed = String(query || '')
+            .trim()
+            .replace(/\s+талаар\s+дэлгэрэнгүй$/u, '')
+            .replace(/\s+талаар$/u, '')
+            .trim();
+
+        if (options.length) {
+            const optionLines = options
+                .map((option, index) => `${index + 1}. ${option.text}`)
+                .join('\n');
+
+            return `Асуулт хэд хэдэн ижил төстэй хэсэгт таарч байна: ${trimmed || 'энэ сэдэв'}.\n${optionLines}\n1, 2, 3 ...-аас сонгоод аль заалт эсвэл аль хэсгийг асууж байгаагаа бичнэ үү.`;
+        }
+
+        return `Яг юуг нь асууж байна вэ: ${trimmed || 'энэ сэдэв'}? Жишээ нь хэмнэлт, хугацаа, шаардлагатай зүйл, эсвэл хэрэгжүүлэх ажил гэж тодруулна уу.`;
+    }
+
+    function resolveClarificationSelection(inputText) {
+        if (!pendingClarification?.options?.length) {
+            return null;
+        }
+
+        const match = String(inputText || '').trim().match(/^(\d+)$/);
+        if (!match) {
+            return null;
+        }
+
+        const selectedIndex = Number(match[1]) - 1;
+        return pendingClarification.options[selectedIndex] || null;
+    }
+
+    function shouldAskClarifyingQuestion(query, relevantSentences, clarificationOptions = []) {
+        const terms = extractTerms(query);
+        const clauseRefs = extractClauseReferences(query);
+        const meaningfulTerms = terms.filter(term => !GENERIC_QUERY_TERMS.has(term));
+        const normalized = normalizeText(query);
+        const vagueReference = /\b(энэ|тэр|үүнийг|үүний|дэлгэрэнгүй|тодруул|тайлбарла)\b/u.test(normalized);
+        const topScore = relevantSentences[0]?.score || 0;
+        const topClauseId = relevantSentences[0]?.clauseId || '';
+
+        if (clauseRefs.length && topClauseId && clauseRefs.includes(topClauseId)) {
+            return false;
+        }
+
+        if (vagueReference && meaningfulTerms.length <= 1) {
+            return true;
+        }
+
+        if (meaningfulTerms.length === 0) {
+            return true;
+        }
+
+        if (relevantSentences.length === 0 || topScore < 6) {
+            return true;
+        }
+
+        if (clarificationOptions.length >= 2) {
+            return true;
+        }
+
+        if (meaningfulTerms.length === 1 && topScore >= 6) {
+            return false;
+        }
+
+        return false;
+    }
+
+    function findChunkById(chunkId) {
+        return knowledgeChunks.find(chunk => chunk.id === chunkId) || null;
+    }
+
+    function findClauseById(clauseId) {
+        return knowledgeClauses.find(clause => clause.id === clauseId || clause.clauseId === clauseId) || null;
+    }
+
+    function findBestMatchingClause(query, preferredClauseId = '') {
+        if (preferredClauseId) {
+            const preferredClause = findClauseById(preferredClauseId);
+            if (preferredClause) {
+                return preferredClause;
+            }
+        }
+
+        return selectRelevantClauses(query, 1)[0] || null;
+    }
+
+    function isDefinitionStyleChunk(chunk) {
+        const firstLine = String(chunk?.text || '').split(/\n+/)[0]?.trim() || '';
+        return /(?:гэдэг нь\s*-|гэж\s*-|гэдэг нь|гэж)/u.test(firstLine);
+    }
+
+    function isDefinitionStyleQuery(query) {
+        const normalized = normalizeText(query);
+        const meaningfulTerms = extractTerms(query).filter(term => !GENERIC_QUERY_TERMS.has(term));
+
+        return meaningfulTerms.length <= 1
+            || /(?:\sгэж\sюу(?:\sвэ)?|\sгэдэг(?:\sнь)?\sюу(?:\sвэ)?|\sюу\sвэ)$/u.test(normalized);
+    }
+
+    function selectRelevantDefinitionChunks(query, maxChunks = 20) {
+        const queryTerms = extractTerms(query).filter(term => !GENERIC_QUERY_TERMS.has(term));
+        if (!isDefinitionStyleQuery(query) || queryTerms.length > 2 || extractClauseReferences(query).length) {
+            return [];
+        }
+
+        const exactMatches = selectRelevantChunks(query, maxChunks)
+            .filter(chunk => isDefinitionStyleChunk(chunk) && queryTerms.some(term => hasTermMatch(chunk.normalized, term)));
+
+        if (exactMatches.length) {
+            return exactMatches;
+        }
+
+        return knowledgeChunks
+            .filter(chunk => isDefinitionStyleChunk(chunk) && queryTerms.some(term => hasApproximateTermMatch(chunk.normalized, term)))
+            .map(chunk => {
+                const approximateScore = queryTerms.reduce((total, term) => total + countApproximateTermMatches(chunk.normalized, term), 0);
+                return {
+                    ...chunk,
+                    score: Math.max(scoreChunk(queryTerms, chunk, getNormalizedPhrase(query)) + 1, 8 + approximateScore)
+                };
+            })
+            .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id))
+            .slice(0, maxChunks);
+    }
+
+    function findBestMatchingChunk(query, preferredChunkId = '') {
+        if (preferredChunkId) {
+            const preferredChunk = findChunkById(preferredChunkId);
+            if (preferredChunk) {
+                return preferredChunk;
+            }
+        }
+
+        const definitionChunks = selectRelevantDefinitionChunks(query, 1);
+        if (definitionChunks.length) {
+            return definitionChunks[0];
+        }
+
+        const exactHeadingMatch = findExactHeadingMatch(query);
+        if (exactHeadingMatch?.chunk) {
+            return exactHeadingMatch.chunk;
+        }
+
+        return selectRelevantChunks(query, 1)[0] || null;
+    }
+
+    function formatChunkAnswer(text) {
+        return String(text || '')
+            .split(/\n+/)
+            .map(line => line.trim())
+            .filter(Boolean)
+            .join('\n');
+    }
+
+    function selectRelevantChunks(query, maxChunks = 4) {
+        const queryTerms = extractTerms(query);
+        const normalizedQuery = getNormalizedPhrase(query);
+        if (!queryTerms.length) {
+            return knowledgeChunks.slice(0, maxChunks);
+        }
+
+        const ranked = knowledgeChunks
+            .map(chunk => ({ ...chunk, score: scoreChunk(queryTerms, chunk, normalizedQuery) }))
+            .filter(chunk => chunk.score > 0)
+            .sort((left, right) => right.score - left.score || left.id - right.id)
+            .slice(0, maxChunks);
+
+        return ranked.length ? ranked : knowledgeChunks.slice(0, Math.min(2, knowledgeChunks.length));
+    }
+
+    function selectRelevantClauses(query, maxClauses = 4) {
+        const queryTerms = extractTerms(query);
+        const normalizedQuery = getNormalizedPhrase(query);
+        const queryClauseRefs = extractClauseReferences(query);
+        const queryPhrases = getQueryCorePhrases(query);
+        const meaningfulTerms = queryTerms.filter(term => !GENERIC_QUERY_TERMS.has(term));
+        if (!queryTerms.length && !queryClauseRefs.length) {
+            return [];
+        }
+
+        const ranked = knowledgeClauses
+            .map(clause => {
+                let score = scoreChunk(queryTerms, clause, normalizedQuery);
+                const hasContainedPhrase = containsQueryPhrase(clause.firstLine || clause.text, queryPhrases);
+                const hasOrderedMeaningfulTerms = meaningfulTerms.length >= 2
+                    && hasOrderedTermMatch(clause.firstLine || clause.text, meaningfulTerms);
+                if (queryClauseRefs.includes(clause.clauseId)) {
+                    score += 40;
+                }
+
+                if (matchesQueryPhrase(clause.firstLine || clause.text, queryPhrases)) {
+                    score += 14;
+                }
+
+                if (hasContainedPhrase) {
+                    score += 18;
+                }
+
+                if (hasOrderedMeaningfulTerms) {
+                    score += 24;
+                }
+
+                return { ...clause, score, hasContainedPhrase, hasOrderedMeaningfulTerms };
+            })
+            .filter(clause => clause.score > 0)
+            .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+
+        const orderedTermRanked = ranked.filter(clause => clause.hasOrderedMeaningfulTerms || queryClauseRefs.includes(clause.clauseId));
+        const phraseMatchedRanked = ranked.filter(clause => clause.hasContainedPhrase || queryClauseRefs.includes(clause.clauseId));
+        const effectiveRanked = orderedTermRanked.length
+            ? orderedTermRanked
+            : (phraseMatchedRanked.length ? phraseMatchedRanked : ranked);
+
+        const filteredRanked = effectiveRanked.filter(clause => {
+            if (queryClauseRefs.includes(clause.clauseId)) {
+                return true;
+            }
+
+            return !effectiveRanked.some(other => other.id !== clause.id
+                && other.clauseId.startsWith(`${clause.clauseId}.`)
+                && other.score >= clause.score
+                && matchesQueryPhrase(other.firstLine || other.text, queryPhrases));
+        });
+
+        const selected = [];
+        const seen = new Set();
+        filteredRanked.forEach(clause => {
+            if (selected.length >= maxClauses) {
+                return;
+            }
+
+            const key = normalizeText(clause.firstLine || clause.text);
+            if (!key || seen.has(key)) {
+                return;
+            }
+
+            seen.add(key);
+            selected.push(clause);
+        });
+
+        return selected;
+    }
+
+    function buildPrompt(query) {
+        const relevantSentences = buildAnswerSentences(query);
+        const context = relevantSentences
+            .map((sentence, index) => `[Эх сурвалж ${index + 1}: ${sentence.source || 'local'}]\n${sentence.text}`)
+            .join('\n\n');
+
+        return `Та бол УБТЗ-ын мэргэшсэн зөвлөх байна.
+
+Доорх markdown файлуудаас асуулттай хамгийн холбоотой өгүүлбэрүүдэд үндэслэн асуултад хариулна уу.
+
+ДҮРЭМ:
+- Зөвхөн өгөгдсөн мэдээлэлд тулгуурла.
+- Мэдээлэлд байхгүй зүйлийг бүү зохиож хариул.
+- Хариултанд асуулттай холбоогүй өгүүлбэр битгий нэм.
+- Хариултыг зөвхөн тухайн асуулттай холбоотой 1-3 өгүүлбэрээр өг.
+- Хэрэв шууд хариулахад хангалттай мэдээлэл байвал шууд хариул.
+- Хэрэв мэдээлэл хүрэлцэхгүй бол нэг л тодруулах асуулт асуу.
+
+СОНГОГДСОН МЭДЭЭЛЭЛ:
+${context}
+
+АСУУЛТ: ${query}`;
+    }
+
+    function shouldIncludeContinuationSentence(sentence) {
+        const raw = String(sentence?.text || '').trim();
+        return /^(?:(Үүнийг|Ингэснээр|Цаашид|Заримаас|Мөн)(?:\s|,|:|$)|[-•])/u.test(raw);
+    }
+
+    function isFollowUpDetailSentence(sentence) {
+        if (!sentence || isSkippableStructuralSentence(sentence)) {
+            return false;
+        }
+
+        if (isHeadingSentence(sentence) || isBulletSentence(sentence) || isNumberedSentence(sentence)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function isBulletSentence(sentence) {
+        return /^[-•]/u.test(String(sentence?.text || '').trim());
+    }
+
+    function isHeadingSentence(sentence) {
+        const raw = String(sentence?.text || '').trim();
+        const normalizedRaw = raw.replace(/[.]$/u, '').trim();
+        const hasOnlyTerminalPeriod = /\.$/u.test(raw) && !/[!?]/.test(raw) && raw.indexOf('.') === raw.length - 1;
+        return normalizedRaw.length > 0
+            && normalizedRaw.length <= 48
+            && (!/[.!?]/.test(raw) || hasOnlyTerminalPeriod)
+            && !isBulletSentence(sentence);
+    }
+
+    function isNumberedSentence(sentence) {
+        return /^(?:\d+(?:\.\d+)+\.?|\d+[.)])\s*/u.test(String(sentence?.text || '').trim());
+    }
+
+    function isSkippableStructuralSentence(sentence) {
+        const raw = String(sentence?.text || '').trim();
+        return raw === 'Хэвлэх' || /^[А-ЯӨҮЁ0-9\s,()-]+$/u.test(raw);
+    }
+
+    function buildReferenceSummary(sentences) {
+        const sourceText = sentences.map(sentence => sentence.text).join(' ');
+        const clauseRefs = Array.from(new Set(Array.from(sourceText.match(CLAUSE_REF_REGEX) || [])));
+        const numericValues = Array.from(new Set(Array.from(sourceText.match(NUMERIC_VALUE_REGEX) || [])));
+        const references = [...clauseRefs, ...numericValues.filter(value => !clauseRefs.includes(value))];
+
+        return references.length ? references.join(', ') : '';
+    }
+
+    function buildSearchResultsSummary(sentences) {
+        return '';
+    }
+
+    function collectFollowingChunkSentences(startChunkIndex, maxSentences = 3) {
+        const collected = [];
+        let collectingBulletList = false;
+
+        for (let chunkIndex = startChunkIndex; chunkIndex < knowledgeChunks.length && collected.length < maxSentences; chunkIndex += 1) {
+            const chunk = knowledgeChunks[chunkIndex];
+            if (!chunk) {
+                continue;
+            }
+
+            const sentences = splitIntoSentences(chunk.text);
+            for (const sentence of sentences) {
+                if (collected.length >= maxSentences) {
+                    break;
+                }
+
+                if (isSkippableStructuralSentence(sentence)) {
+                    continue;
+                }
+
+                if (isHeadingSentence(sentence) && !isNumberedSentence(sentence)) {
+                    return collected;
+                }
+
+                if (collectingBulletList && !isBulletSentence(sentence)) {
+                    return collected;
+                }
+
+                if (isBulletSentence(sentence)) {
+                    collectingBulletList = true;
+                }
+
+                collected.push(sentence);
+            }
+        }
+
+        return collected;
+    }
+
+    function findExactHeadingMatch(query) {
+        const headingVariants = getArticleHeadingVariants(query)
+            .map(item => ({
+                normalized: getNormalizedPhrase(item),
+                comparable: getComparablePhrase(item)
+            }))
+            .filter(item => item.normalized || item.comparable);
+
+        if (!headingVariants.length) {
+            return null;
+        }
+
+        for (const chunk of knowledgeChunks) {
+            const sentences = splitIntoSentences(chunk.text);
+            const sentence = sentences.find(item => {
+                if (!isHeadingSentence(item)) {
+                    return false;
+                }
+
+                const sentenceComparable = getComparablePhrase(item.text);
+                return headingVariants.some(variant => {
+                    if (variant.normalized && item.normalized === variant.normalized) {
+                        return true;
+                    }
+
+                    if (!variant.comparable || !sentenceComparable) {
+                        return false;
+                    }
+
+                    return sentenceComparable === variant.comparable
+                        || sentenceComparable.startsWith(`${variant.comparable} `)
+                        || variant.comparable.startsWith(`${sentenceComparable} `);
+                });
+            });
+            if (sentence) {
+                return { chunk, sentence };
+            }
+        }
+
+        return null;
+    }
+
+    function collectHeadingMatchSentences(chunkSentences, startIndex, maxSentences) {
+        const selected = [];
+
+        for (let cursor = startIndex; cursor < chunkSentences.length && selected.length < maxSentences; cursor += 1) {
+            const sentence = chunkSentences[cursor];
+            if (!sentence || isSkippableStructuralSentence(sentence)) {
+                continue;
+            }
+
+            if (cursor !== startIndex && isHeadingSentence(sentence) && !isNumberedSentence(sentence)) {
+                break;
+            }
+
+            selected.push(sentence);
+        }
+
+        return selected;
+    }
+
+    function collectSentenceWithContinuations(chunkSentences, startIndex, maxSentences) {
+        const selected = [];
+
+        for (let cursor = startIndex; cursor < chunkSentences.length && selected.length < maxSentences; cursor += 1) {
+            const sentence = chunkSentences[cursor];
+            if (!sentence || isSkippableStructuralSentence(sentence)) {
+                continue;
+            }
+
+            if (cursor !== startIndex && !(shouldIncludeContinuationSentence(sentence) || isFollowUpDetailSentence(sentence))) {
+                break;
+            }
+
+            selected.push(sentence);
+        }
+
+        return selected;
+    }
+
+    function hasExactHeadingMatch(query) {
+        return Boolean(findExactHeadingMatch(query));
+    }
+
+    function buildAnswerSentences(query, maxSentences = 3) {
+        const queryTerms = extractTerms(query);
+        const normalizedQuery = getNormalizedPhrase(query);
+        const queryClauseRefs = extractClauseReferences(query);
+        const relevantChunks = selectRelevantChunks(query, 2);
+        const exactHeadingMatch = findExactHeadingMatch(query);
+
+        if (!relevantChunks.length && !exactHeadingMatch) {
+            return selectRelevantSentences(query, maxSentences);
+        }
+
+        const topChunk = exactHeadingMatch?.chunk || relevantChunks[0];
+        const chunkSentences = splitIntoSentences(topChunk.text).map((sentence, index) => ({
+            ...sentence,
+            source: topChunk.source,
+            index,
+            directScore: scoreSentence(queryTerms, sentence, normalizedQuery),
+            score: scoreSentence(queryTerms, sentence, normalizedQuery) + Math.min(topChunk.score || scoreChunk(queryTerms, topChunk, normalizedQuery), 6)
+        }));
+
+        if (exactHeadingMatch?.sentence) {
+            const headingIndex = chunkSentences.findIndex(sentence => sentence.normalized === exactHeadingMatch.sentence.normalized);
+            if (headingIndex >= 0) {
+                const headingSelection = collectHeadingMatchSentences(chunkSentences, headingIndex, maxSentences);
+                if (headingSelection.length === 1 && isHeadingSentence(headingSelection[0])) {
+                    const nextChunkIndex = knowledgeChunks.findIndex(chunk => chunk.id === topChunk.id) + 1;
+                    const followingSentences = collectFollowingChunkSentences(nextChunkIndex, maxSentences);
+                    return followingSentences.length ? [headingSelection[0], ...followingSentences].slice(0, maxSentences) : headingSelection;
+                }
+
+                if (headingSelection.length) {
+                    return headingSelection;
+                }
+            }
+        }
+
+        if (queryClauseRefs.length) {
+            const exactClauseMatches = chunkSentences
+                .filter(sentence => queryClauseRefs.some(reference => hasTermMatch(sentence.normalized, reference)))
+                .sort((left, right) => left.index - right.index)
+                .slice(0, 1);
+
+            if (exactClauseMatches.length) {
+                return collectSentenceWithContinuations(chunkSentences, exactClauseMatches[0].index, maxSentences);
+            }
+        }
+
+        const primary = chunkSentences
+            .filter(sentence => sentence.directScore > 0)
+            .sort((left, right) => right.directScore - left.directScore || right.score - left.score || left.index - right.index);
+
+        if (!primary.length) {
+            return selectRelevantSentences(query, maxSentences);
+        }
+
+        const orderedIndexes = [];
+        const seenIndexes = new Set();
+        primary.forEach(sentence => {
+            if (orderedIndexes.length >= maxSentences) {
+                return;
+            }
+
+            if (!seenIndexes.has(sentence.index)) {
+                seenIndexes.add(sentence.index);
+                orderedIndexes.push(sentence.index);
+            }
+
+            let cursor = sentence.index + 1;
+            while (cursor < chunkSentences.length && orderedIndexes.length < maxSentences) {
+                const nextSentence = chunkSentences[cursor];
+                if (!nextSentence || seenIndexes.has(nextSentence.index)) {
+                    cursor += 1;
+                    continue;
+                }
+
+                if (!(shouldIncludeContinuationSentence(nextSentence) || isFollowUpDetailSentence(nextSentence))) {
+                    break;
+                }
+
+                seenIndexes.add(nextSentence.index);
+                orderedIndexes.push(nextSentence.index);
+                cursor += 1;
+            }
+
+            if (isHeadingSentence(sentence)) {
+                let headingCursor = sentence.index + 1;
+                while (headingCursor < chunkSentences.length && orderedIndexes.length < maxSentences) {
+                    const candidate = chunkSentences[headingCursor];
+                    if (isSkippableStructuralSentence(candidate)) {
+                        headingCursor += 1;
+                        continue;
+                    }
+
+                    if (isHeadingSentence(candidate) && !isNumberedSentence(candidate)) {
+                        break;
+                    }
+
+                    if (!seenIndexes.has(candidate.index)) {
+                        seenIndexes.add(candidate.index);
+                        orderedIndexes.push(candidate.index);
+                    }
+
+                    headingCursor += 1;
+                }
+            }
+        });
+
+        const selectedSentences = orderedIndexes
+            .slice(0, maxSentences)
+            .map(index => chunkSentences[index])
+            .filter(Boolean);
+
+        if (selectedSentences.length === 1 && isHeadingSentence(selectedSentences[0])) {
+            const nextChunkIndex = knowledgeChunks.findIndex(chunk => chunk.id === topChunk.id) + 1;
+            const followingSentences = collectFollowingChunkSentences(nextChunkIndex, maxSentences);
+            if (followingSentences.length) {
+                return [selectedSentences[0], ...followingSentences].slice(0, maxSentences);
+            }
+        }
+
+        return selectedSentences;
+    }
+
+    function buildLocalAnswer(query, preferredChunkId = '', preferredClauseId = '') {
+        if (preferredChunkId && !preferredClauseId) {
+            const preferredChunk = findChunkById(preferredChunkId);
+            if (preferredChunk) {
+                return formatChunkAnswer(preferredChunk.text);
+            }
+        }
+
+        const matchedClause = findBestMatchingClause(query, preferredClauseId);
+        if (matchedClause) {
+            return formatChunkAnswer(matchedClause.text);
+        }
+
+        const matchedChunk = findBestMatchingChunk(query, preferredChunkId);
+        if (!matchedChunk) {
+            return 'Одоогоор энэ асуултад markdown файлуудаас шууд таарах мэдээлэл олдсонгүй. Асуултаа арай тодруулж асууна уу.';
+        }
+
+        return formatChunkAnswer(matchedChunk.text);
+    }
+
+    function isQuotaError(message) {
+        return /quota exceeded|rate limit|too many requests|free tier requests/i.test(String(message || ''));
+    }
+
+    function extractRetrySeconds(message) {
+        const match = String(message || '').match(/retry in\s+([\d.]+)s/i);
+        if (!match) {
+            return null;
+        }
+
+        const seconds = Number(match[1]);
+        return Number.isFinite(seconds) ? Math.ceil(seconds) : null;
+    }
+
+    function buildQuotaFallbackMessage(query, errorMessage) {
+        const retrySeconds = extractRetrySeconds(errorMessage);
+        const localAnswer = buildLocalAnswer(query);
+        const retryText = retrySeconds ? ` Gemini хүсэлтийн лимит дууссан тул ойролцоогоор ${retrySeconds} секундын дараа дахин оролдож болно.` : ' Gemini хүсэлтийн лимит түр дууссан байна.';
+
+        return `Gemini API-ийн үнэгүй хүсэлтийн лимит дууссан байна.${retryText} Түр хугацаанд local мэдээллээс хариулбал: ${localAnswer}`;
+    }
+
+    loadKnowledgeBase();
+
+    async function sendRequest() {
+        const input = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const typing = document.getElementById('typing-indicator');
+        const query = input.value.trim();
+
+        if (!query) return;
+
+        // Хэрэглэгчийн мессежийг харуулах
+        appendMessage(query, 'user-msg');
+        input.value = '';
+        typing.style.display = 'block';
+
+        try {
+            await loadKnowledgeBase();
+
+            let resolvedQuery = query;
+            let resolvedFromClarification = false;
+            let preferredChunkId = '';
+            let preferredClauseId = '';
+            if (pendingClarification) {
+                const selectedOption = resolveClarificationSelection(query);
+                if (selectedOption) {
+                    resolvedQuery = selectedOption.queryText || selectedOption.text || pendingClarification.originalQuery;
+                    preferredChunkId = selectedOption.chunkId || '';
+                    preferredClauseId = selectedOption.clauseId || '';
+                    resolvedFromClarification = true;
+                } else {
+                    resolvedQuery = `${pendingClarification.originalQuery}. Нэмэлт тодруулга: ${query}`;
+                }
+                pendingClarification = null;
+            }
+
+            const relevantDefinitionChunks = selectRelevantDefinitionChunks(resolvedQuery, 20);
+            const relevantClauses = selectRelevantClauses(resolvedQuery, 20);
+            const rankedResults = relevantDefinitionChunks.length >= 2
+                ? relevantDefinitionChunks
+                : (relevantClauses.length ? relevantClauses : selectRelevantChunks(resolvedQuery, 20));
+            const clarificationOptions = getClarificationOptions(resolvedQuery, rankedResults);
+            const exactHeadingMatch = hasExactHeadingMatch(resolvedQuery);
+            const shouldBypassExactHeading = exactHeadingMatch && !shouldAskBroadQueryClarification(resolvedQuery, clarificationOptions);
+            if (!resolvedFromClarification && !shouldBypassExactHeading && shouldAskClarifyingQuestion(resolvedQuery, rankedResults, clarificationOptions)) {
+                pendingClarification = {
+                    originalQuery: pendingClarification?.originalQuery || query,
+                    options: clarificationOptions
+                };
+                appendMessage(getClarificationPrompt(pendingClarification.originalQuery, clarificationOptions), 'ai-msg');
+                return;
+            }
+
+            if (!ENABLE_GEMINI) {
+                lastResolvedQuery = resolvedQuery;
+                appendMessage(buildLocalAnswer(resolvedQuery, preferredChunkId, preferredClauseId), 'ai-msg');
+                return;
+            }
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: buildPrompt(resolvedQuery)
+                        }]
+                    }]
+                })
+            });
+
+            const result = await response.json().catch(() => null);
+            if (!response.ok) {
+                const apiMessage = result?.error?.message || `API алдаа: ${response.status}`;
+                throw new Error(apiMessage);
+            }
+
+            const aiText = result?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
+            if (!aiText) {
+                throw new Error('AI хариулт хоосон ирлээ.');
+            }
+
+            lastResolvedQuery = resolvedQuery;
+            
+            appendMessage(aiText, 'ai-msg');
+        } catch (err) {
+                        const errorMessage = err.message || 'Интернэт холболт болон API эрхээ шалгана уу.';
+
+                        if (isQuotaError(errorMessage)) {
+                            appendMessage(buildQuotaFallbackMessage(lastResolvedQuery || query, errorMessage), 'ai-msg');
+                            return;
+                        }
+
+                        appendMessage(`Алдаа гарлаа: ${errorMessage}`, 'ai-msg');
+        } finally {
+            typing.style.display = 'none';
+        }
+    }
+
+    function appendMessage(text, className) {
+        const chatWindow = document.getElementById('chat-window');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `msg ${className}`;
+        msgDiv.innerText = text;
+        chatWindow.appendChild(msgDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function checkEnter(event) {
+        if (event.key === 'Enter') {
+            sendRequest();
+        }
+    }
+</script>
+
+</body>
+</html>

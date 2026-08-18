@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гэмтлийн бүртгэл</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2128;
+  --border: #30363d;
+  --accent: #f0a500;
+  --accent2: #e05c5c;
+  --green: #3fb950;
+  --green-bg: #0d2818;
+  --red-bg: #2d0f0f;
+  --text: #e6edf3;
+  --text-muted: #7d8590;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* Header */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.header-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.header-sub {
+  font-size: 16px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  margin-top: 4px;
+}
+
+.header-right {
+  display: none;
+}
+
+/* Save indicator */
+.save-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface2);
+  transition: all 0.3s ease;
+  display: none;
+}
+
+.save-badge.saving {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.save-badge.saved {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.save-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.save-badge.saving .save-dot {
+  background: var(--accent);
+  animation: pulse 1s infinite;
+}
+
+.save-badge.saved .save-dot {
+  background: var(--green);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+
+.stat-item {
+  flex: 1;
+  padding: 14px 24px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--mono);
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+.stat-value.red { color: var(--accent2); }
+.stat-value.green { color: var(--green); }
+.stat-value.yellow { color: var(--accent); }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 32px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  width: min(620px, 72vw);
+  min-width: 320px;
+  transition: border-color 0.2s;
+}
+
+.search-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.search-wrap svg { color: var(--text-muted); flex-shrink: 0; }
+
+.search-wrap input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 600;
+  width: 100%;
+}
+
+.search-wrap input::placeholder { color: var(--text-muted); }
+
+.filter-btns {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.filter-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+.filter-btn.green-btn.active { background: var(--green); border-color: var(--green); color: #000; }
+.filter-btn.red-btn.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--mono);
+  transition: all 0.2s;
+}
+
+.source-link:hover {
+  border-color: var(--accent);
+  color: #ffd27a;
+}
+
+.reset-btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--mono);
+}
+
+.reset-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+/* Table container */
+.table-wrap {
+  padding: 24px 32px;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 13.5px;
+}
+
+thead tr th {
+  background: linear-gradient(180deg, #2a3442 0%, #1f2a38 100%);
+  color: #ffd166;
+  font-weight: 800;
+  font-family: var(--sans);
+  font-size: 15px;
+  text-transform: none;
+  letter-spacing: 0.8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #4b5563;
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+thead {
+  display: table-header-group;
+  visibility: visible;
+  opacity: 1;
+}
+
+thead tr th:first-child { border-radius: 8px 0 0 0; }
+thead tr th:last-child { border-radius: 0 8px 0 0; text-align: center; }
+
+tbody tr {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  animation: fadeIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+tbody tr td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+}
+
+tbody tr td:last-child { text-align: center; }
+
+tbody tr:hover td { background: rgba(240, 165, 0, 0.04); }
+
+/* Row statuses */
+tbody tr.status-ilersen td:first-child {
+  border-left: 3px solid var(--accent2);
+}
+
+tbody tr.status-zassan td:first-child {
+  border-left: 3px solid var(--green);
+}
+
+/* Status badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+}
+
+.badge-ilersen {
+  background: rgba(224, 92, 92, 0.15);
+  color: var(--accent2);
+  border: 1px solid rgba(224, 92, 92, 0.3);
+}
+
+.badge-zassan {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+/* Loading */
+.loading-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.error-wrap {
+  text-align: center;
+  padding: 60px;
+  color: var(--accent2);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* Tooltip hint */
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  padding: 0 32px 16px;
+  text-align: right;
+}
+
+.hint span {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin: 0 3px;
+  font-size: 11px;
+}
+
+/* No results */
+#noResults {
+  display: none;
+  text-align: center;
+  padding: 50px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* Progress bar */
+.progress-bar-wrap {
+  height: 3px;
+  background: var(--border);
+  position: relative;
+}
+
+.progress-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* Row number */
+.row-num {
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  width: 32px;
+  text-align: right;
+  padding-right: 8px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">⚠</div>
+    <div>
+      <h1>Гэмтлийн бүртгэл</h1>
+      <div class="header-sub">Замын гэмтлийн хяналтын систем</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="save-badge" id="saveBadge">
+      <div class="save-dot"></div>
+      <span id="saveText">Автомат хадгалалт</span>
+    </div>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-bar-wrap">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-label">Нийт</div>
+    <div class="stat-value yellow" id="statTotal">—</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-label">Илэрсэн</div>
+    <div class="stat-value red" id="statIlersen">—</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-label">Зассан</div>
+    <div class="stat-value green" id="statZassan">—</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-label">Гүйцэтгэл</div>
+    <div class="stat-value" id="statPercent" style="color:var(--text-muted)">—</div>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="Хайх: зам, гэмтэл, км...">
+  </div>
+
+  <div class="filter-btns">
+    <button class="filter-btn active" data-filter="all">Бүгд</button>
+    <button class="filter-btn red-btn" data-filter="ilersen">Илэрсэн</button>
+    <button class="filter-btn green-btn" data-filter="zassan">Зассан</button>
+  </div>
+
+  <a class="source-link" id="scriptLink" href="#" target="_blank" rel="noopener">Apps Script холбоос</a>
+
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <table id="sheetTable">
+    <thead>
+      <tr>
+        <th style="width:32px">#</th>
+        <th>Огноо</th>
+        <th>Зам</th>
+        <th>КМ</th>
+        <th>ПК</th>
+        <th>Үе</th>
+        <th>Гэмтэл</th>
+        <th>Хянасан</th>
+        <th>Төлөв</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr>
+        <td colspan="9">
+          <div class="loading-wrap">
+            <div class="spinner"></div>
+            <span>Мэдээлэл ачааллаж байна...</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div id="noResults" class="empty-state">🔍 Хайлтын үр дүн олдсонгүй</div>
+</div>
+
+<script>
+const SHEET_ID = "1wEIDZXjsJiONIiq_oboEEAeeLjSVegROx3cyG78QCPo";
+const SHEET_GID = "0";
+const SHEET_EDIT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing`;
+const SHEET_FALLBACK_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbyMf0mPRYjSj6ZJEZ_ZpQZAsLitPrGiZlVbP4GruNJT4MVS650D24Co41B81hNbz5k/exec";
+const STORAGE_KEY = "gemtliin_bugd";
+
+document.getElementById("scriptLink").href = SHEET_FALLBACK_URL;
+
+let allRows = [];
+let statusMap = {};
+let currentFilter = "all";
+let saveTimer = null;
+
+function getStatusValue(entry) {
+  if (typeof entry === "string") return entry;
+  if (entry && typeof entry === "object") return entry.status || "ilersen";
+  return "ilersen";
+}
+
+function getFixedDateValue(entry) {
+  if (entry && typeof entry === "object") return entry.fixedDate || "";
+  return "";
+}
+
+function getTodayDate() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}.${mm}.${dd}`;
+}
+
+// Load saved statuses
+function loadStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch { return {}; }
+}
+
+// Save with debounce + visual feedback
+function saveStorage() {
+  showSaving();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(statusMap));
+      showSaved();
+    } catch(e) {
+      console.error("Хадгалахад алдаа:", e);
+    }
+  }, 600);
+}
+
+function showSaving() {
+  const badge = document.getElementById("saveBadge");
+  badge.className = "save-badge saving";
+  document.getElementById("saveText").textContent = "Хадгалж байна...";
+}
+
+function showSaved() {
+  const badge = document.getElementById("saveBadge");
+  badge.className = "save-badge saved";
+  document.getElementById("saveText").textContent = "Хадгалагдсан ✓";
+  setTimeout(() => {
+    badge.className = "save-badge";
+    document.getElementById("saveText").textContent = "Автомат хадгалалт";
+  }, 2500);
+}
+
+// Update stats
+function updateStats() {
+  const total = allRows.length;
+  const zassan = Object.values(statusMap).filter(v => getStatusValue(v) === "zassan").length;
+  const ilersen = total - zassan;
+  const pct = total > 0 ? Math.round((zassan / total) * 100) : 0;
+
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statIlersen").textContent = ilersen;
+  document.getElementById("statZassan").textContent = zassan;
+  document.getElementById("statPercent").textContent = pct + "%";
+
+  const bar = document.getElementById("progressBar");
+  bar.style.width = pct + "%";
+  bar.style.background = pct === 100
+    ? "var(--green)"
+    : `linear-gradient(90deg, var(--accent2), var(--accent))`;
+}
+
+// Render rows with filter + search
+function renderRows() {
+  const tbody = document.getElementById("tbody");
+  const searchVal = document.getElementById("searchInput").value.toLowerCase();
+  tbody.innerHTML = "";
+
+  const filtered = allRows.filter((cols, i) => {
+    const status = getStatusValue(statusMap[i]);
+    if (currentFilter === "zassan" && status !== "zassan") return false;
+    if (currentFilter === "ilersen" && status !== "ilersen") return false;
+    if (searchVal) {
+      return cols.some(c => c.toLowerCase().includes(searchVal));
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    document.getElementById("noResults").style.display = "block";
+    return;
+  }
+  document.getElementById("noResults").style.display = "none";
+
+  filtered.forEach((cols, fi) => {
+    const i = allRows.indexOf(cols);
+    const status = getStatusValue(statusMap[i]);
+    const fixedDate = getFixedDateValue(statusMap[i]);
+
+    const tr = document.createElement("tr");
+    tr.classList.add(status === "zassan" ? "status-zassan" : "status-ilersen");
+    tr.style.animationDelay = (fi * 25) + "ms";
+
+    // Row number
+    const tdNum = document.createElement("td");
+    tdNum.className = "row-num";
+    tdNum.textContent = i + 1;
+    tr.appendChild(tdNum);
+
+    // Data cols
+    cols.forEach((col, ci) => {
+      const td = document.createElement("td");
+      td.textContent = col;
+      // Highlight search
+      if (searchVal && col.toLowerCase().includes(searchVal)) {
+        const hl = col.replace(new RegExp(`(${searchVal})`, "gi"),
+          `<mark style="background:rgba(240,165,0,0.35);color:var(--text);border-radius:2px;padding:0 2px">$1</mark>`);
+        td.innerHTML = hl;
+      }
+      tr.appendChild(td);
+    });
+
+    // Status badge
+    const tdStatus = document.createElement("td");
+    tdStatus.innerHTML = status === "zassan"
+      ? `<span class="badge badge-zassan">● Зассан${fixedDate ? ` | ${fixedDate}` : ""} | ПДБр</span>`
+      : `<span class="badge badge-ilersen">● Илэрсэн</span>`;
+    tr.appendChild(tdStatus);
+
+    // Double click → төлөв солих (Илэрсэн <-> Зассан)
+    tr.ondblclick = function(e) {
+      const current = getStatusValue(statusMap[i]);
+      statusMap[i] = current === "zassan"
+        ? { status: "ilersen" }
+        : { status: "zassan", fixedDate: getTodayDate() };
+      saveStorage();
+      updateStats();
+      renderRows();
+    };
+
+    // Shift+click → илэрсэн рүү буцаах
+    tr.onclick = function(e) {
+      if (e.shiftKey) {
+        statusMap[i] = { status: "ilersen" };
+        saveStorage();
+        updateStats();
+        renderRows();
+      }
+    };
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Filter buttons
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    renderRows();
+  });
+});
+
+// Search
+document.getElementById("searchInput").addEventListener("input", renderRows);
+
+function normalizeCols(cols) {
+  let normalized = [...cols];
+
+  // 13 оронтой timestamp байвал хасна.
+  if (normalized[0] && /^\d{13}$/.test(normalized[0])) {
+    normalized.shift();
+  }
+
+  // Эхэнд serial дугаар, дараагийнх нь огноо байвал serial-ийг хасна.
+  if (normalized.length >= 2 && /^\d+$/.test(normalized[0]) && /^\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}$/.test(normalized[1])) {
+    normalized.shift();
+  }
+
+  // Sheet-ээс ирсэн "Илэрсэн/Зассан" текст төлөв багана байвал хасна.
+  const last = normalized[normalized.length - 1]?.toLowerCase();
+  if (last === "илэрсэн" || last === "зассан") {
+    normalized.pop();
+  }
+
+  // Гарчигтай таарах 7 багана: Огноо, Зам, КМ, ПК, Үе, Гэмтэл, Хянасан
+  normalized = normalized.slice(0, 7);
+  while (normalized.length < 7) normalized.push("");
+  return normalized;
+}
+
+function parseCsvRows(csvText) {
+  if (!csvText || /^\s*</.test(csvText)) {
+    throw new Error("CSV биш өгөгдөл ирсэн");
+  }
+
+  const rows = csvText.split("\n").slice(1).filter(r => r.trim() !== "");
+  return rows.map(row => {
+    const cols = row.split(",").map(c => c.replace(/^"|"$/g, "").trim());
+    return normalizeCols(cols);
+  });
+}
+
+async function fetchSheetRows() {
+  try {
+    const response = await fetch(SHEET_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("JSON fetch алдаа");
+    const json = await response.json();
+    const rows = Array.isArray(json) ? json : json?.value;
+    if (!Array.isArray(rows)) throw new Error("JSON бүтэц буруу");
+
+    return rows.map(item => {
+      const cols = [
+        item?.["Огноо"],
+        item?.["Зам"],
+        item?.["КМ"],
+        item?.["ПК"],
+        item?.["Үе"],
+        item?.["Гэмтэл"],
+        item?.["Хянасан"]
+      ].map(v => String(v ?? "").trim());
+      return normalizeCols(cols);
+    });
+  } catch {
+    const fallbackRes = await fetch(SHEET_FALLBACK_URL, { cache: "no-store" });
+    if (!fallbackRes.ok) throw new Error("Fallback fetch алдаа");
+    const csvText = await fallbackRes.text();
+    return parseCsvRows(csvText);
+  }
+}
+
+function renderLoadError() {
+  document.getElementById("tbody").innerHTML = `
+    <tr><td colspan="9">
+      <div class="error-wrap">
+        ⚠ Мэдээлэл ачааллахад алдаа гарлаа.<br>
+        <span style="font-size:11px;opacity:0.6;margin-top:6px;display:block">
+          Google Sheet эрх болон холбоосоо шалгана уу.
+        </span>
+        <a href="${SHEET_EDIT_URL}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;color:#7cc4ff;text-decoration:underline">
+          Sheet нээх
+        </a>
+      </div>
+    </td></tr>`;
+}
+
+// Fetch sheet
+statusMap = loadStorage();
+
+fetchSheetRows()
+  .then(rows => {
+    allRows = rows;
+    updateStats();
+    renderRows();
+  })
+  .catch(renderLoadError);
+</script>
+</body>
+</html>

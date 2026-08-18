@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИССО</title>
+    <style>
+        :root {
+            --primary-color: #1b365d;
+            --secondary-color: #4a777a;
+            --accent-color: #d9534f;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            width: min(1800px, 100%);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        header h1 {
+            font-size: 24px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: minmax(380px, 460px) minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+            width: min(1800px, 100%);
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .content-area {
+            min-width: 0;
+        }
+
+        .form-card, .filter-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-card h2, .content-area h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            height: 60px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: #12243d;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn-edit {
+            background-color: #f0ad4e;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* Grid Cards for Data */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .data-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .data-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background-color: #e0e0e0;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .km-badge {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-info {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .card-footer {
+            padding: 10px 15px;
+            background-color: #fafafa;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-filter input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .km-group {
+            margin-bottom: 18px;
+        }
+
+        .km-lanes {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .km-lane {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        .km-lane-title {
+            display: none;
+        }
+
+        .km-lane-empty {
+            color: #8a8a8a;
+            font-size: 13px;
+            padding: 8px;
+            border: 1px dashed #cfcfcf;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .km-group h3 {
+            font-size: 14px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 8px;
+        }
+
+        .km-group .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .km-group .data-card {
+            min-width: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .km-lanes,
+            .km-lane {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .km-group .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .image-preview {
+            margin-top: 8px;
+            width: 100%;
+            max-height: 180px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            display: none;
+            background: #f3f3f3;
+        }
+
+        .preview-text {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1> Төмөр замын хиймэл төхөөрөмжийн судалгаа</h1>
+        <span id="total-count">Нийт бүртгэл: 0</span>
+    </header>
+
+    <div class="container">
+        <div>
+            <div class="form-card">
+                <h2 id="form-title">Шинэ Объектын Бүртгэл</h2>
+                <form id="bridgeForm">
+                    <input type="hidden" id="editIndex" value="">
+                    
+                    <div class="form-group">
+                        <label for="km">Байршил (Км, Пикет)</label>
+                        <input type="text" id="km" placeholder="Жишээ нь: Км 455 + 200" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Нэршил / Дугаар</label>
+                        <input type="text" id="name" placeholder="Жишээ нь: Гүүр №12 эсвэл Хоолой №4" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Төрөл</label>
+                        <select id="type">
+                            <option value="Дөрвөлжин хоолой">Дөрвөлжин хоолой</option>
+                            <option value="Бөөрөнхий хоолой">Бөөрөнхий хоолой</option>
+                            <option value="Төмөр бетон гүүр">Төмөр бетон гүүр</option>
+                            <option value="Төмөр гүүр">Төмөр гүүр</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="size">Хэмжээ (Урт / Диаметр)</label>
+                        <input type="text" id="size" placeholder="Жишээ нь: Ø1.5м эсвэл 4x4м, Урт 20м" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Тайлбар тодорхойлолт</label>
+                        <textarea id="description" placeholder="Техникийн байдал, ус урсцын хэмжээ гэх мэт..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imageFile">Бодит зураг (Гараас оруулах)</label>
+                        <input type="file" id="imageFile" accept="image/*">
+                        <input type="hidden" id="imageData">
+                        <img id="imagePreview" class="image-preview" alt="Оруулсан зураг preview">
+                        <div id="previewText" class="preview-text">Зураг сонгоогүй байна.</div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="submitBtn">Бүртгэх</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="search-filter">
+                <input type="text" id="searchInput" placeholder="Км, нэр эсвэл төрлөөр хайх..." oninput="filterData()">
+            </div>
+
+            <h2>Бүртгэгдсэн Гүүр, Хоолойн Жагсаалт</h2>
+            <div id="cardsGrid" class="cards-grid">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Өгөгдлийг хадгалах массив (LocalStorage-с уншина)
+        let dataList = JSON.parse(localStorage.getItem('railwayStructures')) || [];
+        const draftKey = 'railwayStructures_draft';
+        const placeholderImage = 'https://images.unsplash.com/photo-1515165562839-978bbcf182c0?auto=format&fit=crop&w=500&q=80';
+
+        const form = document.getElementById('bridgeForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const formTitle = document.getElementById('form-title');
+        const editIndexInput = document.getElementById('editIndex');
+        const cardsGrid = document.getElementById('cardsGrid');
+        const totalCount = document.getElementById('total-count');
+        const imageFileInput = document.getElementById('imageFile');
+        const imageDataInput = document.getElementById('imageData');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewText = document.getElementById('previewText');
+
+        // Хуудас ачаалахад өгөгдлийг харуулах
+        document.addEventListener('DOMContentLoaded', () => {
+            setupImageUpload();
+            restoreDraft();
+            setupFormAutosave();
+            renderCards(dataList);
+        });
+
+        // Форм илгээх (Нэмэх эсвэл Засах)
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const km = document.getElementById('km').value;
+            const name = document.getElementById('name').value;
+            const type = document.getElementById('type').value;
+            const size = document.getElementById('size').value;
+            const description = document.getElementById('description').value;
+            const imageData = imageDataInput.value;
+
+            const editIndex = editIndexInput.value;
+
+            const item = { km, name, type, size, description, imageData };
+
+            if(editIndex === "") {
+                // Шинээр нэмэх
+                dataList.push(item);
+            } else {
+                // Засварлах
+                dataList[editIndex] = item;
+                editIndexInput.value = "";
+                submitBtn.textContent = "Бүртгэх";
+                formTitle.textContent = "Шинэ Объектын Бүртгэл";
+            }
+
+            saveAndRender();
+            form.reset();
+            resetImagePreview();
+            clearDraft();
+        });
+
+        // Картуудыг дэлгэцэнд гаргах функц
+        function renderCards(array) {
+            cardsGrid.innerHTML = "";
+            totalCount.textContent = `Нийт бүртгэл: ${array.length}`;
+
+            if(array.length === 0) {
+                cardsGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777; padding: 20px;">Бүртгэгдсэн мэдээлэл алга байна.</p>`;
+                return;
+            }
+
+            const groupedByKm = array.reduce((acc, item) => {
+                const kmKey = getKmGroupKey(item.km);
+                if (!acc[kmKey]) {
+                    acc[kmKey] = [];
+                }
+                acc[kmKey].push(item);
+                return acc;
+            }, {});
+
+            const sortedKmGroups = Object.keys(groupedByKm)
+                .map(km => ({
+                    km,
+                    items: groupedByKm[km],
+                    kmValue: parseKmValue(km)
+                }))
+                .sort((a, b) => a.kmValue - b.kmValue || a.km.localeCompare(b.km, 'mn'));
+
+            const lanesWrap = document.createElement('div');
+            lanesWrap.className = 'km-lanes';
+            lanesWrap.appendChild(createLane(sortedKmGroups));
+            cardsGrid.appendChild(lanesWrap);
+        }
+
+        function createLane(groups) {
+            const laneSection = document.createElement('section');
+
+            const lane = document.createElement('div');
+            lane.className = 'km-lane';
+
+            if (groups.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'km-lane-empty';
+                empty.textContent = 'Энэ мөрөнд харуулах км байхгүй байна.';
+                lane.appendChild(empty);
+            }
+
+            groups.forEach(group => {
+                const groupWrap = document.createElement('div');
+                groupWrap.className = 'km-group';
+
+                const groupTitle = document.createElement('h3');
+                groupTitle.textContent = `${group.km} - ${group.items.length} бүртгэл`;
+                groupWrap.appendChild(groupTitle);
+
+                const groupGrid = document.createElement('div');
+                groupGrid.className = 'cards-grid';
+
+                group.items.forEach(item => {
+                    const sourceIndex = dataList.indexOf(item);
+                    const imageSource = getImageSource(item);
+                    const card = document.createElement('div');
+                    card.className = 'data-card';
+                    card.innerHTML = `
+                        <div>
+                            <img src="${imageSource}" alt="${item.name}" onerror="this.src='${placeholderImage}'">
+                            <div class="card-body">
+                                <span class="km-badge">${item.km}</span>
+                                <div class="card-title">${item.name}</div>
+                                <div class="card-info"><strong>Төрөл:</strong> ${item.type}</div>
+                                <div class="card-info"><strong>Хэмжээ:</strong> ${item.size}</div>
+                                <div class="card-info" style="margin-top: 8px;">${item.description || 'Тайлбар байхгүй'}</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn-danger" onclick="deleteItem(${sourceIndex})">Устгах</button>
+                        </div>
+                    `;
+                    groupGrid.appendChild(card);
+                });
+
+                groupWrap.appendChild(groupGrid);
+                lane.appendChild(groupWrap);
+            });
+
+            laneSection.appendChild(lane);
+            return laneSection;
+        }
+
+        function parseKmValue(kmText) {
+            const input = (kmText || '').toString();
+            const nums = input.match(/\d+(?:[.,]\d+)?/g);
+
+            if (!nums || nums.length === 0) {
+                return Number.MAX_SAFE_INTEGER;
+            }
+
+            const kmPart = parseFloat(nums[0].replace(',', '.'));
+            const meterPart = nums[1] ? parseFloat(nums[1].replace(',', '.')) : 0;
+
+            if (Number.isNaN(kmPart)) {
+                return Number.MAX_SAFE_INTEGER;
+            }
+
+            return kmPart + (Number.isNaN(meterPart) ? 0 : meterPart / 1000);
+        }
+
+        function getKmGroupKey(kmText) {
+            const input = (kmText || '').toString().trim();
+            const match = input.match(/\d+(?:[.,]\d+)?/);
+
+            if (!match) {
+                return 'Тодорхойгүй Км';
+            }
+
+            const kmValue = match[0].replace(',', '.');
+            return `${kmValue} км`;
+        }
+
+        function getImageSource(item) {
+            return item.imageData || item.imageUrl || placeholderImage;
+        }
+
+        // LocalStorage руу хадгалаад дэлгэцийг шинэчлэх
+        function saveAndRender() {
+            localStorage.setItem('railwayStructures', JSON.stringify(dataList));
+            renderCards(dataList);
+        }
+
+        // Устгах функц
+        function deleteItem(index) {
+            if(confirm('Энэхүү бүртгэлийг устгахдаа итгэлтэй байна уу?')) {
+                dataList.splice(index, 1);
+                saveAndRender();
+            }
+        }
+
+        // Засах горимд шилжүүлэх
+        function editItem(index) {
+            const item = dataList[index];
+            document.getElementById('km').value = item.km;
+            document.getElementById('name').value = item.name;
+            document.getElementById('type').value = item.type;
+            document.getElementById('size').value = item.size;
+            document.getElementById('description').value = item.description;
+            imageDataInput.value = item.imageData || item.imageUrl || '';
+            showImagePreview(imageDataInput.value);
+
+            editIndexInput.value = index;
+            submitBtn.textContent = "Өөрчлөлтийг хадгалах";
+            formTitle.textContent = "Шинэ Объектын Бүртгэл";
+            saveDraft();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Хайлт болон шүүлт хийх
+        function filterData() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = dataList.filter(item => 
+                item.km.toLowerCase().includes(query) ||
+                item.name.toLowerCase().includes(query) ||
+                item.type.toLowerCase().includes(query) ||
+                item.size.toLowerCase().includes(query)
+            );
+            renderCards(filtered);
+        }
+
+        function setupImageUpload() {
+            imageFileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64 = event.target.result;
+                    imageDataInput.value = base64;
+                    showImagePreview(base64, file.name);
+                    saveDraft();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function showImagePreview(source, fileName = 'Оруулсан зураг') {
+            if (!source) {
+                resetImagePreview();
+                return;
+            }
+
+            imagePreview.src = source;
+            imagePreview.style.display = 'block';
+            previewText.textContent = fileName;
+        }
+
+        function resetImagePreview() {
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            previewText.textContent = 'Зураг сонгоогүй байна.';
+            imageDataInput.value = '';
+            imageFileInput.value = '';
+        }
+
+        function setupFormAutosave() {
+            const debouncedSave = debounce(saveDraft, 300);
+            form.querySelectorAll('input, select, textarea').forEach(el => {
+                el.addEventListener('input', debouncedSave);
+                el.addEventListener('change', debouncedSave);
+            });
+        }
+
+        function saveDraft() {
+            const draft = {
+                km: document.getElementById('km').value,
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value,
+                size: document.getElementById('size').value,
+                description: document.getElementById('description').value,
+                imageData: imageDataInput.value,
+                editIndex: editIndexInput.value,
+                submitText: submitBtn.textContent,
+                formTitle: formTitle.textContent
+            };
+            localStorage.setItem(draftKey, JSON.stringify(draft));
+        }
+
+        function restoreDraft() {
+            const draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+            if (!draft) return;
+
+            document.getElementById('km').value = draft.km || '';
+            document.getElementById('name').value = draft.name || '';
+            document.getElementById('type').value = draft.type || 'Дөрвөлжин хоолой';
+            document.getElementById('size').value = draft.size || '';
+            document.getElementById('description').value = draft.description || '';
+            imageDataInput.value = draft.imageData || '';
+            editIndexInput.value = draft.editIndex || '';
+
+            if (draft.submitText) submitBtn.textContent = draft.submitText;
+            if (draft.formTitle) formTitle.textContent = draft.formTitle;
+            if (draft.imageData) {
+                showImagePreview(draft.imageData, 'Түр хадгалсан зураг');
+            }
+        }
+
+        function clearDraft() {
+            localStorage.removeItem(draftKey);
+        }
+
+        function debounce(fn, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гэмтэлтэй зам төмөр бүртгэл</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --primary-ink: #0f172a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --radius: 12px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --transition: all 0.25s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.1), transparent 30%),
+                linear-gradient(180deg, #f8fbff 0%, #eef4ff 52%, #f8fafc 100%);
+            color: var(--text-main);
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Header Layout */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94));
+            padding: 24px 32px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 i {
+            color: var(--primary);
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid rgba(37, 99, 235, 0.14);
+        }
+
+        .status-badge.saved {
+            background: #ecfdf5;
+            color: var(--success);
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 18px;
+            padding: 14px 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), #3b82f6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* Table Card Container */
+        .table-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            position: relative;
+        }
+
+        .table-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb 0%, #38bdf8 48%, #0ea5e9 100%);
+        }
+
+        .table-panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 22px 24px 16px;
+        }
+
+        .table-panel-head h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-ink);
+            margin-bottom: 4px;
+        }
+
+        .table-panel-head p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .table-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #eff6ff, #e0f2fe);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            padding: 0 12px 12px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(37, 99, 235, 0.45) rgba(226, 232, 240, 0.9);
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.65), rgba(14, 165, 233, 0.65));
+            border-radius: 999px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.65);
+            border-radius: 999px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+            min-width: 1280px;
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            border-radius: 18px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        th {
+            background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+            color: #334155;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.7px;
+            padding: 16px 12px;
+            border: 1px solid rgba(203, 213, 225, 0.95);
+            text-align: center;
+            vertical-align: middle;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        td {
+            padding: 12px;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            color: var(--text-main);
+            vertical-align: middle;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.96);
+        }
+
+        tbody tr:nth-child(even) td {
+            background: #fbfdff;
+        }
+
+        tbody tr:hover td {
+            background-color: #f0f7ff;
+        }
+
+        tbody td:first-child {
+            font-weight: 700;
+            color: var(--primary);
+            background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+        }
+
+        /* Inputs inside table */
+        table input, table select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(203, 213, 225, 0.88);
+            border-radius: 10px;
+            font-size: 13px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            transition: var(--transition);
+            color: var(--text-main);
+        }
+
+        table input:focus, table select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            background: #fff;
+        }
+
+        table input::placeholder {
+            color: #94a3b8;
+        }
+
+        .action-btns {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            background: #fff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: 0 8px 18px -14px rgba(15, 23, 42, 0.5);
+        }
+
+        .icon-btn.delete { color: var(--danger); }
+        .icon-btn.delete:hover {
+            background: #fee2e2;
+            border-color: #fecaca;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 56px 40px;
+            color: var(--text-muted);
+            font-style: italic;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .analytics-section {
+            margin-top: 24px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+            border-radius: 22px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 24px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(248, 250, 252, 0.9));
+        }
+
+        .analytics-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-ink);
+            margin-bottom: 4px;
+        }
+
+        .analytics-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .analytics-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+        }
+
+        .analytics-body {
+            padding: 24px;
+            display: grid;
+            gap: 22px;
+        }
+
+        .report-layout {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .report-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .report-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .report-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .report-card-title i {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+            color: var(--primary);
+        }
+
+        .report-card-title h3 {
+            font-size: 16px;
+            color: var(--primary-ink);
+            margin-bottom: 3px;
+        }
+
+        .report-card-title p,
+        .report-side-note {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .report-narrative {
+            font-size: 16px;
+            line-height: 1.9;
+            color: var(--text-main);
+            margin-bottom: 18px;
+        }
+
+        .report-narrative strong {
+            color: var(--primary-ink);
+        }
+
+        .report-narrative-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .report-narrative-item {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(248, 250, 252, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+        }
+
+        .report-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .report-metric {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(248, 250, 252, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+        }
+
+        .report-metric-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .report-metric-value {
+            font-size: 24px;
+            line-height: 1;
+            font-weight: 700;
+            color: var(--primary-ink);
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 280px;
+            display: block;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #fbfdff 0%, #f8fafc 100%);
+        }
+
+        .type-donut-card {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(248, 250, 252, 0.92);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+        }
+
+        .type-donut-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .type-donut-head h4 {
+            font-size: 15px;
+            color: var(--primary-ink);
+            margin-bottom: 3px;
+        }
+
+        .type-donut-head p,
+        .type-donut-total {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .type-donut-total {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            font-weight: 700;
+        }
+
+        .ring-guide {
+            display: flex;
+            .type-pie-container {
+                margin-top: 8px;
+                min-height: 360px;
+                border-radius: 16px;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                border: 1px solid rgba(226, 232, 240, 0.95);
+                padding: 8px;
+
+        .analytics-empty {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-muted);
+            border: 1px dashed rgba(148, 163, 184, 0.4);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                padding: 20px;
+            }
+
+            header,
+            .action-bar,
+            .table-panel-head {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .table-panel-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .report-layout {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 14px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 20px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .table-panel-head {
+                padding: 18px 18px 12px;
+            }
+
+            .analytics-header,
+            .analytics-body {
+                padding: 18px;
+            }
+
+            .analytics-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .report-layout,
+            .report-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .table-responsive {
+                padding: 0 8px 8px;
+            }
+
+            th,
+            td {
+                padding: 10px 8px;
+            }
+
+            .chart-svg {
+                height: 220px;
+            }
+
+            .type-pie-container {
+                min-height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title">
+            <h1><i class="fa-solid fa-train"></i>Гэмтэлтэй зам төмөр бүртгэл</h1>
+            <p>Хурц гэмтэлтэй, гэмтэлтэй зам төмрүүдийг бүртгэх</p>
+        </div>
+        <div id="saveStatus" class="status-badge saved">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Автоматаар хадгалагдсан
+        </div>
+    </header>
+
+    <div class="action-bar">
+        <button class="btn" onclick="addRow()">
+            <i class="fa-solid fa-plus"></i> Мөр нэмэх
+        </button>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table id="railTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 50px;">Д/Д</th>
+                        <th rowspan="2" style="width: 120px;">Илрүүлсэн өдөр</th>
+                        <th rowspan="2" style="width: 160px;">Хэн, ямар аргаар илрүүлсэн</th>
+                        <th colspan="2">Байршил</th>
+                        <th colspan="3">Зам төмрийн шинж</th>
+                        <th colspan="3">Гэмтлийн бүртгэл</th>
+                        <th rowspan="2" style="width: 160px;">Сольсон он сар хугацааны тэмдэглэл</th>
+                        <th rowspan="2" style="width: 70px;">Үйлдэл</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 130px;">Байрлал</th>
+                        <th style="width: 100px;">Жирээ</th>
+                        <th style="width: 80px;">Он</th>
+                        <th style="width: 100px;">Төрөл</th>
+                        <th style="width: 80px;">Урт</th>
+                        <th style="width: 90px;">Номер</th>
+                        <th style="width: 80px;">Гүн</th>
+                        <th style="width: 80px;">Урт</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="analytics-section">
+        <div class="analytics-header">
+            <div>
+                <h2>Тайлан ба ангилсан үзүүлэлт</h2>
+                <p>Он, төрөл, урт, номероор ангилсан тоон мэдээлэл болон график дүрслэл</p>
+            </div>
+            <div class="analytics-chip">
+                <i class="fa-solid fa-chart-column"></i>
+                Автоматаар шинэчлэгдэнэ
+            </div>
+        </div>
+        <div class="analytics-body">
+            <div class="report-layout">
+                <div id="summaryPanel" class="report-card"></div>
+                <div id="schemePanel" class="report-card"></div>
+            </div>
+            <div id="analyticsEmpty" class="analytics-empty" style="display: none;">Шинжилгээ харуулахын тулд хүснэгтэд дор хаяж нэг мөр мэдээлэл бүртгэнэ үү.</div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Шаардлагатай сонголтуудын утгууд
+    const tireOptions = ["Баруун", "Зүүн"];
+    const typeOptions = ["Р-43", "Р-50", "Р-65"];
+    const numberOptions = ["10.1", "10.2", "11.1", "11.2", "14","17.1","17.2","18","20.1","20.2", "21.1", "21.2", "24", "25","26.3","26.4","27.1","27.2","30B.1","30B.2","30Г.1","30Г.2","38.1","40","41.1","41.2","43","44","46.3","46.4","47.1","49","50.1","50.2","52.1","52.2","53.1","53.2","55","56.3","56.4","59","60.1","60.2","62.1","62.2","65","66.3","66.4","69","70.1","70.2","74","79","85","86.3","86.4","99.1","99.2","99.3","99.4"];
+    let saveTimeout = null;
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function normalizeValue(value) {
+        const normalized = String(value || "").trim();
+        return normalized || "Тодорхойгүй";
+    }
+
+    function parseMeters(value) {
+        const normalized = String(value || "").replace(/,/g, '.');
+        const matched = normalized.match(/\d+(?:\.\d+)?/);
+        return matched ? Number.parseFloat(matched[0]) : 0;
+    }
+
+    function isReplaced(note) {
+        return String(note || '').trim().length > 0;
+    }
+
+    function groupRows(rows) {
+        const groups = new Map();
+        rows.forEach(row => {
+            const year = normalizeValue(row.year);
+            const railType = normalizeValue(row.railType);
+            const number = normalizeValue(row.number);
+            const key = `${year}__${railType}__${number}`;
+
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    year,
+                    railType,
+                    number,
+                    count: 0,
+                    totalMeters: 0,
+                    replacedCount: 0,
+                    lengths: new Set()
+                });
+            }
+
+            const group = groups.get(key);
+            group.count += 1;
+            group.totalMeters += parseMeters(row.railLength);
+            group.replacedCount += isReplaced(row.replaceNote) ? 1 : 0;
+            if (String(row.railLength || '').trim()) {
+                group.lengths.add(String(row.railLength).trim());
+            }
+        });
+
+        return Array.from(groups.values()).sort((a, b) => b.count - a.count || b.totalMeters - a.totalMeters || a.year.localeCompare(b.year, 'mn'));
+    }
+
+    function formatMeters(value) {
+        if (!Number.isFinite(value) || value <= 0) {
+            return '0';
+        }
+        const rounded = Math.round(value * 10) / 10;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    }
+
+    function formatPercent(part, total) {
+        if (!total) {
+            return '0%';
+        }
+        return `${Math.round((part / total) * 100)}%`;
+    }
+
+    function createCompositeChartSvg(groups) {
+        if (!groups.length) {
+            return "";
+        }
+
+        const width = 700;
+        const rowHeight = 50;
+        const height = Math.max(220, 44 + (groups.length * rowHeight));
+        const padding = { top: 8, right: 24, bottom: 20, left: 16 };
+        const labelWidth = 210;
+        const barAreaWidth = width - padding.left - padding.right - labelWidth - 74;
+        const max = Math.max(...groups.map(group => group.count), 1);
+
+        const bars = groups.map((group, index) => {
+            const y = padding.top + (index * rowHeight);
+            const barWidth = (group.count / max) * barAreaWidth;
+            const replacedWidth = group.count ? (group.replacedCount / group.count) * barWidth : 0;
+            const label = `${group.year} / ${group.railType} / ${group.number}`;
+            const shortLabel = escapeHtml(label.length > 28 ? `${label.slice(0, 28)}...` : label);
+            return `
+                <g>
+                    <text x="${padding.left}" y="${y + 22}" font-size="12" font-weight="600" fill="#334155">${shortLabel}</text>
+                    <rect x="${padding.left + labelWidth}" y="${y + 6}" width="${barAreaWidth}" height="16" rx="8" fill="#e2e8f0"></rect>
+                    <rect x="${padding.left + labelWidth}" y="${y + 6}" width="${barWidth}" height="16" rx="8" fill="#93c5fd"></rect>
+                    <rect x="${padding.left + labelWidth}" y="${y + 6}" width="${replacedWidth}" height="16" rx="8" fill="#2563eb"></rect>
+                    <text x="${padding.left + labelWidth}" y="${y + 38}" font-size="11" fill="#64748b">${escapeHtml(formatMeters(group.totalMeters))} м</text>
+                    <text x="${width - padding.right}" y="${y + 22}" text-anchor="end" font-size="12" font-weight="700" fill="#0f172a">${group.count} удаа</text>
+                </g>`;
+        }).join("");
+
+        return `
+            <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+                ${bars}
+            </svg>`;
+    }
+
+    function aggregateTypes(rows) {
+        const counts = new Map();
+        rows.forEach(row => {
+            const railType = normalizeValue(row.railType);
+            counts.set(railType, (counts.get(railType) || 0) + 1);
+        });
+        return Array.from(counts.entries())
+            .map(([label, count]) => ({ label, count }))
+            .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'mn'));
+    }
+
+    function aggregateTypeNumbers(rows) {
+        const typeMap = new Map();
+        rows.forEach(row => {
+            const railType = normalizeValue(row.railType);
+            const number = normalizeValue(row.number);
+
+            if (!typeMap.has(railType)) {
+                typeMap.set(railType, new Map());
+            }
+
+            const numberMap = typeMap.get(railType);
+            numberMap.set(number, (numberMap.get(number) || 0) + 1);
+        });
+
+        return Array.from(typeMap.entries())
+            .map(([railType, numberMap]) => ({
+                railType,
+                count: Array.from(numberMap.values()).reduce((sum, value) => sum + value, 0),
+                numbers: Array.from(numberMap.entries())
+                    .map(([label, count]) => ({ label, count }))
+                    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'mn'))
+            }))
+            .sort((a, b) => b.count - a.count || a.railType.localeCompare(b.railType, 'mn'));
+    }
+
+    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+        return {
+            x: centerX + (radius * Math.cos(angleInRadians)),
+            y: centerY + (radius * Math.sin(angleInRadians))
+        };
+    }
+
+    function describeArc(centerX, centerY, radius, startAngle, endAngle) {
+        const start = polarToCartesian(centerX, centerY, radius, endAngle);
+        const end = polarToCartesian(centerX, centerY, radius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+        return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+    }
+
+    function getTypeColors(count) {
+        const palette = ['#2563eb', '#14b8a6', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6'];
+        return Array.from({ length: count }, (_, index) => palette[index % palette.length]);
+    }
+
+    function createTypeDonutSvg(entries) {
+        if (!entries.length) {
+            return '';
+        }
+
+        const size = 220;
+        const center = 110;
+        const radius = 70;
+        const total = entries.reduce((sum, entry) => sum + entry.count, 0);
+        const colors = getTypeColors(entries.length);
+        let currentAngle = 0;
+
+        const arcs = entries.map((entry, index) => {
+            const sliceAngle = total ? (entry.count / total) * 360 : 0;
+            const startAngle = currentAngle;
+            const endAngle = currentAngle + sliceAngle;
+            currentAngle = endAngle;
+            const path = describeArc(center, center, radius, startAngle, endAngle || 0.01);
+            return `<path d="${path}" fill="none" stroke="${colors[index]}" stroke-width="24" stroke-linecap="round"></path>`;
+        }).join('');
+
+        return `
+            <svg class="donut-svg" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+                <circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#e2e8f0" stroke-width="24"></circle>
+                ${arcs}
+                <text x="${center}" y="${center - 6}" text-anchor="middle" font-size="28" font-weight="700" fill="#0f172a">${total}</text>
+                <text x="${center}" y="${center + 18}" text-anchor="middle" font-size="12" fill="#64748b">Нийт бүртгэл</text>
+            </svg>`;
+    }
+
+    function createTypeLegend(entries) {
+        const colors = getTypeColors(entries.length);
+        const total = entries.reduce((sum, entry) => sum + entry.count, 0);
+        return entries.map((entry, index) => `
+            <div class="type-legend-item">
+                <div class="type-legend-label"><span class="type-dot" style="background:${colors[index]}"></span>${escapeHtml(entry.label)}</div>
+                <div class="type-legend-value">${entry.count} мөр • ${formatPercent(entry.count, total)}</div>
+            </div>
+        `).join('');
+    }
+
+
+    function renderTypePieChart(entries) {
+        const container = document.getElementById('typePieContainer');
+        if (!container || typeof Highcharts === 'undefined' || !entries.length) {
+            return;
+        }
+
+        const typeColorMap = {
+            'Р-43': '#2563eb',
+            'Р-50': '#14b8a6',
+            'Р-65': '#0ea5e9'
+        };
+
+        const colors = getTypeColors(entries.length);
+        const data = entries.map((entry, index) => ({
+            name: entry.label,
+            y: entry.count,
+            color: typeColorMap[entry.label] || colors[index]
+        }));
+
+        Highcharts.chart(container, {
+            chart: {
+                type: 'pie',
+                backgroundColor: 'transparent',
+                height: 340,
+                spacingTop: 8,
+                spacingBottom: 8
+            },
+            title: { text: null },
+            credits: { enabled: false },
+            tooltip: {
+                headerFormat: '',
+                pointFormat: '<span style="color:{point.color}">●</span> {point.name}: <b>{point.y} мөр ({point.percentage:.1f}%)</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: false,
+                    slicedOffset: 8,
+                    borderWidth: 4,
+                    borderColor: '#ffffff',
+                    borderRadius: 10,
+                    innerSize: '42%',
+                    dataLabels: {
+                        enabled: true,
+                        distance: 22,
+                        connectorWidth: 1.5,
+                        connectorColor: '#94a3b8',
+                        style: {
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            color: '#0f172a',
+                            textOutline: 'none'
+                        },
+                        formatter: function () {
+                            return `<b>${this.point.name}</b><br>${this.percentage.toFixed(1)}%`;
+                        }
+                    }
+                }
+            },
+            series: [{
+                type: 'pie',
+                animation: {
+                    duration: 900
+                },
+                data
+            }]
+        });
+    }
+
+    function renderSummary(rows, groups) {
+        const summaryPanel = document.getElementById('summaryPanel');
+        const totalMeters = rows.reduce((sum, row) => sum + parseMeters(row.railLength), 0);
+        const totalReplaced = rows.filter(row => isReplaced(row.replaceNote)).length;
+        const totalNotReplaced = rows.length - totalReplaced;
+        const replacementPercent = formatPercent(totalReplaced, rows.length);
+        const narrativeHtml = groups.map((group, index) => {
+            const replacementPercentByGroup = formatPercent(group.replacedCount, group.count);
+            const lengthsText = group.lengths.size
+                ? Array.from(group.lengths).map(value => escapeHtml(value)).join(', ')
+                : 'Тодорхойгүй';
+            return `
+                <div class="report-narrative-item">
+                    <div class="report-narrative">
+                        <strong>${index + 1}.</strong> <strong>${escapeHtml(group.year)}</strong> оны <strong>${escapeHtml(group.railType)}</strong> төрлийн зам төмөр <strong>${escapeHtml(group.number)}</strong> номерын гэмтэл нийт <strong>${group.count}</strong> удаа бүртгэгдэж, нийт урт <strong>${formatMeters(group.totalMeters)} м</strong> болсон байна. Бүртгэлд орсон уртын үзүүлэлтүүд: <strong>${lengthsText}</strong>. Үүнээс <strong>${group.replacedCount}</strong> ширхэг буюу <strong>${replacementPercentByGroup}</strong> нь сольсон, <strong>${group.count - group.replacedCount}</strong> нь тэмдэглэлгүй үлдсэн байна.
+                    </div>
+                </div>`;
+        }).join('');
+
+        summaryPanel.innerHTML = `
+            <div class="report-card-header">
+                <div class="report-card-title">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <div>
+                        <h3>Нэгтгэсэн тайлан</h3>
+                        <p>Бүх бүртгэлийг он, төрөл, номероор нэгтгэн дүгнэв</p>
+                    </div>
+                </div>
+                <div class="report-side-note">Нийт ${rows.length} мөр</div>
+            </div>
+            <div class="report-narrative-list">
+                ${narrativeHtml}
+            </div>
+            <div class="report-metrics">
+                <div class="report-metric">
+                    <div class="report-metric-label">Нийт зам төмрийн урт</div>
+                    <div class="report-metric-value">${formatMeters(totalMeters)} м</div>
+                </div>
+                <div class="report-metric">
+                    <div class="report-metric-label">Сольсон бүртгэл</div>
+                    <div class="report-metric-value">${totalReplaced} / ${rows.length}</div>
+                </div>
+                <div class="report-metric">
+                    <div class="report-metric-label">Солилтын хувь</div>
+                    <div class="report-metric-value">${replacementPercent}</div>
+                </div>
+            </div>
+            <div class="report-side-note" style="margin-top: 14px;">Сольсонгүй үлдсэн бүртгэл: ${totalNotReplaced} ширхэг</div>
+        `;
+    }
+
+    function renderScheme(rows, groups) {
+        const schemePanel = document.getElementById('schemePanel');
+        const limitedGroups = groups.slice(0, 6);
+        const typeEntries = aggregateTypes(rows);
+
+        schemePanel.innerHTML = `
+            <div class="report-card-header">
+                <div class="report-card-title">
+                    <i class="fa-solid fa-chart-gantt"></i>
+                    <div>
+                        <h3>Нэгтгэсэн схем график</h3>
+                        <p>Он, төрөл, номерын нийлмэл огтлолцлоор харуулав</p>
+                    </div>
+                </div>
+                <div class="report-side-note">Top ${limitedGroups.length}</div>
+            </div>
+            ${createCompositeChartSvg(limitedGroups)}
+            <div class="type-donut-card">
+                <div class="type-donut-head">
+                    <div>
+                        <h4>Төрлийн хуваарилалт график</h4>
+                        <p>Р-43, Р-50, Р-65 төрлүүдийг 1 тойрогт 3 тод хэсгээр харуулав</p>
+                    </div>
+                    <div class="type-donut-total">${typeEntries.length} төрөл</div>
+                </div>
+                <div id="typePieContainer" class="type-pie-container"></div>
+            </div>
+        `;
+
+        renderTypePieChart(typeEntries);
+    }
+
+    function updateAnalytics(data) {
+        const summaryPanel = document.getElementById('summaryPanel');
+        const schemePanel = document.getElementById('schemePanel');
+        const analyticsEmpty = document.getElementById('analyticsEmpty');
+
+        if (!data.length) {
+            summaryPanel.innerHTML = '';
+            schemePanel.innerHTML = '';
+            analyticsEmpty.style.display = 'block';
+            return;
+        }
+
+        const groups = groupRows(data);
+        analyticsEmpty.style.display = 'none';
+        renderSummary(data, groups);
+        renderScheme(data, groups);
+    }
+
+    // Өгөгдлийг LocalStorage-оос авах эсвэл анхдагч өгөгдлөөр эхлүүлэх
+    function loadData() {
+        const savedData = localStorage.getItem('rail_defects_data');
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                if (data.length > 0) {
+                    renderTable(data);
+                    return;
+                }
+            } catch (e) {
+                console.error("Өгөгдөл уншихад алдаа гарлаа", e);
+            }
+        }
+
+        // Хэрэглэгчийн зураг дээрх анхны загвар өгөгдөл
+        const defaultData = [
+            {
+                dateFound: "2025-07-10",
+                detector: "ПЧОП РДМ тэргэнцэрээр",
+                location: "810 км 7 пк 3 үе",
+                tire: "Баруун",
+                year: "1979",
+                railType: "Р-50",
+                railLength: "25 м",
+                number: "17.1",
+                depth: "5 см",
+                length: "3 см",
+                replaceNote: "2026.07.25-ны 18 цагт сольсон"
+            }
+        ];
+        renderTable(defaultData);
+    }
+
+    // Хүснэгтийг зурах
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="13" class="empty-state">Бүртгэгдсэн мэдээлэл байхгүй байна.</td></tr>`;
+            updateAnalytics([]);
+            return;
+        }
+
+        data.forEach((row, index) => {
+            const tr = document.createElement('tr');
+            
+            // Жирээний select үүсгэх
+            let tireHtml = `<select onchange="triggerAutoSave()">`;
+            tireOptions.forEach(opt => {
+                tireHtml += `<option value="${opt}" ${row.tire === opt ? 'selected' : ''}>${opt}</option>`;
+            });
+            tireHtml += `</select>`;
+
+            // Төрлийн select үүсгэх
+            let typeHtml = `<select onchange="triggerAutoSave()">`;
+            typeOptions.forEach(opt => {
+                typeHtml += `<option value="${opt}" ${row.railType === opt ? 'selected' : ''}>${opt}</option>`;
+            });
+            typeHtml += `</select>`;
+
+            // Номерийн select үүсгэх
+            let numHtml = `<select onchange="triggerAutoSave()">`;
+            numberOptions.forEach(opt => {
+                numHtml += `<option value="${opt}" ${row.number === opt ? 'selected' : ''}>${opt}</option>`;
+            });
+            numHtml += `</select>`;
+
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><input type="date" value="${row.dateFound || ''}" oninput="triggerAutoSave()"></td>
+                <td><input type="text" value="${row.detector || ''}" placeholder="Жишээ: ПЧОП..." oninput="triggerAutoSave()"></td>
+                <td><input type="text" value="${row.location || ''}" placeholder="Байрлал" oninput="triggerAutoSave()"></td>
+                <td>${tireHtml}</td>
+                <td><input type="text" value="${row.year || ''}" placeholder="Он" oninput="triggerAutoSave()"></td>
+                <td>${typeHtml}</td>
+                <td><input type="text" value="${row.railLength || ''}" placeholder="Урт" oninput="triggerAutoSave()"></td>
+                <td>${numHtml}</td>
+                <td><input type="text" value="${row.depth || ''}" placeholder="Гүн" oninput="triggerAutoSave()"></td>
+                <td><input type="text" value="${row.length || ''}" placeholder="Урт" oninput="triggerAutoSave()"></td>
+                <td><input type="text" value="${row.replaceNote || ''}" placeholder="Сольсон тэмдэглэл" oninput="triggerAutoSave()"></td>
+                <td>
+                    <div class="action-btns">
+                        <button class="icon-btn delete" onclick="deleteRow(this)" title="Устгах"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateAnalytics(data);
+    }
+
+    // Шинэ мөр нэмэх
+    function addRow() {
+        const tbody = document.getElementById('tableBody');
+        // Хэрэв хоосон төлөвтэй байвал устгаад шинэ мөр нэмнэ
+        if(tbody.querySelector('.empty-state')) {
+            tbody.innerHTML = '';
+        }
+        
+        const data = collectData();
+        data.push({
+            dateFound: new Date().toISOString().split('T')[0],
+            detector: "",
+            location: "",
+            tire: "Баруун",
+            year: "",
+            railType: "Р-50",
+            railLength: "",
+            number: "17",
+            depth: "",
+            length: "",
+            replaceNote: ""
+        });
+        renderTable(data);
+        triggerAutoSave();
+    }
+
+    // Мөр устгах
+    function deleteRow(btn) {
+        const row = btn.closest('tr');
+        row.remove();
+        reindexTable();
+        triggerAutoSave();
+    }
+
+    // Мөрийн дугаарыг дахин шинэчлэх
+    function reindexTable() {
+        const rows = document.querySelectorAll('#tableBody tr');
+        rows.forEach((row, idx) => {
+            const firstCell = row.querySelector('td');
+            if(firstCell && !row.querySelector('.empty-state')) {
+                firstCell.textContent = idx + 1;
+            }
+        });
+    }
+
+    // Хүснэгт дэх өгөгдлийг цуглуулах
+    function collectData() {
+        const rows = document.querySelectorAll('#tableBody tr');
+        const data = [];
+        
+        rows.forEach(row => {
+            if (row.querySelector('.empty-state')) return;
+            const inputs = row.querySelectorAll('input, select');
+            if(inputs.length > 0) {
+                data.push({
+                    dateFound: inputs[0].value,
+                    detector: inputs[1].value,
+                    location: inputs[2].value,
+                    tire: inputs[3].value,
+                    year: inputs[4].value,
+                    railType: inputs[5].value,
+                    railLength: inputs[6].value,
+                    number: inputs[7].value,
+                    depth: inputs[8].value,
+                    length: inputs[9].value,
+                    replaceNote: inputs[10].value
+                });
+            }
+        });
+        return data;
+    }
+
+    // Автоматаар хадгалах функц (Autosave)
+    function triggerAutoSave() {
+        const statusBadge = document.getElementById('saveStatus');
+        statusBadge.className = "status-badge";
+        statusBadge.innerHTML = `<i class="fa-solid fa-rotate fa-spin"></i> Хадгалж байна...`;
+
+        updateAnalytics(collectData());
+
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            const data = collectData();
+            localStorage.setItem('rail_defects_data', JSON.stringify(data));
+            
+            statusBadge.className = "status-badge saved";
+            statusBadge.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Автоматаар хадгалагдсан`;
+        }, 600); // 0.6 секундын дараа автоматаар LocalStorage-рүү хадгална
+    }
+
+    // Хуудас ачаалагдах үед ажиллах
+    window.onload = function() {
+        loadData();
+    };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мэдээллийн хэсэг</title>
+  <style>
+    :root {
+      --bg: #071428;
+      --panel: #0b1e3a;
+      --accent: #00d4ff;
+      --accent-soft: rgba(0, 212, 255, 0.14);
+      --text: #e8f4fd;
+      --muted: #86a7c8;
+      --border: rgba(0, 212, 255, 0.2);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(0, 212, 255, 0.1), transparent 28%),
+        linear-gradient(180deg, #04101f 0%, var(--bg) 100%);
+    }
+
+    .card {
+      width: min(760px, 100%);
+      padding: 32px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(11, 30, 58, 0.96), rgba(7, 20, 40, 0.98));
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .eyebrow {
+      margin-bottom: 12px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.15;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .note {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <div class="eyebrow">МЭДЭЭЛЛИЙН ХЭСЭГ</div>
+    <h1 id="sectionTitle">Сонгосон цэс</h1>
+    <p>
+      Энэ хэсгийн iframe холболт амжилттай нэмэгдсэн. Үндсэн агуулга хараахан тусдаа хуудсаар бэлтгэгдээгүй тул түр placeholder дэлгэц харуулж байна.
+    </p>
+    <p>
+      Дараагийн шатанд энэ цэсэнд зориулсан бодит тайлан, маягт, бүртгэл эсвэл хяналтын самбарын хуудсыг тусад нь оруулж болно.
+    </p>
+    <div class="note" id="sectionNote">Агуулгын гарчиг автоматаар цэсний нэрээр шинэчлэгдэнэ.</div>
+  </section>
+
+  <script>
+    const rawHash = window.location.hash ? window.location.hash.slice(1) : '';
+    const title = rawHash ? decodeURIComponent(rawHash) : 'Сонгосон цэс';
+    document.title = title;
+    document.getElementById('sectionTitle').textContent = title;
+    document.getElementById('sectionNote').textContent = '"' + title + '" хэсгийн бодит агуулгыг дараагийн алхмаар энэ хуудсанд байршуулна.';
+  </script>
+</body>
+</html>

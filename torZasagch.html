@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тор Засагчийн Судалгаа</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <header class="bg-blue-900 text-white shadow-md py-4 px-6 mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    🛡️ Малтай айлын судалгаа
+                </h1>
+                <p class="text-sm text-blue-200">Төмөр замын аюутай бүсд ойр суурьшсан малтай айлын судалгаа</p>
+            </div>
+            <div class="mt-3 md:mt-0 text-sm bg-blue-800 px-4 py-2 rounded-lg border border-blue-700">
+                Статус: <span class="text-green-400 font-semibold">● Хэвийн ажиллаж байна</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 pb-12">
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <button onclick="openModal()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition duration-200 flex items-center justify-center gap-2 shadow-sm">
+                ➕ Бүртгэл нэмэх
+            </button>
+            <div class="w-full md:w-72">
+                <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Километр эсвэл малчны нэрээр хайх..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="py-3 px-4">Төмөр замын байршил</th>
+                            <th class="py-3 px-4">малтай айлын байршил</th>
+                            <th class="py-3 px-4">Эрсдэлийн зэрэг</th>
+                            <th class="py-3 px-4">Малчны мэдээлэл</th>
+                            <th class="py-3 px-4">Малын тоо, толгой</th>
+                            <th class="py-3 px-4">Таних тамга, тэмдэг</th>
+                            <th class="py-3 px-4">Сануулга тэмдэглэл</th>
+                            <th class="py-3 px-4 text-center">Үйлдэл</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-200 text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="dataModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-800 mb-4">Шинэ Км Бүртгэл Нэмэх</h3>
+            
+            <form id="recordForm" onsubmit="saveRecord(event)">
+                <input type="hidden" id="recordIndex">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Километр (Км / ПК)</label>
+                        <input type="text" id="kmInput" required placeholder="Жишээ нь: Км 455 ПК 3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Малтай айлын байршил</label>
+                        <input type="text" id="locationInput" required placeholder="Төмөр замаас зай, чиглэл" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Малчны нэр</label>
+                        <input type="text" id="herdsmanName" required placeholder="Малчны бүтэн нэр" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Утасны дугаар</label>
+                        <input type="text" id="herdsmanPhone" required placeholder="Утасны дугаар" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Эрсдэлийн зэрэг</label>
+                    <select id="riskLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                        <option value="Их">Их</option>
+                        <option value="Дунд" selected>Дунд</option>
+                        <option value="Бага">Бага</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Малын тоо толгой</label>
+                        <input type="text" id="livestockCount" required placeholder="Жишээ нь: 250 толгой (Адуу-50, Хонь-200)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Малын тамга тэмдэг</label>
+                        <input type="text" id="livestockStamp" required placeholder="Тамганы зураглал / нэр" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Тамганы зураг оруулах</label>
+                    <input type="file" id="stampImageInput" accept="image/*" onchange="handleStampImageChange(event)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    <input type="hidden" id="stampImageData">
+                    <div class="mt-2">
+                        <img id="stampPreview" alt="Тамганы зураг" class="hidden h-20 w-20 object-cover rounded-lg border border-gray-300">
+                        <p id="stampPreviewText" class="text-xs text-gray-500">Зураг сонгоогүй байна.</p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Сануулга авч байсан тэмдэглэл</label>
+                    <textarea id="notesInput" rows="3" placeholder="Өмнө нь өгсөн мэдэгдэл, тор эвдсэн эсэх тухай..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">Болих</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition">Хадгалах</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-[60] px-4" onclick="closeImageModal()">
+        <div class="relative max-w-4xl w-full flex justify-center" onclick="event.stopPropagation()">
+            <button type="button" onclick="closeImageModal()" class="absolute -top-10 right-0 text-white bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm">Хаах ✕</button>
+            <img id="modalImage" alt="Тамганы томруулсан зураг" class="max-h-[85vh] w-auto rounded-xl border border-white/30 shadow-2xl object-contain">
+        </div>
+    </div>
+
+    <script>
+        // Анхдагч санах ойн өгөгдөл (Жишээ)
+        let records = JSON.parse(localStorage.getItem('railway_fence_records')) || [
+            {
+                km: "Км 420 (ПК 4)",
+                location: "Зүүн талдаа 300м зайтай хот айл",
+                name: "Б. Батсуурь",
+                phone: "99112233",
+                riskLevel: "Их",
+                count: "Адуу-40, Хонь-150",
+                stamp: "Өлзий тамга (Баруун гуяндаа)",
+                stampImage: "",
+                notes: "2026.05.10-нд албан ёсны сануулга өгсөн. Тор унагааж байсан түүхтэй."
+            },
+            {
+                km: "Км 435 (ПК 8)",
+                location: "Баруун гар тал, гүүрний орчим",
+                name: "Д. Энхбаяр",
+                phone: "88223344",
+                riskLevel: "Дунд",
+                count: "Үхэр-30, Ямаа-120",
+                stamp: "Сар тамга",
+                stampImage: "",
+                notes: "Тор түр зуур тасалж гардаг эрсдэлтэй цэг. Малчинд анхааруулсан."
+            }
+        ];
+
+        records = records.map(item => ({
+            ...item,
+            riskLevel: item.riskLevel || "Дунд"
+        }));
+
+        // Хуудас ачаалагдахад хүснэгтийг дүүргэх
+        window.onload = function() {
+            renderTable();
+        };
+
+        // Хүснэгт render хийх функц
+        function renderTable(dataToRender = records) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (dataToRender.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-gray-400">Бүртгэгдсэн мэдээлэл одоогоор алга байна.</td></tr>`;
+                return;
+            }
+
+            dataToRender.forEach((item, index) => {
+                const riskBadge = getRiskBadge(item.riskLevel);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-3 px-4 font-bold text-blue-900">${item.km}</td>
+                        <td class="py-3 px-4 text-gray-700">${item.location}</td>
+                        <td class="py-3 px-4">${riskBadge}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-semibold text-gray-900">${item.name}</div>
+                            <div class="text-xs text-gray-500">📞 ${item.phone}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-gray-900 font-medium">${item.count}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-xs text-orange-600 font-semibold mb-1">T: ${item.stamp || '-'}</div>
+                            ${item.stampImage
+                                ? `<button type="button" onclick='openImageModal(${JSON.stringify(item.stampImage)})' class="inline-block" title="Томруулж харах"><img src="${item.stampImage}" alt="Тамганы зураг" class="h-12 w-12 object-cover rounded border border-gray-300 hover:opacity-90 transition cursor-zoom-in"></button>`
+                                : `<span class="text-xs text-gray-400">Зураггүй</span>`}
+                        </td>
+                        <td class="py-3 px-4 text-gray-600 text-xs italic bg-gray-50 rounded">${item.notes || 'Тэмдэглэл байхгүй'}</td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <button onclick="editRecord(${index})" class="bg-amber-100 text-amber-700 hover:bg-amber-200 p-1.5 rounded-lg text-xs font-medium transition" title="Засах">✏️</button>
+                                <button onclick="deleteRecord(${index})" class="bg-red-100 text-red-700 hover:bg-red-200 p-1.5 rounded-lg text-xs font-medium transition" title="Устгах">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function getRiskBadge(riskLevel) {
+            if (riskLevel === 'Их') {
+                return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">Их</span>`;
+            }
+
+            if (riskLevel === 'Бага') {
+                return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">Бага</span>`;
+            }
+
+            return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">Дунд</span>`;
+        }
+
+        // Modal нээх
+        function openModal() {
+            document.getElementById('dataModal').classList.remove('hidden');
+            document.getElementById('dataModal').classList.add('flex');
+            document.getElementById('modalTitle').innerText = 'Шинэ Км Бүртгэл Нэмэх';
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordIndex').value = '';
+            document.getElementById('stampImageData').value = '';
+            document.getElementById('stampPreview').classList.add('hidden');
+            document.getElementById('stampPreview').src = '';
+            document.getElementById('stampPreviewText').innerText = 'Зураг сонгоогүй байна.';
+        }
+
+        // Modal хаах
+        function closeModal() {
+            document.getElementById('dataModal').classList.remove('flex');
+            document.getElementById('dataModal').classList.add('hidden');
+        }
+
+        // Тамганы зургийг томруулж харах modal
+        function openImageModal(imageSrc) {
+            if (!imageSrc) return;
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            imageModal.classList.remove('hidden');
+            imageModal.classList.add('flex');
+        }
+
+        function closeImageModal() {
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            imageModal.classList.remove('flex');
+            imageModal.classList.add('hidden');
+            modalImage.src = '';
+        }
+
+        // Мэдээлэл хадгалах (Нэмэх болон Засах)
+        function saveRecord(event) {
+            event.preventDefault();
+            
+            const index = document.getElementById('recordIndex').value;
+            const newRecord = {
+                km: document.getElementById('kmInput').value,
+                location: document.getElementById('locationInput').value,
+                name: document.getElementById('herdsmanName').value,
+                phone: document.getElementById('herdsmanPhone').value,
+                riskLevel: document.getElementById('riskLevel').value,
+                count: document.getElementById('livestockCount').value,
+                stamp: document.getElementById('livestockStamp').value,
+                stampImage: document.getElementById('stampImageData').value,
+                notes: document.getElementById('notesInput').value
+            };
+
+            if (index === "") {
+                records.push(newRecord); // Шинээр нэмэх
+            } else {
+                records[index] = newRecord; // Засах
+            }
+
+            localStorage.setItem('railway_fence_records', JSON.stringify(records));
+            renderTable();
+            closeModal();
+        }
+
+        // Тамганы зургийг base64 болгож хадгалах
+        function handleStampImageChange(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('stampPreview');
+            const previewText = document.getElementById('stampPreviewText');
+            const stampImageData = document.getElementById('stampImageData');
+
+            if (!file) {
+                stampImageData.value = '';
+                preview.src = '';
+                preview.classList.add('hidden');
+                previewText.innerText = 'Зураг сонгоогүй байна.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                stampImageData.value = imageData;
+                preview.src = imageData;
+                preview.classList.remove('hidden');
+                previewText.innerText = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Засах форм руу өгөгдөл дуудах
+        function editRecord(index) {
+            const item = records[index];
+            document.getElementById('recordIndex').value = index;
+            document.getElementById('kmInput').value = item.km;
+            document.getElementById('locationInput').value = item.location;
+            document.getElementById('herdsmanName').value = item.name;
+            document.getElementById('herdsmanPhone').value = item.phone;
+            document.getElementById('riskLevel').value = item.riskLevel || 'Дунд';
+            document.getElementById('livestockCount').value = item.count;
+            document.getElementById('livestockStamp').value = item.stamp;
+            document.getElementById('stampImageData').value = item.stampImage || '';
+            document.getElementById('notesInput').value = item.notes;
+
+            const preview = document.getElementById('stampPreview');
+            const previewText = document.getElementById('stampPreviewText');
+            if (item.stampImage) {
+                preview.src = item.stampImage;
+                preview.classList.remove('hidden');
+                previewText.innerText = 'Одоогийн зураг';
+            } else {
+                preview.src = '';
+                preview.classList.add('hidden');
+                previewText.innerText = 'Зураг сонгоогүй байна.';
+            }
+
+            document.getElementById('modalTitle').innerText = 'Бүртгэл Засах';
+            document.getElementById('dataModal').classList.remove('hidden');
+            document.getElementById('dataModal').classList.add('flex');
+        }
+
+        // Устгах
+        function deleteRecord(index) {
+            if (confirm("Та энэ км-ийн бүртгэлийг устгахдаа итгэлтэй байна уу?")) {
+                records.splice(index, 1);
+                localStorage.setItem('railway_fence_records', JSON.stringify(records));
+                renderTable();
+            }
+        }
+
+        // Хайлт хийх
+        function filterData() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = records.filter(item => 
+                item.km.toLowerCase().includes(query) || 
+                item.name.toLowerCase().includes(query) ||
+                item.location.toLowerCase().includes(query)
+            );
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

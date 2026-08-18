@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Зааварчилгааны өдөр тутмын бүртгэл</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rail-navy:#151b33;
+    --rail-navy-2:#262f57;
+    --rail-violet:#5b3fae;
+    --rail-accent:#ff9f43;
+    --rail-green:#1fab6f;
+    --rail-red:#e5484d;
+    --rail-bg:#eef1f8;
+    --rail-card:#ffffff;
+    --rail-line:#e4e7f2;
+    --rail-text:#171d33;
+    --rail-muted:#6b7488;
+    --radius-lg:18px;
+    --radius-md:14px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--rail-bg);
+    color:var(--rail-text);
+    font-family:"Inter", "Segoe UI", Roboto, Arial, sans-serif;
+    padding-bottom:60px;
+  }
+  h1,h2,h3,.font-display{font-family:"Manrope","Inter",sans-serif;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:radial-gradient(120% 180% at 100% 0%, rgba(91,63,174,.55) 0%, transparent 55%),
+               linear-gradient(120deg,var(--rail-navy) 0%, var(--rail-navy-2) 60%, var(--rail-violet) 130%);
+    color:#fff;
+    padding:28px 0 42px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(21,27,51,.25);
+  }
+  .hero::after{
+    content:"";
+    position:absolute; right:-70px; top:-90px;
+    width:260px;height:260px;border-radius:50%;
+    background:rgba(255,255,255,.06);
+  }
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+  .hero .badge-live{
+    display:inline-flex;align-items:center;gap:7px;
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.18);
+    padding:7px 14px;border-radius:30px;
+    font-size:.8rem;font-weight:600;color:#fff;
+    backdrop-filter:blur(4px);
+  }
+  .hero .badge-live .dot{width:8px;height:8px;border-radius:50%;background:var(--rail-green);animation:pulse 1.6s infinite;}
+  .hero-icon{
+    width:52px;height:52px;border-radius:14px;
+    background:rgba(255,255,255,.12);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.5rem;flex:0 0 auto;
+    border:1px solid rgba(255,255,255,.15);
+  }
+  .hero h1{font-weight:800;font-size:1.55rem;letter-spacing:.1px;margin:0 0 2px;}
+  .hero p{color:rgba(255,255,255,.72);margin:0;font-size:.88rem;}
+  .hero .track-line{
+    position:absolute; left:0; right:0; bottom:0; height:5px;
+    background-repeat:repeat-x; background-size:24px 5px;
+    background-image:repeating-linear-gradient(90deg,var(--rail-accent) 0 12px, transparent 12px 24px);
+    opacity:.85;
+  }
+
+  .container-app{max-width:1180px;margin:0 auto;padding:0 18px;position:relative;z-index:2;}
+
+  /* ---------- Tabs ---------- */
+  .rail-tabs{
+    display:flex;gap:6px;
+    background:#fff;
+    border:1px solid var(--rail-line);
+    border-radius:14px;
+    padding:6px;
+    margin-top:-26px;
+    margin-bottom:24px;
+    box-shadow:0 8px 22px rgba(21,27,51,.08);
+    position:relative;z-index:3;
+    width:fit-content;
+  }
+  .rail-tab-btn{
+    border:none;background:transparent;
+    padding:10px 20px;border-radius:10px;
+    font-weight:700;font-size:.86rem;color:var(--rail-muted);
+    display:flex;align-items:center;gap:8px;
+    transition:all .15s ease;
+  }
+  .rail-tab-btn i{font-size:1rem;}
+  .rail-tab-btn.active{
+    background:linear-gradient(120deg,var(--rail-navy),var(--rail-violet));
+    color:#fff;
+    box-shadow:0 4px 12px rgba(91,63,174,.3);
+  }
+  .rail-tab-btn .count-pill{
+    background:rgba(0,0,0,.08);
+    color:inherit;
+    font-size:.72rem;
+    padding:1px 8px;
+    border-radius:20px;
+    font-weight:700;
+  }
+  .rail-tab-btn.active .count-pill{background:rgba(255,255,255,.22);}
+  .tab-pane{display:none;}
+  .tab-pane.active{display:block;animation:fadein .2s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:var(--rail-card);
+    border-radius:var(--radius-lg);
+    border:1px solid var(--rail-line);
+    box-shadow:0 6px 18px rgba(21,27,51,.05);
+    padding:22px 24px;
+    margin-bottom:22px;
+  }
+  .panel-title{
+    font-size:.78rem;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--rail-muted);
+    margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel-title i{color:var(--rail-violet);}
+
+  .form-control:focus, .form-select:focus{
+    border-color:var(--rail-violet);
+    box-shadow:0 0 0 .2rem rgba(91,63,174,.15);
+  }
+  .form-label.small{font-weight:600;color:var(--rail-navy);}
+
+  .session-setup-row{
+    align-items:stretch;
+  }
+  .session-field{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .session-action{
+    height:100%;
+    display:flex;
+    align-items:flex-end;
+  }
+  .session-action .btn{
+    min-height:46px;
+  }
+
+  #qrScanner{
+    border:2px dashed #b9c0e0;
+    background:#f7f8fd;
+    font-weight:600;
+    letter-spacing:.02em;
+  }
+  #qrScanner:focus{
+    border-style:solid;
+    background:#fff;
+  }
+  .scan-hint{
+    display:flex;align-items:center;gap:10px;
+    background:#eef0ff;
+    border:1px solid #d8dcf7;
+    color:var(--rail-navy);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:.86rem;
+    margin-bottom:14px;
+  }
+  .scan-hint .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--rail-green);
+    box-shadow:0 0 0 0 rgba(31,171,111,.6);
+    animation:pulse 1.6s infinite;
+    flex:0 0 auto;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(31,171,111,.55);}
+    70%{box-shadow:0 0 0 8px rgba(31,171,111,0);}
+    100%{box-shadow:0 0 0 0 rgba(31,171,111,0);}
+  }
+  .scan-hint.idle .dot{background:var(--rail-red);animation:none;}
+  .scan-hint.idle{background:#fdeeee;border-color:#f6d4d4;color:#8a2e2e;}
+
+  .manual-add-row{
+    display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;
+  }
+  .manual-add-row input{flex:1;min-width:220px;}
+
+  .stat-card{
+    border-radius:var(--radius-md);
+    padding:16px 18px;
+    border:1px solid var(--rail-line);
+    background:#fff;
+    height:100%;
+    display:flex;align-items:center;gap:14px;
+  }
+  .stat-card .stat-icon{
+    width:42px;height:42px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.1rem;flex:0 0 auto;
+  }
+  .stat-total .stat-icon{background:#eef0ff;color:var(--rail-navy);}
+  .stat-ok .stat-icon{background:#e5f7ee;color:var(--rail-green);}
+  .stat-warn .stat-icon{background:#fdeeee;color:var(--rail-red);}
+  .stat-card .stat-label{font-size:.74rem;color:var(--rail-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .stat-card .stat-value{font-size:1.7rem;font-weight:800;line-height:1.15;}
+  .stat-total .stat-value{color:var(--rail-navy);}
+  .stat-ok .stat-value{color:var(--rail-green);}
+  .stat-warn .stat-value{color:var(--rail-red);}
+
+  table.rail-table{margin-bottom:0;}
+  table.rail-table thead th{
+    background:linear-gradient(120deg,var(--rail-navy),var(--rail-violet));
+    color:#fff;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+    border:none;
+    vertical-align:middle;
+    padding:12px 10px;
+  }
+  table.rail-table tbody td{vertical-align:middle;font-size:.88rem;padding:10px;}
+  table.rail-table tbody tr:hover{background:#f7f8fd;}
+  .row-del-btn{background:none;border:none;color:#c94d4d;font-size:1rem;padding:2px 6px;border-radius:6px;}
+  .row-del-btn:hover{background:#fdeeee;}
+
+  .badge-ok{background:#e5f7ee;color:var(--rail-green);border:1px solid #bfe9d3;font-weight:600;}
+  .badge-warn{background:#fdeeee;color:var(--rail-red);border:1px solid #f6cccc;font-weight:600;}
+
+  .empty-row td{text-align:center;color:var(--rail-muted);padding:34px 10px;font-size:.9rem;}
+
+  /* ---------- History ---------- */
+  .history-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .history-toolbar input{max-width:320px;}
+  .history-day-header{
+    display:flex;align-items:center;gap:10px;
+    margin:26px 0 12px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .history-day-header:first-child{margin-top:0;}
+  .history-day-header .line{flex:1;height:1px;background:var(--rail-line);}
+  .history-day-header span.day-label{
+    font-weight:700;color:var(--rail-navy);font-size:.92rem;
+    background:#eef0ff;padding:5px 14px;border-radius:20px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .history-day-header .day-count{
+    background:rgba(0,0,0,.06);font-size:.72rem;padding:1px 8px;border-radius:20px;
+  }
+  .history-day-header i.chev{color:var(--rail-muted);transition:transform .2s ease;}
+  .history-day-header.collapsed i.chev{transform:rotate(-90deg);}
+  .day-group-body{overflow:hidden;transition:max-height .25s ease;}
+  .day-group-body.collapsed{max-height:0 !important;}
+
+  .session-card{
+    border:1px solid var(--rail-line);
+    border-radius:var(--radius-md);
+    margin-bottom:16px;
+    overflow:hidden;
+    background:#fff;
+    transition:box-shadow .15s ease;
+  }
+  .session-card:hover{box-shadow:0 6px 16px rgba(21,27,51,.08);}
+  .session-card .session-head{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    gap:12px;
+    padding:15px 18px;
+    background:#f7f8fd;
+    border-bottom:1px solid var(--rail-line);
+    cursor:pointer;
+  }
+  .session-head .title-block{display:grid;gap:4px;}
+  .session-head .title-block .t{font-weight:700;color:var(--rail-navy);font-size:1rem;}
+  .session-head .title-block .s{font-size:.82rem;color:var(--rail-muted);}
+  .session-head-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .session-head-actions .chip{
+    font-size:.76rem;
+    font-weight:600;
+    padding:4px 10px;
+    border-radius:20px;
+  }
+  .chip-total{background:#eef0ff;color:var(--rail-navy);}
+  .chip-ok{background:#e5f7ee;color:var(--rail-green);}
+  .chip-warn{background:#fdeeee;color:var(--rail-red);}
+  .session-body table{margin:0;}
+  .session-body .history-entries-table thead th{
+    font-size:.7rem;
+    padding:10px 10px;
+  }
+  .session-body .history-entries-table tbody td{
+    padding:9px 10px;
+  }
+  .session-body .history-entries-table tbody td:nth-child(1),
+  .session-body .history-entries-table tbody td:nth-child(5),
+  .session-body .history-entries-table tbody td:nth-child(6){
+    text-align:center;
+    white-space:nowrap;
+  }
+  .session-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .session-body.open{max-height:2000px;}
+  .toggle-btn{
+    background:none;
+    border:none;
+    color:var(--rail-navy);
+    font-size:1rem;
+    width:30px;
+    height:30px;
+    border-radius:8px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .toggle-btn:hover{background:#e9ecfb;}
+  .toggle-btn i.chev{transition:transform .2s ease;}
+  .session-card.open .toggle-btn i.chev{transform:rotate(180deg);}
+
+  .btn-rail-primary{
+    background:linear-gradient(120deg,var(--rail-navy),var(--rail-violet));
+    border:none;color:#fff;font-weight:700;
+    box-shadow:0 4px 12px rgba(91,63,174,.25);
+  }
+  .btn-rail-primary:hover{opacity:.92;color:#fff;}
+  .btn-rail-primary:disabled{opacity:.6;}
+  .btn-outline-danger-soft{
+    border:1px solid #f3c4c4;color:#b93333;background:#fff;font-weight:600;
+  }
+  .btn-outline-danger-soft:hover{background:#fdeeee;color:#b93333;}
+  .btn-add-soft{
+    border:1px solid #c7d0f7;color:var(--rail-navy);background:#eef0ff;font-weight:700;
+  }
+  .btn-add-soft:hover{background:#e1e4ff;color:var(--rail-navy);}
+
+  select.form-select-sm, input.form-control-sm{font-size:.85rem;}
+
+  /* ---------- Toasts ---------- */
+  .toast-stack{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:10px;}
+  .rail-toast{
+    min-width:280px;max-width:360px;
+    background:#fff;border-radius:12px;
+    box-shadow:0 10px 28px rgba(21,27,51,.18);
+    border-left:5px solid var(--rail-green);
+    padding:13px 16px;
+    display:flex;align-items:flex-start;gap:10px;
+    font-size:.87rem;color:var(--rail-text);
+    animation:toastIn .25s ease;
+  }
+  .rail-toast.warn{border-left-color:var(--rail-red);}
+  .rail-toast i{font-size:1.1rem;margin-top:1px;}
+  .rail-toast.ok i{color:var(--rail-green);}
+  .rail-toast.warn i{color:var(--rail-red);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  @keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateX(10px);}}
+  .rail-toast.hide{animation:toastOut .2s ease forwards;}
+
+  @media (max-width:576px){
+    .rail-tabs{width:100%;}
+    .rail-tab-btn{flex:1;justify-content:center;padding:9px 8px;font-size:.78rem;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="container-app">
+    <div class="hero-top">
+      <div class="d-flex align-items-center gap-3">
+        <div class="hero-icon"><i class="bi bi-train-front-fill"></i></div>
+        <div>
+          <h1>Зааварчилгааны өдөр тутмын бүртгэл</h1>
+        </div>
+      </div>
+      <div class="badge-live"><span class="dot"></span>Систем идэвхтэй</div>
+    </div>
+  </div>
+  <div class="track-line"></div>
+</div>
+
+<div class="container-app">
+
+  <!-- Tabs -->
+  <div class="rail-tabs">
+    <button class="rail-tab-btn active" data-tab="active" onclick="switchTab('active')">
+      <i class="bi bi-clipboard2-pulse"></i>Идэвхтэй бүртгэл
+      <span class="count-pill" id="tabCountActive">0</span>
+    </button>
+    <button class="rail-tab-btn" data-tab="history" onclick="switchTab('history')">
+      <i class="bi bi-journal-text"></i>Түүх
+      <span class="count-pill" id="tabCountHistory">0</span>
+    </button>
+  </div>
+
+  <!-- ============ TAB: ACTIVE ============ -->
+  <div class="tab-pane active" id="pane-active">
+
+    <!-- Session setup -->
+    <div class="panel">
+      <div class="row g-3 session-setup-row">
+        <div class="col-lg-5 col-md-6">
+          <div class="session-field">
+            <label class="form-label small mb-0">Зааварчилгааны нэр</label>
+            <input type="text" id="trainingName" class="form-control" placeholder="Жишээ: Цариг тохируулах">
+          </div>
+        </div>
+        <div class="col-lg-5 col-md-6">
+          <div class="session-field">
+            <label class="form-label small mb-0">Зааварчилгаа өгсөн ажилтан</label>
+            <input type="text" id="instructorName" class="form-control" placeholder="Жишээ: Бригад Баттөр">
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-12">
+          <div class="session-action">
+            <button class="btn btn-rail-primary w-100" id="saveBtn" onclick="saveSession()">
+              <i class="bi bi-save2 me-1"></i>Хадгалах
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scanner + manual add -->
+    <div class="panel" style="margin-top:18px;">
+      <div class="panel-title"><i class="bi bi-qr-code-scan"></i>Ажилтан бүртгэх</div>
+      <div class="scan-hint" id="scanHint" style="display:none;">
+        <div class="dot"></div>
+        <div id="scanHintText">QR уншуулах горим идэвхтэй. Сканнераа чиглүүлж ажилтны нэрийг уншуулна уу.</div>
+      </div>
+      <div class="row g-2 align-items-center mb-3">
+        <div class="col-md-6">
+          <input type="text" id="qrScanner" class="form-control form-control-lg" placeholder="Энд QR уншуулна уу...">
+        </div>
+        <div class="col-md-6">
+          <input type="text" id="manualName" class="form-control form-control-lg" placeholder="Ажилтны нэрийг бичээд Enter дарна уу...">
+        </div>
+      </div>
+
+      <div class="table-responsive mt-2">
+        <table class="table rail-table table-bordered">
+          <thead>
+            <tr>
+              <th style="width:34px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+              <th style="width:40px; text-align: center">№</th>
+              <th style="text-align: center;">Ажилтны нэр</th>
+              <th style="text-align: center;">тайлбар</th>
+              <th style="width:110px; text-align: center">Бүртгэл</th>
+              <th style="width:120px; text-align: center">гарын үсэг</th>
+              <th style="width:44px;"></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: HISTORY ============ -->
+  <div class="tab-pane" id="pane-history">
+    <div class="panel">
+      <div class="panel-title"><i class="bi bi-journal-text"></i>Өмнөх зааварчилгааны түүх</div>
+      <div class="history-toolbar">
+        <input type="text" id="historySearch" class="form-control form-control-sm" placeholder="Зааварчилгааны нэр, ажилтны нэрээр хайх...">
+        <button class="btn btn-outline-secondary btn-sm" onclick="clearHistorySearch()"><i class="bi bi-x-lg me-1"></i>Цэвэрлэх</button>
+      </div>
+      <div id="historyContainer"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+  const MN_WEEKDAYS = ['Ням','Даваа','Мягмар','Лхагва','Пүрэв','Баасан','Бямба'];
+  const EMPLOYEE_TAB_CODE = 'Baaska@2026';
+  const EMPLOYEE_TAB_ACCESS_KEY = 'employeeTabAccessGranted';
+
+  function todayKey(d = new Date()){
+    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  }
+  function formatDateMn(d = new Date()){
+    return `${d.getFullYear()} оны ${String(d.getMonth()+1).padStart(2,'0')} сарын ${String(d.getDate()).padStart(2,'0')} өдөр`;
+  }
+  function formatTimeMn(d = new Date()){
+    return d.toLocaleTimeString('mn-MN', {hour:'2-digit', minute:'2-digit'});
+  }
+  function weekdayMn(d = new Date()){
+    return MN_WEEKDAYS[d.getDay()];
+  }
+
+  // ---------- Toasts ----------
+  function showToast(message, kind = 'ok'){
+    const stack = document.getElementById('toastStack');
+    const el = document.createElement('div');
+    el.className = `rail-toast ${kind}`;
+    el.innerHTML = `<i class="bi ${kind==='ok' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}"></i><div>${message}</div>`;
+    stack.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('hide');
+      setTimeout(() => el.remove(), 220);
+    }, 3200);
+  }
+
+  // ---------- Tabs ----------
+  function hasEmployeeTabAccess(){
+    return sessionStorage.getItem(EMPLOYEE_TAB_ACCESS_KEY) === '1';
+  }
+
+  function requestEmployeeTabAccess(){
+    const code = prompt('Бүртгэлтэй ажилтан цэсийн код оруулна уу:');
+    if (code === null) {
+      return false;
+    }
+    if (String(code).trim() === EMPLOYEE_TAB_CODE) {
+      sessionStorage.setItem(EMPLOYEE_TAB_ACCESS_KEY, '1');
+      showToast('Бүртгэлтэй ажилтан цэс нээгдлээ', 'ok');
+      return true;
+    }
+    showToast('Код буруу байна', 'warn');
+    return false;
+  }
+
+  function switchTab(name){
+    if (name === 'employees' && !hasEmployeeTabAccess() && !requestEmployeeTabAccess()) {
+      return;
+    }
+    document.querySelectorAll('.rail-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('pane-' + name).classList.add('active');
+    if (name === 'active') qrInput.focus();
+  }
+
+  // ---------- State ----------
+  let currentEntries = [];
+  let history = [];
+  try { currentEntries = JSON.parse(localStorage.getItem('currentSessionEntries') || '[]'); } catch(e) { currentEntries = []; }
+  try { history = JSON.parse(localStorage.getItem('trainingHistory') || '[]'); } catch(e) { history = []; }
+
+  const trainingNameEl = document.getElementById('trainingName');
+  const instructorNameEl = document.getElementById('instructorName');
+  const qrInput = document.getElementById('qrScanner');
+  const manualNameEl = document.getElementById('manualName');
+  const tableBody = document.getElementById('tableBody');
+  const scanHint = document.getElementById('scanHint');
+  const scanHintText = document.getElementById('scanHintText');
+  const historySearchEl = document.getElementById('historySearch');
+  const QR_SCANNER_TIMEOUT_MS = 350;
+  const QR_SCANNER_MIN_CHARS = 3;
+  const QR_SCANNER_MAX_AVG_INTERVAL_MS = 70;
+  let qrKeyTimestamps = [];
+  let qrLastKeyTime = 0;
+  let qrInputPasted = false;
+
+  // collapse state for day groups (dayKey -> collapsed bool)
+  let collapsedDays = {};
+
+  // Restore meta for in-progress session
+  trainingNameEl.value = localStorage.getItem('currentTrainingName') || '';
+  instructorNameEl.value = localStorage.getItem('currentInstructorName') || '';
+  trainingNameEl.addEventListener('input', () => localStorage.setItem('currentTrainingName', trainingNameEl.value));
+  instructorNameEl.addEventListener('input', () => localStorage.setItem('currentInstructorName', instructorNameEl.value));
+
+  function persistCurrent(){
+    localStorage.setItem('currentSessionEntries', JSON.stringify(currentEntries));
+  }
+  function persistHistory(){
+    localStorage.setItem('trainingHistory', JSON.stringify(history));
+  }
+
+  function ensureEntryShape(entry){
+    return {
+      verifiedByScan: false,
+      ...entry
+    };
+  }
+
+  currentEntries = currentEntries.map(ensureEntryShape);
+  history = history.map(session => ({
+    ...session,
+    entries: Array.isArray(session.entries) ? session.entries.map(ensureEntryShape) : []
+  }));
+
+  function isEntryVerified(entry){
+    return Boolean(entry && entry.verifiedByScan);
+  }
+
+  function isEntryOk(e){
+    return e.health === 'Тийм' && e.equipment === 'Тийм' && e.uniform === 'Тийм';
+  }
+
+  function renderTable(){
+    tableBody.innerHTML = '';
+    if (currentEntries.length === 0){
+      tableBody.innerHTML = `<tr class="empty-row"><td colspan="7"><i class="bi bi-inbox fs-4 d-block mb-1"></i>Одоогоор бүртгэгдсэн хүн алга. QR уншуулах эсвэл гараар нэмнэ үү.</td></tr>`;
+    } else {
+      currentEntries.forEach((rec, index) => {
+        const verified = isEntryVerified(rec);
+        tableBody.innerHTML += `
+          <tr>
+            <td><input type="checkbox" class="row-check" data-idx="${index}"></td>
+            <td>${index + 1}</td>
+            <td class="fw-semibold">${escapeHtml(rec.name)}</td>
+            <td>
+              <input type="text" class="form-control form-control-sm" placeholder="Тайлбар..." value="${escapeHtml(rec.remark || '')}" onchange="updateField(${index},'remark',this.value)">
+            </td>
+            <td class="small text-muted">${rec.time}</td>
+            <td>${verified
+              ? '<span class="badge badge-ok"><i class="bi bi-check-circle-fill me-1"></i>Баталгаажсан</span>'
+              : '<span class="badge badge-warn"><i class="bi bi-exclamation-triangle-fill me-1"></i>Баталгаажаагүй</span>'}
+            </td>
+            <td><button class="row-del-btn" title="Устгах" onclick="deleteEntry(${index})"><i class="bi bi-trash3"></i></button></td>
+          </tr>`;
+      });
+    }
+    document.getElementById('checkAll').checked = false;
+    updateStats();
+    updateTabCounts();
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function updateField(index, field, value){
+    currentEntries[index][field] = value;
+    persistCurrent();
+    renderTable();
+  }
+
+  function updateStats(){
+    const total = currentEntries.length;
+    const ok = currentEntries.filter(isEntryVerified).length;
+    const statTotalEl = document.getElementById('statTotal');
+    const statOkEl = document.getElementById('statOk');
+    const statWarnEl = document.getElementById('statWarn');
+
+    if (statTotalEl) statTotalEl.textContent = total;
+    if (statOkEl) statOkEl.textContent = ok;
+    if (statWarnEl) statWarnEl.textContent = total - ok;
+  }
+
+  function updateTabCounts(){
+    document.getElementById('tabCountActive').textContent = currentEntries.length;
+    document.getElementById('tabCountHistory').textContent = history.length;
+  }
+
+  function toggleAll(source){
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = source.checked);
+  }
+
+  function deleteEntry(index){
+    const rec = currentEntries[index];
+    if (!confirm(`"${rec.name}"-г бүртгэлээс устгах уу?`)) return;
+    currentEntries.splice(index, 1);
+    persistCurrent();
+    renderTable();
+    showToast(`"${rec.name}" бүртгэлээс устгагдлаа.`, 'warn');
+  }
+
+  function deleteSelected(){
+    const checked = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => parseInt(cb.dataset.idx));
+    if (checked.length === 0){
+      showToast('Устгах мөрөө сонгоно уу.', 'warn');
+      return;
+    }
+    if (!confirm(`Сонгосон ${checked.length} ажилтны бүртгэлийг устгах уу?`)) return;
+    currentEntries = currentEntries.filter((_, i) => !checked.includes(i));
+    persistCurrent();
+    renderTable();
+    showToast(`${checked.length} ажилтны бүртгэл устгагдлаа.`, 'warn');
+  }
+
+  function setScanHint(active, text){
+    scanHint.classList.toggle('idle', !active);
+    scanHintText.textContent = text;
+  }
+
+  function resetQrScannerTracking(){
+    qrKeyTimestamps = [];
+    qrLastKeyTime = 0;
+    qrInputPasted = false;
+  }
+
+  // ---------- Shared: add an employee entry ----------
+  function addEmployeeEntry(name, source = 'manual'){
+    name = (name || '').trim();
+    const training = trainingNameEl.value.trim();
+    const instructor = instructorNameEl.value.trim();
+
+    if (!training){
+      setScanHint(false, 'Эхлээд "Зааварчилгааны нэр" талбарыг бөглөнө үү!');
+      trainingNameEl.focus();
+      return false;
+    }
+    if (!instructor){
+      setScanHint(false, 'Эхлээд "Зааварчилгаа өгсөн ажилтан" талбарыг бөглөнө үү!');
+      instructorNameEl.focus();
+      return false;
+    }
+    if (!name) return false;
+
+    const existingEntry = currentEntries.find(r => r.name.toLowerCase() === name.toLowerCase());
+    if (existingEntry){
+      if (source === 'scanner') {
+        if (existingEntry.verifiedByScan) {
+          setScanHint(false, `⚠ "${name}" өмнө нь scanner-аар баталгаажсан байна!`);
+          return false;
+        }
+
+        existingEntry.verifiedByScan = true;
+        existingEntry.time = formatTimeMn(new Date());
+        persistCurrent();
+        renderTable();
+        setScanHint(true, `✓ "${name}" scanner-аар баталгаажлаа.`);
+        return true;
+      }
+
+      setScanHint(false, `⚠ "${name}" энэ зааварчилгаанд аль хэдийн бүртгэгдсэн байна!`);
+      return false;
+    }
+
+    const now = new Date();
+    currentEntries.push({
+      name,
+      health: 'Тийм',
+      equipment: 'Тийм',
+      uniform: 'Тийм',
+      remark: '',
+      time: formatTimeMn(now),
+      verifiedByScan: source === 'scanner'
+    });
+    persistCurrent();
+    renderTable();
+    setScanHint(true, source === 'scanner'
+      ? `✓ "${name}" scanner-аар баталгаажин бүртгэгдлээ. Дараагийн ажилтныг уншуулна уу.`
+      : `✓ "${name}" гараар нэмэгдлээ. Scanner-аар уншуулсны дараа баталгаажна.`);
+    return true;
+  }
+
+  // ---------- QR scan handling ----------
+  qrInput.addEventListener('paste', function(e){
+    qrInputPasted = true;
+  });
+
+  qrInput.addEventListener('keydown', function(e){
+    const now = Date.now();
+
+    if (now - qrLastKeyTime > QR_SCANNER_TIMEOUT_MS) {
+      qrKeyTimestamps = [];
+      qrInputPasted = false;
+    }
+
+    qrLastKeyTime = now;
+
+    if (e.key.length === 1) {
+      qrKeyTimestamps.push(now);
+    }
+  });
+
+  qrInput.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+
+    e.preventDefault();
+    const name = qrInput.value.trim();
+    const keyCount = qrKeyTimestamps.length;
+    const totalDurationMs = keyCount > 1
+      ? qrKeyTimestamps[keyCount - 1] - qrKeyTimestamps[0]
+      : 0;
+    const avgIntervalMs = keyCount > 1 ? totalDurationMs / (keyCount - 1) : 0;
+    const isLikelyScannerInput = !qrInputPasted
+      && keyCount >= QR_SCANNER_MIN_CHARS
+      && avgIntervalMs <= QR_SCANNER_MAX_AVG_INTERVAL_MS;
+
+    qrInput.value = '';
+    resetQrScannerTracking();
+
+    if (!isLikelyScannerInput) {
+      setScanHint(false, 'Энэ талбар зөвхөн scanner уншилт бүртгэнэ. Гараар бичсэн текст хадгалагдахгүй.');
+      qrInput.focus();
+      return;
+    }
+
+    addEmployeeEntry(name, 'scanner');
+  });
+
+  // ---------- Manual add handling ----------
+  function addManualEntry(){
+    const name = manualNameEl.value.trim();
+    if (!name){
+      showToast('Ажилтны нэрийг оруулна уу.', 'warn');
+      return;
+    }
+    const added = addEmployeeEntry(name);
+    if (added){
+      manualNameEl.value = '';
+      showToast(`"${name}" гараар нэмэгдлээ.`, 'ok');
+    }
+  }
+  manualNameEl.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      addManualEntry();
+    }
+  });
+
+  // Keep scanner focused (only on active tab, and not when typing elsewhere)
+  document.addEventListener('click', (e) => {
+    const activePane = document.getElementById('pane-active').classList.contains('active');
+    if (!activePane) return;
+    if (!['INPUT','SELECT','BUTTON','TEXTAREA'].includes(e.target.tagName) && !e.target.closest('button')){
+      qrInput.focus();
+    }
+  });
+  window.addEventListener('load', () => qrInput.focus());
+
+  // ---------- Save session ----------
+  function saveSession(){
+    const training = trainingNameEl.value.trim();
+    const instructor = instructorNameEl.value.trim();
+    const saveBtn = document.getElementById('saveBtn');
+
+    if (!training || !instructor){
+      showToast('Зааварчилгааны нэр болон өгсөн ажилтны нэрийг бөглөнө үү!', 'warn');
+      return;
+    }
+    if (currentEntries.length === 0){
+      showToast('Хадгалахын өмнө дор хаяж нэг ажилтныг бүртгэнэ үү!', 'warn');
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Хадгалж байна...';
+
+    setTimeout(() => {
+      const now = new Date();
+      const session = {
+        id: Date.now(),
+        training,
+        instructor,
+        dayKey: todayKey(now),
+        dateDisplay: formatDateMn(now),
+        weekday: weekdayMn(now),
+        time: formatTimeMn(now),
+        entries: JSON.parse(JSON.stringify(currentEntries))
+      };
+      history.unshift(session);
+      persistHistory();
+
+      // Reset current session
+      currentEntries = [];
+      persistCurrent();
+      trainingNameEl.value = '';
+      instructorNameEl.value = '';
+      localStorage.removeItem('currentTrainingName');
+      localStorage.removeItem('currentInstructorName');
+
+      renderTable();
+      renderHistory();
+      setScanHint(true, 'Шинэ зааварчилгааны нэрээ оруулаад үргэлжлүүлнэ үү.');
+
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="bi bi-save2 me-1"></i>Хадгалах';
+
+      showToast(`"${session.training}" зааварчилгаа (${session.entries.length} хүн) түүхэнд амжилттай хадгалагдлаа.`, 'ok');
+      trainingNameEl.focus();
+    }, 350);
+  }
+
+  // ---------- History rendering ----------
+  function toggleSession(id){
+    const card = document.getElementById('card-' + id);
+    const body = document.getElementById('body-' + id);
+    body.classList.toggle('open');
+    card.classList.toggle('open');
+  }
+
+  function toggleDayGroup(dayKey){
+    collapsedDays[dayKey] = !collapsedDays[dayKey];
+    renderHistory();
+  }
+
+  function deleteSessionCard(id){
+    if (!confirm('Энэ зааварчилгааны бүртгэлийг устгах уу?')) return;
+    const session = history.find(s => s.id === id);
+    history = history.filter(s => s.id !== id);
+    persistHistory();
+    renderHistory();
+    updateTabCounts();
+    if (session) showToast(`"${session.training}" бүртгэл түүхээс устгагдлаа.`, 'warn');
+  }
+
+  function clearHistorySearch(){
+    historySearchEl.value = '';
+    renderHistory();
+  }
+  historySearchEl.addEventListener('input', () => renderHistory());
+
+  function renderHistory(){
+    const container = document.getElementById('historyContainer');
+    const query = historySearchEl.value.trim().toLowerCase();
+
+    let filtered = history;
+    if (query){
+      filtered = history.filter(s => {
+        if (s.training.toLowerCase().includes(query) || s.instructor.toLowerCase().includes(query)) return true;
+        return s.entries.some(e => e.name.toLowerCase().includes(query));
+      });
+    }
+
+    if (filtered.length === 0){
+      container.innerHTML = `<div class="text-muted text-center py-4"><i class="bi bi-inbox fs-3 d-block mb-1"></i>${history.length === 0 ? 'Одоогоор хадгалагдсан түүх алга.' : 'Хайлтад тохирох бүртгэл олдсонгүй.'}</div>`;
+      return;
+    }
+
+    // group by day, preserving order (already newest-first)
+    const groups = [];
+    const seen = new Map();
+    filtered.forEach(s => {
+      if (!seen.has(s.dayKey)){
+        seen.set(s.dayKey, { dayKey: s.dayKey, dateDisplay: s.dateDisplay, weekday: s.weekday, sessions: [] });
+        groups.push(seen.get(s.dayKey));
+      }
+      seen.get(s.dayKey).sessions.push(s);
+    });
+
+    container.innerHTML = groups.map(g => {
+      const isCollapsed = !!collapsedDays[g.dayKey];
+      const dayHeader = `
+        <div class="history-day-header ${isCollapsed ? 'collapsed' : ''}" onclick="toggleDayGroup('${g.dayKey}')">
+          <span class="day-label"><i class="bi bi-calendar3"></i>${g.dateDisplay} (${g.weekday} гараг)<span class="day-count">${g.sessions.length}</span></span>
+          <div class="line"></div>
+          <i class="bi bi-chevron-down chev"></i>
+        </div>`;
+
+      const cards = g.sessions.map(s => {
+        const total = s.entries.length;
+        const ok = s.entries.filter(isEntryVerified).length;
+        const warn = total - ok;
+        const rows = s.entries.map((e, i) => {
+          const eOk = isEntryVerified(e);
+          return `
+            <tr>
+              <td>${i+1}</td>
+              <td class="fw-semibold">${escapeHtml(e.name)}</td>
+              <td class="small text-muted">${escapeHtml(e.remark) || '—'}</td>
+              <td class="small text-muted">${e.time}</td>
+              <td>${eOk
+                ? '<span class="badge badge-ok"><i class="bi bi-check-circle-fill me-1"></i>Баталгаажсан</span>'
+                : '<span class="badge badge-warn"><i class="bi bi-exclamation-triangle-fill me-1"></i>Баталгаажаагүй</span>'}
+              </td>
+            </tr>`;
+        }).join('');
+
+        return `
+          <div class="session-card" id="card-${s.id}">
+            <div class="session-head" onclick="toggleSession(${s.id})">
+              <div class="title-block">
+                <div class="t"><i class="bi bi-clipboard2-check me-1"></i>${escapeHtml(s.training)}</div>
+                <div class="s">Зааварчилгаа өгсөн: ${escapeHtml(s.instructor)} · ${s.time}</div>
+              </div>
+              <div class="session-head-actions" onclick="event.stopPropagation()">
+                <span class="chip chip-total">Нийт: ${total}</span>
+                <span class="chip chip-ok">Баталгаажсан: ${ok}</span>
+                <span class="chip chip-warn">Баталгаажуулаагүй: ${warn}</span>
+                <button class="toggle-btn" onclick="toggleSession(${s.id})" title="Дэлгэрэнгүй">
+                  <i class="bi bi-chevron-down chev"></i>
+                </button>
+                <button class="toggle-btn text-danger" onclick="deleteSessionCard(${s.id})" title="Устгах">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </div>
+            <div class="session-body" id="body-${s.id}">
+              <div class="table-responsive">
+                <table class="table rail-table table-bordered mb-0 history-entries-table">
+                  <thead>
+                    <tr>
+                      <th style="width:40px;">№</th>
+                      <th>Ажилтны нэр</th>
+                      <th>Тайлбар</th>
+                      <th style="width:80px;">Цаг</th>
+                      <th style="width:120px;">Төлөв</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      return dayHeader + `<div class="day-group-body ${isCollapsed ? 'collapsed' : ''}">${cards}</div>`;
+    }).join('');
+  }
+
+  // ---------- Init ----------
+  renderTable();
+  renderHistory();
+  updateTabCounts();
+</script>
+<script src="employee.js"></script>
+</body>
+</html>

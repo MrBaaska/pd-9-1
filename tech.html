@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <title>2026 Оны Төлөвлөгөө</title>
+    <link rel="stylesheet" href="ss.css">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        .highlight-annual-row td {
+            background-color: #fef3c7;
+        }
+        .highlight-performance-row td {
+            background-color: #e0f2fe;
+        }
+        .label-cell {
+            text-align: center;
+        }
+        .table-container {
+            margin: 0 auto;
+            width: min(calc(100vw - 24px), 1440px);
+            max-width: 100%;
+            padding: 0 1rem;
+            overflow-x: hidden;
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 0;
+            table-layout: fixed;
+        }
+        .chart-wrapper {
+            margin: 2rem auto 0;
+            padding: 1rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            width: min(calc(100vw - 24px), 1440px);
+            max-width: 100%;
+        }
+        .chart-panel {
+            min-height: 420px;
+        }
+        .rail-chart-wrapper {
+            margin: 5rem auto 0;
+            padding: 1rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            width: min(calc(100vw - 24px), 1440px);
+            max-width: 100%;
+        }
+        #rail-comparison-chart {
+            min-height: 380px;
+        }
+        .additional-chart-row {
+            width: min(calc(100vw - 24px), 1440px);
+            max-width: 100%;
+            margin: 1.75rem auto 0;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .pie-panel,
+        .metric-line-panel {
+            flex: 1 1 480px;
+            min-width: 0;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+        }
+        .pie-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            color: #374151;
+        }
+        .pie-controls label {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 600;
+        }
+        .pie-controls select {
+            padding: 0.25rem 0.4rem;
+            border: 1px solid #cbd5f5;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-size: 0.95rem;
+        }
+        .metric-line-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .metric-line-panel .metric-line-controls {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+        .metric-line-panel label {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 600;
+        }
+        .metric-line-panel select {
+            padding: 0.25rem 0.4rem;
+            border: 1px solid #cbd5f5;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-size: 0.95rem;
+        }
+        #summary-chart {
+            height: 440px;
+        }
+        #metric-pie {
+            min-height: 420px;
+        }
+        #metric-line {
+            min-height: 400px;
+        }
+        .simple-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            min-height: inherit;
+        }
+        .simple-chart-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: center;
+        }
+        .simple-chart-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+            margin-top: -0.35rem;
+        }
+        .simple-chart-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .simple-chart-canvas {
+            animation: chartFadeIn 0.55s ease-out;
+            transform-origin: center top;
+        }
+        .simple-chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem 1rem;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        .simple-chart-ready .simple-chart-legend {
+            animation: chartFadeIn 0.7s ease-out;
+        }
+        .simple-chart-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .simple-chart-legend i {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+        .simple-chart-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            color: #64748b;
+            font-weight: 600;
+            text-align: center;
+        }
+        .simple-chart-empty-panel {
+            min-height: 280px;
+            border-radius: 22px;
+            border: 1px solid #dbe4ee;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,250,252,0.96)),
+                radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.16), transparent 32%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 14px 32px rgba(15, 23, 42, 0.06);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .simple-chart-empty-panel::before {
+            content: '';
+            position: absolute;
+            inset: 14px;
+            border: 1px dashed rgba(148, 163, 184, 0.38);
+            border-radius: 18px;
+            pointer-events: none;
+        }
+        .simple-chart-empty-visual {
+            position: relative;
+            width: min(320px, 100%);
+            height: 120px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 0.7rem;
+        }
+        .simple-chart-empty-bar {
+            width: 42px;
+            border-radius: 16px 16px 10px 10px;
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.22) 0%, rgba(226, 232, 240, 0.35) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+        }
+        .simple-chart-empty-bar:nth-child(1) { height: 34px; }
+        .simple-chart-empty-bar:nth-child(2) { height: 72px; }
+        .simple-chart-empty-bar:nth-child(3) { height: 48px; }
+        .simple-chart-empty-bar:nth-child(4) { height: 90px; }
+        .simple-chart-empty-bar:nth-child(5) { height: 58px; }
+        .simple-chart-empty-line {
+            position: absolute;
+            inset: 10px 0 auto 0;
+            width: 100%;
+            height: 82px;
+        }
+        .simple-chart-empty-donut {
+            width: 148px;
+            height: 148px;
+            border-radius: 50%;
+            background:
+                conic-gradient(from 25deg, rgba(59, 130, 246, 0.18), rgba(14, 165, 233, 0.14), rgba(148, 163, 184, 0.18), rgba(96, 165, 250, 0.14), rgba(59, 130, 246, 0.18));
+            position: relative;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+        }
+        .simple-chart-empty-donut::after {
+            content: '';
+            position: absolute;
+            inset: 26px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .simple-chart-empty-caption {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-align: center;
+        }
+        .simple-chart-empty-note {
+            max-width: 520px;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            color: #475569;
+            text-align: center;
+        }
+        .simple-chart-empty-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            font-size: 0.86rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .simple-chart-series-line {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: lineDraw 1s ease forwards;
+        }
+        .simple-chart-point {
+            opacity: 0;
+            transform: translateY(4px);
+            animation: pointFadeIn 0.35s ease-out forwards;
+        }
+        .simple-chart-point text {
+            opacity: 0;
+            animation: labelFadeIn 0.4s ease-out forwards;
+            animation-delay: 0.22s;
+        }
+        .simple-chart-pie-slice {
+            opacity: 0;
+            transform-origin: center center;
+            animation: pieSliceIn 0.55s ease-out forwards;
+        }
+        .simple-chart-pie-label {
+            opacity: 0;
+            animation: labelFadeIn 0.4s ease-out forwards;
+            animation-delay: 0.22s;
+        }
+        .simple-chart-pie-center {
+            opacity: 0;
+            animation: chartFadeIn 0.45s ease-out forwards;
+            animation-delay: 0.25s;
+        }
+        @keyframes chartFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.985);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes lineDraw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        @keyframes pointFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes labelFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes pieSliceIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        input,
+        textarea,
+        select {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        .copyright-footer {
+            margin: 1.5rem auto 0;
+            width: min(calc(100vw - 24px), 1440px);
+            max-width: 100%;
+            text-align: center;
+            color: #334155;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.75rem 1rem 1.25rem;
+        }
+
+        th, td {
+            word-break: break-word;
+        }
+
+        @media (max-width: 1100px) {
+            .table-container {
+                width: min(calc(100vw - 16px), 1440px);
+                padding: 0 0.5rem;
+            }
+            .table-container table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 6px 4px;
+            }
+            .additional-chart-row {
+                width: min(calc(100vw - 16px), 1440px);
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="table-container">
+        <table>
+        <thead>
+            <tr>
+                <th rowspan="3" style="width: 150px;">Үзүүлэлт</th>
+                <th colspan="24">2026 ОНЫ ЗАМЫН ТЕХНИКИЙН БАЙДЛЫН ҮЗҮҮЛЭЛТ</th>
+                <th rowspan="3">Нийт</th>
+            </tr>
+            <tr id="month-headers">
+                </tr>
+            <tr id="sub-headers">
+                </tr>
+        </thead>
+        <tbody id="table-body">
+            </tbody>
+    </table>
+</div>
+
+    <div class="chart-wrapper">
+        <div class="chart-panel">
+            <div id="summary-chart"></div>
+        </div>
+    </div>
+
+    <div class="rail-chart-wrapper">
+        <div id="rail-comparison-chart"></div>
+    </div>
+    <div class="additional-chart-row">
+        <div class="pie-panel">
+            <div class="pie-controls">
+                <label>
+                    Сар/Жил
+                    <select id="pie-scope">
+                        <option value="month">Сар</option>
+                        <option value="year">Жил</option>
+                    </select>
+                </label>
+                <label>
+                    Сар
+                    <select id="pie-month-select">
+                        <option value="1">1-р сар</option>
+                        <option value="2">2-р сар</option>
+                        <option value="3">3-р сар</option>
+                        <option value="4">4-р сар</option>
+                        <option value="5">5-р сар</option>
+                        <option value="6">6-р сар</option>
+                        <option value="7">7-р сар</option>
+                        <option value="8">8-р сар</option>
+                        <option value="9">9-р сар</option>
+                        <option value="10">10-р сар</option>
+                        <option value="11">11-р сар</option>
+                        <option value="12">12-р сар</option>
+                    </select>
+                </label>
+            </div>
+            <div id="metric-pie"></div>
+        </div>
+        <div class="metric-line-panel">
+            <div class="metric-line-controls">
+                <label>
+                    Жил
+                    <select id="metric-line-year">
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                    </select>
+                </label>
+            </div>
+            <div id="metric-line"></div>
+        </div>
+    </div>
+
+<script>
+    const monthHeaders = document.getElementById('month-headers');
+    const subHeaders = document.getElementById('sub-headers');
+    const tableBody = document.getElementById('table-body');
+    const performanceCells = [];
+    const ballInputsByMonth = Array.from({ length: 12 }, () => []);
+    let ballTotalCell = null;
+    let performanceTotalCell = null;
+    const averageRowConfig = {
+        'Төлөвлөгөө': { inputs: [], totalCell: null },
+        'урсгал засварын гүйцэтгэл': { inputs: [], totalCell: null },
+        '2025 оны гүйцэтгэл': { inputs: [], totalCell: null },
+        '2026 оны төлөвлөгөө': { inputs: [], totalCell: null }
+    };
+    const rail2025RowName = '2025 онд хурц гэмтлээр солигдсон зам төмөр';
+    const rail2026RowName = '2026 онд хурц гэмтэлээр солигдсон зам төмөр';
+    const totalSumRowConfig = {
+        [rail2025RowName]: { inputs: [], totalCell: null },
+        [rail2026RowName]: { inputs: [], totalCell: null }
+    };
+    const sumRowNames = [
+        '2* гэмтэл',
+        '3-р зэргийн',
+        'үүрэггүй км',
+        'чиг',
+        'суулт',
+        'далиу суулт',
+        'цариг',
+        'түвшин'
+    ];
+    const rowSumConfig = sumRowNames.reduce((acc, name) => {
+        acc[name] = { inputs: [], totalCell: null };
+        return acc;
+    }, {});
+    const chartRowRefs = {
+        '2025 оны гүйцэтгэл': [],
+        '2026 оны төлөвлөгөө': [],
+        '2026 оны гүйцэтгэл': [],
+        [rail2025RowName]: [],
+        [rail2026RowName]: []
+    };
+    const monthLabels = Array.from({ length: 12 }, (_, i) => `${i + 1}-р сар`);
+    const chartSeriesConfig = [
+        { name: '2025 оны гүйцэтгэл', color: '#f97316' },
+        { name: '2026 оны төлөвлөгөө', color: '#2563eb' },
+        { name: '2026 оны гүйцэтгэл', color: '#059669' }
+    ];
+    const railComparisonSeriesConfig = [
+        { name: rail2025RowName, color: '#dc2626' },
+        { name: rail2026RowName, color: '#0ea5e9' }
+    ];
+    const metricRows = ['чиг', 'суулт', 'далиу суулт', 'цариг', 'түвшин'];
+    const metricInputsByMonth = metricRows.reduce((acc, name) => {
+        acc[name] = Array.from({ length: 12 }, () => []);
+        return acc;
+    }, {});
+    const metricHistoricalYearData = {
+        '2025': metricRows.reduce((acc, name) => {
+            acc[name] = Array.from({ length: 12 }, () => 0);
+            return acc;
+        }, {})
+    };
+    const pieScopeSelect = document.getElementById('pie-scope');
+    const pieMonthSelect = document.getElementById('pie-month-select');
+    const metricLineYearSelect = document.getElementById('metric-line-year');
+    const AUTOSAVE_STORAGE_KEY = 'gthab-autosave-v1';
+    const AUTOSAVE_DELAY_MS = 300;
+    let summaryChart = null;
+    let pieChart = null;
+    let metricLineChart = null;
+    let railComparisonChart = null;
+    let autosaveTimer = null;
+
+const rows = [
+    { name: "Замын балл", editable: true, subCells: true },
+    { name: "2* гэмтэл", editable: true, subCells: true },
+    { name: "3-р зэргийн", editable: true, subCells: true },
+    { name: "үүрэггүй км", editable: true, subCells: true },
+    { name: "чиг", editable: true, subCells: true },
+    { name: "суулт", editable: true, subCells: true },
+    { name: "далиу суулт", editable: true, subCells: true },
+    { name: "цариг", editable: true, subCells: true },
+    { name: "түвшин", editable: true, subCells: true },
+    { name: "2025 оны гүйцэтгэл", editable: true, subCells: true, combined: true, highlightClass: 'highlight-annual-row' }, // Сар бүрийн хоёр зэргийг нэгтгэх
+    { name: "2026 оны төлөвлөгөө", editable: true, subCells: false, combined: true }, // Гараас утга авах боломжтой, сар бүр 2 нүд нэгтгэх
+    { name: "2026 оны гүйцэтгэл", editable: false, subCells: false, combined: true, highlightClass: 'highlight-performance-row', performanceRow: true },
+    { name: rail2025RowName, editable: true, subCells: false, combined: true },
+    { name: rail2026RowName, editable: true, subCells: false, combined: true },
+    { name: "урсгал засварын гүйцэтгэл-%", editable: true, subCells: true, combined: true }
+];
+
+// 1. Толгой хэсгийг үүсгэх (1-12 сар)
+for (let i = 1; i <= 12; i++) {
+    const th = document.createElement('th');
+    th.colSpan = 2;
+    th.innerText = `${i}-р сар`;
+    monthHeaders.appendChild(th);
+
+    const sub1 = document.createElement('th');
+    sub1.innerText = 'эхний';
+    const sub2 = document.createElement('th');
+    sub2.innerText = 'сүүл';
+    subHeaders.appendChild(sub1);
+    subHeaders.appendChild(sub2);
+}
+
+// 2. Мөрүүдийг үүсгэх
+rows.forEach(rowData => {
+    const tr = document.createElement('tr');
+    if (rowData.highlightClass) {
+        tr.classList.add(rowData.highlightClass);
+    }
+    
+    // Нэрний нүд
+    const nameCell = document.createElement('td');
+    nameCell.className = 'label-cell';
+    nameCell.innerText = rowData.name;
+    tr.appendChild(nameCell);
+
+    if (rowData.combined) {
+        // Төлөвлөгөөний мөр сар бүр хоёр нүд нэгтгэн colSpan 2-оор харуулах
+        for (let month = 0; month < 12; month++) {
+            const td = document.createElement('td');
+            td.colSpan = 2;
+            let chartRef = td;
+            if (rowData.performanceRow) {
+                td.classList.add('read-only');
+                performanceCells.push(td);
+            }
+            if (rowData.editable) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = '0';
+                td.appendChild(input);
+                chartRef = input;
+                const avgConfig = averageRowConfig[rowData.name];
+                if (avgConfig) {
+                    avgConfig.inputs.push(input);
+                    input.addEventListener('input', () => updateAverageRow(rowData.name));
+                }
+                const totalConfig = totalSumRowConfig[rowData.name];
+                if (totalConfig) {
+                    totalConfig.inputs.push(input);
+                    input.addEventListener('input', () => updateCombinedRowTotal(rowData.name));
+                }
+            } else {
+                if (!rowData.performanceRow) {
+                    td.innerText = '-';
+                }
+                td.className = td.className ? `${td.className} read-only` : 'read-only';
+            }
+            const chartRefs = chartRowRefs[rowData.name];
+            if (chartRefs) {
+                chartRefs.push(chartRef);
+                if (rowData.editable) {
+                    chartRef.addEventListener('input', () => {
+                        updateSummaryChart();
+                        updateRailComparisonChart();
+                    });
+                }
+            }
+            tr.appendChild(td);
+        }
+    } else {
+        // Өгөгдлийн нүднүүд (24 нүд)
+            for (let j = 0; j < 24; j++) {
+            const td = document.createElement('td');
+            
+            if (rowData.special === "хувь" && j % 2 !== 0) {
+                td.innerText = "хувь";
+                td.className = "read-only";
+            } else if (!rowData.editable) {
+                // Төлөвлөгөө болон Өмнөх оны сар хэсэг
+                td.innerText = "-"; 
+                td.className = "read-only";
+                } else {
+                // Гараас утга авах хэсэг
+                const input = document.createElement('input');
+                input.type = "text";
+                input.placeholder = "0";
+                td.appendChild(input);
+                if (rowData.name === 'Замын балл') {
+                    const monthIdx = Math.floor(j / 2);
+                    ballInputsByMonth[monthIdx].push(input);
+                        input.addEventListener('input', () => {
+                            updatePerformanceAverage();
+                            updateBallRowTotal();
+                        });
+                }
+                const metricRowInputs = metricInputsByMonth[rowData.name];
+                if (metricRowInputs) {
+                    const monthIdx = Math.floor(j / 2);
+                    metricRowInputs[monthIdx].push(input);
+                    input.addEventListener('input', () => {
+                        updateMetricPie();
+                        updateMetricLineChart();
+                    });
+                }
+                const sumConfig = rowSumConfig[rowData.name];
+                if (sumConfig) {
+                    sumConfig.inputs.push(input);
+                    input.addEventListener('input', () => updateRowSum(rowData.name));
+                }
+            }
+            tr.appendChild(td);
+        }
+    }
+
+    // Нийт багана
+    const totalCell = document.createElement('td');
+    totalCell.innerText = "";
+    if (rowData.name === 'Замын балл') {
+        ballTotalCell = totalCell;
+    }
+    if (rowData.performanceRow) {
+        performanceTotalCell = totalCell;
+    }
+    if (averageRowConfig[rowData.name]) {
+        averageRowConfig[rowData.name].totalCell = totalCell;
+    }
+    if (totalSumRowConfig[rowData.name]) {
+        totalSumRowConfig[rowData.name].totalCell = totalCell;
+    }
+    if (rowSumConfig[rowData.name]) {
+        rowSumConfig[rowData.name].totalCell = totalCell;
+    }
+    tr.appendChild(totalCell);
+
+    tableBody.appendChild(tr);
+});
+
+function getAllTableInputs() {
+    return Array.from(tableBody.querySelectorAll('input'));
+}
+
+function hasOptionWithValue(selectEl, value) {
+    if (!selectEl) return false;
+    return Array.from(selectEl.options).some(option => option.value === value);
+}
+
+function saveAutosaveData() {
+    const payload = {
+        inputs: getAllTableInputs().map(input => input.value),
+        controls: {
+            pieScope: pieScopeSelect?.value || '',
+            pieMonth: pieMonthSelect?.value || '',
+            metricLineYear: metricLineYearSelect?.value || ''
+        }
+    };
+    try {
+        localStorage.setItem(AUTOSAVE_STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+        // Ignore storage quota/privacy mode errors.
+    }
+}
+
+function scheduleAutosave() {
+    if (autosaveTimer) {
+        clearTimeout(autosaveTimer);
+    }
+    autosaveTimer = setTimeout(() => {
+        saveAutosaveData();
+    }, AUTOSAVE_DELAY_MS);
+}
+
+function loadAutosaveData() {
+    try {
+        const raw = localStorage.getItem(AUTOSAVE_STORAGE_KEY);
+        if (!raw) return;
+        const payload = JSON.parse(raw);
+        const savedInputs = Array.isArray(payload?.inputs) ? payload.inputs : [];
+        const tableInputs = getAllTableInputs();
+        tableInputs.forEach((input, index) => {
+            const savedValue = savedInputs[index];
+            if (typeof savedValue === 'string') {
+                input.value = savedValue;
+            }
+        });
+
+        const controls = payload?.controls || {};
+        if (typeof controls.pieScope === 'string' && hasOptionWithValue(pieScopeSelect, controls.pieScope)) {
+            pieScopeSelect.value = controls.pieScope;
+        }
+        if (typeof controls.pieMonth === 'string' && hasOptionWithValue(pieMonthSelect, controls.pieMonth)) {
+            pieMonthSelect.value = controls.pieMonth;
+        }
+        if (typeof controls.metricLineYear === 'string' && hasOptionWithValue(metricLineYearSelect, controls.metricLineYear)) {
+            metricLineYearSelect.value = controls.metricLineYear;
+        }
+    } catch (error) {
+        // Ignore malformed or unavailable localStorage data.
+    }
+}
+
+function updateRowSum(rowName) {
+    const config = rowSumConfig[rowName];
+    if (!config || !config.totalCell) return;
+    let total = 0;
+    let hasValue = false;
+    config.inputs.forEach(input => {
+        const value = input.value.trim();
+        const num = parseFloat(value);
+        if (Number.isFinite(num)) {
+            total += num;
+            hasValue = true;
+        }
+    });
+    config.totalCell.textContent = hasValue ? formatNumber(total) : '';
+}
+
+function formatAverage(values) {
+    if (values.length < 2) return '';
+    const nums = values.map(val => parseFloat(val));
+    if (nums.some(num => Number.isNaN(num))) return '';
+    const avg = (nums[0] + nums[1]) / 2;
+    return Number.isInteger(avg) ? avg.toString() : avg.toFixed(1);
+}
+
+function updatePerformanceAverage() {
+    const monthlyValues = [];
+    performanceCells.forEach((cell, monthIdx) => {
+        const inputs = ballInputsByMonth[monthIdx] || [];
+        const trimmed = inputs.map(input => input.value.trim()).filter(val => val !== '');
+        const avg = formatAverage(trimmed);
+        cell.textContent = avg;
+        const num = parseFloat(avg);
+        if (Number.isFinite(num)) monthlyValues.push(num);
+    });
+    if (performanceTotalCell) {
+        if (monthlyValues.length > 0) {
+            const total = monthlyValues.reduce((acc, v) => acc + v, 0) / monthlyValues.length;
+            performanceTotalCell.textContent = formatNumber(total);
+        } else {
+            performanceTotalCell.textContent = '';
+        }
+    }
+}
+
+function formatNumber(value) {
+    if (!Number.isFinite(value)) return '0';
+    return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+}
+
+function updateAverageRow(rowName) {
+    const config = averageRowConfig[rowName];
+    if (!config || !config.totalCell) return;
+    const values = config.inputs
+        .map(input => parseFloat(input.value.trim()))
+        .filter(num => Number.isFinite(num));
+    if (!values.length) {
+        config.totalCell.textContent = '';
+        return;
+    }
+    const average = values.reduce((acc, num) => acc + num, 0) / values.length;
+    config.totalCell.textContent = formatNumber(average);
+}
+
+function updateCombinedRowTotal(rowName) {
+    const config = totalSumRowConfig[rowName];
+    if (!config || !config.totalCell) return;
+    let total = 0;
+    let hasValue = false;
+    config.inputs.forEach(input => {
+        const value = input.value.trim();
+        const num = parseFloat(value);
+        if (Number.isFinite(num)) {
+            total += num;
+            hasValue = true;
+        }
+    });
+    config.totalCell.textContent = hasValue ? formatNumber(total) : '';
+}
+
+function updateBallRowTotal() {
+    if (!ballTotalCell) return;
+    let sum = 0;
+    let count = 0;
+    ballInputsByMonth.forEach(inputs => {
+        inputs.forEach(input => {
+            const value = input.value.trim();
+            if (value === '') return;
+            const num = parseFloat(value);
+            if (Number.isFinite(num)) {
+                sum += num;
+                count += 1;
+            }
+        });
+    });
+    if (count === 0) {
+        ballTotalCell.textContent = '';
+        return;
+    }
+    const average = sum / count;
+    ballTotalCell.textContent = formatNumber(average);
+}
+
+function sumMetricInputs(inputs) {
+    return inputs.reduce((acc, input) => {
+        const value = input.value.trim();
+        const num = parseFloat(value);
+        return Number.isFinite(num) ? acc + num : acc;
+    }, 0);
+}
+
+function getMetricValue(rowName, monthIdx) {
+    const monthInputs = (metricInputsByMonth[rowName] || [])[monthIdx] || [];
+    if (!monthInputs.length) return 0;
+    return sumMetricInputs(monthInputs);
+}
+
+function getMetricYearValue(rowName) {
+    return Array.from({ length: 12 }, (_, idx) => getMetricValue(rowName, idx))
+        .reduce((acc, value) => acc + value, 0);
+}
+
+function getPieSeriesData() {
+    const scope = pieScopeSelect?.value || 'month';
+    const monthIdx = Math.max(0, Math.min(11, (parseInt(pieMonthSelect?.value, 10) || 1) - 1));
+    return metricRows.map(name => {
+        const value = scope === 'year' ? getMetricYearValue(name) : getMetricValue(name, monthIdx);
+        return { name, y: Number.isFinite(value) ? value : 0 };
+    });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function polarToCartesian(cx, cy, radius, angleDegrees) {
+    const angleRadians = (angleDegrees - 90) * (Math.PI / 180);
+    return {
+        x: cx + (radius * Math.cos(angleRadians)),
+        y: cy + (radius * Math.sin(angleRadians))
+    };
+}
+
+function describeArc(cx, cy, radius, startAngle, endAngle) {
+    const start = polarToCartesian(cx, cy, radius, endAngle);
+    const end = polarToCartesian(cx, cy, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+    return [
+        'M', start.x, start.y,
+        'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+        'L', cx, cy,
+        'Z'
+    ].join(' ');
+}
+
+function renderLegend(series) {
+    return `
+        <div class="simple-chart-legend">
+            ${series.map(item => `
+                <span><i style="background:${item.color};"></i>${escapeHtml(item.name)}</span>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderEmptyChartState(type, message, note) {
+    const visual = type === 'pie'
+        ? '<div class="simple-chart-empty-donut"></div>'
+        : `
+            <div class="simple-chart-empty-visual">
+                <svg class="simple-chart-empty-line" viewBox="0 0 320 82" aria-hidden="true">
+                    <path d="M12 62 C48 18, 86 64, 122 34 S198 18, 236 44 S286 68, 308 24" fill="none" stroke="rgba(59, 130, 246, 0.42)" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="122" cy="34" r="4" fill="#2563eb"></circle>
+                    <circle cx="236" cy="44" r="4" fill="#64748b"></circle>
+                    <circle cx="308" cy="24" r="4" fill="#0ea5e9"></circle>
+                </svg>
+                <div class="simple-chart-empty-bar"></div>
+                <div class="simple-chart-empty-bar"></div>
+                <div class="simple-chart-empty-bar"></div>
+                <div class="simple-chart-empty-bar"></div>
+                <div class="simple-chart-empty-bar"></div>
+            </div>
+        `;
+
+    return `
+        <div class="simple-chart-empty-panel">
+            ${visual}
+            <div class="simple-chart-empty-pill">Өгөгдөл хүлээж байна</div>
+            <div class="simple-chart-empty-caption">${escapeHtml(message)}</div>
+            <div class="simple-chart-empty-note">${escapeHtml(note)}</div>
+        </div>
+    `;
+}
+
+function renderLineChart(containerId, options) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const width = Math.max(container.clientWidth || 900, 720);
+    const height = options.height || 420;
+    const margin = { top: 40, right: 28, bottom: 56, left: 44 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    const normalizedSeries = (options.series || []).map(series => ({
+        ...series,
+        data: (series.data || []).map(value => Number.isFinite(value) ? value : 0),
+        hasValue: (series.data || []).some(value => Number.isFinite(value) && value !== 0)
+    }));
+    const dataValues = normalizedSeries.flatMap(series => series.data);
+    const maxValue = Math.max(1, ...dataValues, 1);
+    const yTicks = 5;
+    const categories = options.categories || [];
+    const xStep = categories.length > 1 ? chartWidth / (categories.length - 1) : chartWidth;
+
+    const gridLines = Array.from({ length: yTicks + 1 }, (_, index) => {
+        const ratio = index / yTicks;
+        const y = margin.top + chartHeight - (chartHeight * ratio);
+        const labelValue = formatNumber(maxValue * ratio);
+        return `
+            <line x1="${margin.left}" y1="${y}" x2="${width - margin.right}" y2="${y}" stroke="#e2e8f0" stroke-width="1" />
+            <text x="${margin.left - 10}" y="${y + 4}" font-size="11" fill="#64748b" text-anchor="end">${escapeHtml(labelValue)}</text>
+        `;
+    }).join('');
+
+    const xLabels = categories.map((label, index) => {
+        const x = margin.left + (categories.length > 1 ? xStep * index : chartWidth / 2);
+        return `<text x="${x}" y="${height - 18}" font-size="11" fill="#64748b" text-anchor="middle">${escapeHtml(label)}</text>`;
+    }).join('');
+
+    const seriesMarkup = normalizedSeries.map(series => {
+        const points = series.data.map((value, index) => {
+            const x = margin.left + (categories.length > 1 ? xStep * index : chartWidth / 2);
+            const y = margin.top + chartHeight - ((value / maxValue) * chartHeight);
+            return { x, y, value };
+        });
+        const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+        const pointMarkup = points.map((point, index) => `
+            <g class="simple-chart-point" style="animation-delay:${0.18 + (index * 0.04)}s;">
+                <circle cx="${point.x}" cy="${point.y}" r="4" fill="${series.color}" />
+                <text x="${point.x}" y="${point.y - 10}" font-size="11" fill="${series.color}" text-anchor="middle">${escapeHtml(formatNumber(point.value))}</text>
+            </g>
+        `).join('');
+        return `
+            <path class="simple-chart-series-line" pathLength="100" d="${path}" fill="none" stroke="${series.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            ${pointMarkup}
+        `;
+    }).join('');
+
+    const hasAnyValue = normalizedSeries.some(series => series.hasValue);
+
+    container.innerHTML = `
+        <div class="simple-chart simple-chart-ready">
+            <div class="simple-chart-title">${escapeHtml(options.title || '')}</div>
+            ${options.subtitle ? `<div class="simple-chart-subtitle">${escapeHtml(options.subtitle)}</div>` : ''}
+            ${hasAnyValue ? `
+                <div class="simple-chart-canvas">
+                    <svg class="simple-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(options.title || 'chart')}">
+                        ${gridLines}
+                        <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height - margin.bottom}" stroke="#94a3b8" stroke-width="1.5" />
+                        <line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="#94a3b8" stroke-width="1.5" />
+                        ${xLabels}
+                        ${seriesMarkup}
+                    </svg>
+                </div>
+            ` : renderEmptyChartState('line', 'График хараахан бэлэн болоогүй байна.', 'Хүснэгтийн мөрүүдэд сар бүрийн тоон утгаа оруулмагц шугаман график автоматаар гарч ирнэ.')}
+            ${renderLegend(normalizedSeries)}
+        </div>
+    `;
+}
+
+function renderPieChart(containerId, options) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const width = Math.max(container.clientWidth || 520, 420);
+    const height = options.height || 420;
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = Math.min(width, height) * 0.28;
+    const data = (options.data || []).map((item, index) => ({
+        name: item.name,
+        value: Number.isFinite(item.y) ? item.y : 0,
+        color: item.color || options.colors?.[index % options.colors.length] || '#2563eb'
+    }));
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+
+    if (total <= 0) {
+        container.innerHTML = `
+            <div class="simple-chart">
+                <div class="simple-chart-title">${escapeHtml(options.title || '')}</div>
+                ${renderEmptyChartState('pie', 'Диаграммд харуулах тоон утга алга байна.', 'Сонгосон сар эсвэл жилийн үзүүлэлтэд дор хаяж нэг тоо оруулсны дараа хувийн бүтцийн диаграмм автоматаар зурна.')}
+                ${renderLegend(data)}
+            </div>
+        `;
+        return;
+    }
+
+    let currentAngle = 0;
+    const slices = data.map(item => {
+        const angle = (item.value / total) * 360;
+        const startAngle = currentAngle;
+        const endAngle = currentAngle + angle;
+        currentAngle = endAngle;
+        const labelAngle = startAngle + angle / 2;
+        const labelPoint = polarToCartesian(cx, cy, radius * 0.68, labelAngle);
+        return {
+            ...item,
+            path: describeArc(cx, cy, radius, startAngle, endAngle),
+            labelX: labelPoint.x,
+            labelY: labelPoint.y,
+            percent: (item.value / total) * 100
+        };
+    });
+
+    container.innerHTML = `
+        <div class="simple-chart simple-chart-ready">
+            <div class="simple-chart-title">${escapeHtml(options.title || '')}</div>
+            ${options.subtitle ? `<div class="simple-chart-subtitle">${escapeHtml(options.subtitle)}</div>` : ''}
+            <div class="simple-chart-canvas">
+                <svg class="simple-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(options.title || 'pie chart')}">
+                    ${slices.map((slice, index) => `
+                        <path class="simple-chart-pie-slice" style="animation-delay:${index * 0.08}s;" d="${slice.path}" fill="${slice.color}" stroke="#ffffff" stroke-width="2"></path>
+                        <text class="simple-chart-pie-label" style="animation-delay:${0.18 + (index * 0.08)}s;" x="${slice.labelX}" y="${slice.labelY}" font-size="11" fill="#0f172a" text-anchor="middle">${escapeHtml(slice.percent.toFixed(1))}%</text>
+                    `).join('')}
+                    <circle class="simple-chart-pie-center" cx="${cx}" cy="${cy}" r="${radius * 0.45}" fill="#ffffff"></circle>
+                    <text class="simple-chart-pie-center" x="${cx}" y="${cy - 4}" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Нийт</text>
+                    <text class="simple-chart-pie-center" x="${cx}" y="${cy + 16}" font-size="15" font-weight="700" fill="#2563eb" text-anchor="middle">${escapeHtml(formatNumber(total))}</text>
+                </svg>
+            </div>
+            ${renderLegend(slices)}
+        </div>
+    `;
+}
+
+function createMetricPie() {
+    pieChart = { id: 'metric-pie' };
+    updateMetricPie();
+}
+
+function updateMetricPie() {
+    if (!pieChart) return;
+    renderPieChart(pieChart.id, {
+        title: 'Гэмтлийн харьцуулалт',
+        subtitle: (pieScopeSelect?.value || 'month') === 'year'
+            ? 'Жилийн нэгтгэсэн үзүүлэлт'
+            : `${pieMonthSelect?.selectedOptions?.[0]?.textContent || ''} үзүүлэлт`,
+        data: getPieSeriesData(),
+        colors: ['#2563eb', '#f97316', '#14b8a6', '#8b5cf6', '#ef4444']
+    });
+}
+
+function getMetricLineMonthValue(rowName, monthIdx, year) {
+    if (year === '2026') {
+        return getMetricValue(rowName, monthIdx);
+    }
+    const yearData = metricHistoricalYearData[year] || {};
+    return Number.isFinite(yearData[rowName]?.[monthIdx]) ? yearData[rowName][monthIdx] : 0;
+}
+
+function getMetricLineSeries(year) {
+    return metricRows.map(name => ({
+        name,
+        data: monthLabels.map((_, idx) => getMetricLineMonthValue(name, idx, year))
+    }));
+}
+
+function createMetricLineChart() {
+    metricLineChart = { id: 'metric-line' };
+    updateMetricLineChart();
+}
+
+function updateMetricLineChart() {
+    if (!metricLineChart) return;
+    const palette = ['#2563eb', '#f97316', '#14b8a6', '#8b5cf6', '#ef4444'];
+    renderLineChart(metricLineChart.id, {
+        title: 'Гэмтлийн үзүүлэлт',
+        subtitle: `${metricLineYearSelect?.value || '2026'} оны сар бүрийн харьцуулалт`,
+        categories: monthLabels,
+        height: 420,
+        series: getMetricLineSeries(metricLineYearSelect?.value || '2026').map((series, index) => ({
+            ...series,
+            color: palette[index % palette.length]
+        }))
+    });
+}
+
+function handlePieScopeChange() {
+    if (!pieScopeSelect || !pieMonthSelect) return;
+    pieMonthSelect.disabled = pieScopeSelect.value === 'year';
+    updateMetricPie();
+}
+
+if (pieScopeSelect && pieMonthSelect) {
+    pieScopeSelect.addEventListener('change', () => {
+        handlePieScopeChange();
+        scheduleAutosave();
+    });
+    pieMonthSelect.addEventListener('change', () => {
+        updateMetricPie();
+        scheduleAutosave();
+    });
+}
+if (metricLineYearSelect) {
+    metricLineYearSelect.addEventListener('change', () => {
+        updateMetricLineChart();
+        scheduleAutosave();
+    });
+}
+
+tableBody.addEventListener('input', event => {
+    if (event.target instanceof HTMLInputElement) {
+        scheduleAutosave();
+    }
+});
+window.addEventListener('beforeunload', saveAutosaveData);
+
+function getChartRowValues(rowName) {
+    const refs = chartRowRefs[rowName] || [];
+    return refs.map(ref => {
+        let raw = '';
+        if (ref instanceof HTMLInputElement) {
+            raw = ref.value.trim();
+        } else {
+            raw = ref.textContent.trim();
+        }
+        const num = parseFloat(raw);
+        return Number.isFinite(num) ? num : null;
+    });
+}
+
+function createSummaryChart() {
+    summaryChart = { id: 'summary-chart' };
+    updateSummaryChart();
+}
+
+function updateSummaryChart() {
+    if (!summaryChart) return;
+    renderLineChart(summaryChart.id, {
+        title: 'Замын баллын төлөвлөгөө-гүйцэтгэл',
+        categories: monthLabels,
+        height: 440,
+        series: chartSeriesConfig.map(cfg => ({
+            name: cfg.name,
+            data: getChartRowValues(cfg.name),
+            color: cfg.color
+        }))
+    });
+}
+
+function createRailComparisonChart() {
+    railComparisonChart = { id: 'rail-comparison-chart' };
+    updateRailComparisonChart();
+}
+
+function updateRailComparisonChart() {
+    if (!railComparisonChart) return;
+    renderLineChart(railComparisonChart.id, {
+        title: '2025 ба 2026 онд хурц гэмтэлээр солигдсон зам төмрийн харьцуулалт',
+        categories: monthLabels,
+        height: 390,
+        series: railComparisonSeriesConfig.map(cfg => ({
+            name: cfg.name,
+            data: getChartRowValues(cfg.name),
+            color: cfg.color
+        }))
+    });
+}
+
+function setupContentProtection() {
+    const blockEvent = event => {
+        event.preventDefault();
+    };
+
+    document.addEventListener('contextmenu', blockEvent);
+    document.addEventListener('copy', blockEvent);
+    document.addEventListener('cut', blockEvent);
+    document.addEventListener('dragstart', blockEvent);
+    document.addEventListener('selectstart', event => {
+        const target = event.target;
+        if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+            return;
+        }
+        event.preventDefault();
+    });
+    document.addEventListener('keydown', event => {
+        const key = event.key.toLowerCase();
+        const isCtrlOrMeta = event.ctrlKey || event.metaKey;
+        if (isCtrlOrMeta && ['c', 'x', 'u', 's', 'a', 'p'].includes(key)) {
+            event.preventDefault();
+        }
+        if (event.key === 'F12') {
+            event.preventDefault();
+        }
+    });
+}
+
+setupContentProtection();
+loadAutosaveData();
+updatePerformanceAverage();
+updateBallRowTotal();
+Object.keys(averageRowConfig).forEach(updateAverageRow);
+Object.keys(totalSumRowConfig).forEach(updateCombinedRowTotal);
+Object.keys(rowSumConfig).forEach(updateRowSum);
+createRailComparisonChart();
+updateRailComparisonChart();
+createSummaryChart();
+updateSummaryChart();
+createMetricPie();
+handlePieScopeChange();
+createMetricLineChart();
+updateMetricLineChart();
+window.addEventListener('resize', () => {
+    updateSummaryChart();
+    updateRailComparisonChart();
+    updateMetricPie();
+    updateMetricLineChart();
+});
+</script>
+</body>
+</html>

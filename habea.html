@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ХАВЭА-2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{font-family:'Montserrat',sans-serif;margin:0;padding:10px;background:#f4f7f6;color:#333;min-width:0;overflow-x:hidden}
+.container{width:min(calc(100vw - 24px),1600px);max-width:100%;margin:14px auto;padding:20px;background:#fff;box-shadow:0 4px 8px rgba(0,0,0,0.1);border-radius:8px;overflow-x:hidden}
+h2,h3{text-align:center;color:#004d40;margin-bottom:20px}
+#dataForm{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:30px;padding:15px;border:1px solid #e0e0e0;border-radius:6px;background:#e8f5e9;align-items:center}
+#dataForm select,#dataForm input[type="text"],#dataForm input[type="date"],#dataForm input[type="file"],#dataForm button{padding:10px;border:1px solid #ccc;border-radius:4px;font-size:14px;flex:1;min-width:150px}
+#dataForm input[type="file"]{padding:5px}
+#dataForm button{background:#00796b;color:#fff;cursor:pointer;font-weight:700;transition:background 0.3s}
+#dataForm button:hover{background:#004d40}
+.export-buttons{text-align:center;margin:20px 0;display:flex;gap:15px;justify-content:center;flex-wrap:wrap}
+.export-buttons button{padding:12px 25px;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;color:#fff}
+.btn-pdf{background:#d32f2f}.btn-pdf:hover{background:#b71c1c}
+.btn-excel{background:#388e3c}.btn-excel:hover{background:#2e7d32}
+.btn-json{background:#1976d2}.btn-json:hover{background:#1565c0}
+.btn-print{background:#7b1fa2}.btn-print:hover{background:#6a1b9a}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;table-layout:fixed}
+th,td{border:1px solid #c8e6c9;padding:10px 8px;text-align:center;word-wrap:break-word;word-break:break-word;vertical-align:middle}
+#dataTable th:nth-child(1){width:2%}
+#dataTable th:nth-child(2){width:15%}
+#dataTable th:nth-child(7){width:12%}
+#dataTable th:nth-child(8){width:12%}
+#dataTable th:nth-child(5){width:8%}
+#dataTable th:nth-child(6){width:12%}
+#dataTable th:nth-child(7){width:12%}
+#dataTable th:nth-child(8){width:7%}
+th{background:#b2dfdb;color:#004d40;font-weight:700;text-transform:uppercase;font-size:12px}
+tr:nth-child(even){background:#f1f8e9}
+img{max-width:300px;max-height:300px;height:auto;border-radius:4px;vertical-align:middle;margin:5px 0;cursor:pointer;object-fit:contain}
+td select,td input[type="text"]{padding:6px 8px;border:1px solid #a5d6a7;border-radius:3px;background:#fff;width:95%;box-sizing:border-box;font-size:13px}
+#categorySummary th{background:#80cbc4;font-size:14px}
+#categorySummary td{font-size:14px;padding:12px}
+#categorySummary tfoot td{font-weight:700;background:#4db6ac;color:#fff;font-size:16px}
+#detailedSummaryTable th{background:#ffccbc}
+#detailedSummaryTable td:nth-child(1){font-weight:700;text-align:left;padding:12px}
+#detailedSummaryTable td:nth-child(2){text-align:left;padding:12px}
+.chart-container{display:flex;gap:30px;margin:30px 0;flex-wrap:wrap}
+.chart-box{flex:1 1 320px;min-width:0;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+.chart-box h4{text-align:center;color:#004d40;margin-bottom:15px;font-size:16px}
+canvas{max-height:400px}
+@media screen and (max-width:1024px){
+    body{min-width:100%;font-size:13px}
+    .container{max-width:100%;margin:10px;padding:15px}
+    h2{font-size:18px;margin-bottom:12px}
+    h3{font-size:16px;margin-bottom:12px}
+    #dataForm{flex-direction:column;padding:12px}
+    #dataForm select,#dataForm input[type="text"],#dataForm input[type="date"],#dataForm input[type="file"],#dataForm button{min-width:100%;width:100%;font-size:14px;padding:10px}
+    .export-buttons{flex-direction:row;flex-wrap:wrap;gap:10px}
+    .export-buttons button{flex:1;min-width:45%;padding:12px}
+    table{font-size:12px;overflow-x:auto;display:block}
+    th,td{padding:8px 6px;font-size:12px}
+    img{max-width:200px;max-height:200px}
+    .chart-container{flex-direction:column;gap:20px}
+    .chart-box{min-width:100%;width:100%;padding:15px}
+    canvas{max-height:300px}
+    td select,td input[type="text"]{font-size:12px;padding:6px}
+}
+@media screen and (max-width:768px){
+    body{font-size:12px}
+    h2{font-size:16px}
+    h3{font-size:14px}
+    table{font-size:11px}
+    th,td{padding:6px 4px;font-size:11px}
+    img{max-width:150px;max-height:150px}
+    .export-buttons button{min-width:100%;padding:10px}
+    td select,td input[type="text"]{font-size:11px;padding:5px}
+}
+.container div[style*="display:flex"][style*="gap:30px"] > div{min-width:0!important;max-width:100%!important}
+.container div[style*="display:flex"][style*="gap:30px"]{width:100%;gap:20px!important}
+@media print{.export-buttons,#dataForm,td select,td input[type="text"]{display:none!important}body{background:#fff}.container{box-shadow:none;max-width:100%}}
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.9)}
+.modal-content{margin:auto;display:block;max-width:90%;max-height:90%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.close{position:absolute;top:15px;right:35px;color:#f1f1f1;font-size:40px;font-weight:700;cursor:pointer}
+.close:hover{color:#bbb}
+.autosave-indicator{position:fixed;bottom:20px;right:20px;background:#00796b;color:#fff;padding:10px 20px;border-radius:25px;font-size:12px;opacity:0;transition:opacity 0.3s;z-index:999}
+.autosave-indicator.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Замын 2-р ангийн 9-р хэсэг</h2>
+<h2>ХӨДӨЛМӨРИЙН АЮУЛГҮЙ БАЙДАЛ, ЭРҮҮЛ АХУЙ - 2026</h2>
+<!-- PDF хадгалах, хэвлэх комондыг устгав -->
+<form id="dataForm">
+<select id="category">
+<option value="Багаж хэрэгсэл, тоног төхөөрөмжтэй холбоотой">Багаж хэрэгсэл, тоног төхөөрөмжтэй холбоотой</option>
+<option value="Машинтай холбоотой">Машинтай холбоотой</option>
+<option value="Цахилгааны утас, монтажтай холбоотой">Цахилгааны утас, монтажтай холбоотой</option>
+<option value="Ажлын хувцас, хамгаалах хэрэгслүүдтэй холбоотой">Ажлын хувцас, хамгаалах хэрэгслүүдтэй холбоотой</option>
+<option value="Бичиг баримт, сургалттай холбоотой">Бичиг баримт, сургалттай холбоотой</option>
+<option value="Галын аюулгүй байдалтай холбоотой">Галын аюулгүй байдалтай холбоотой</option>
+<option value="Бусад">Бусад</option>
+</select>
+<input type="text" id="foundItem" placeholder="Илэрсэн үл тохирол" required>
+<input type="text" id="owner" placeholder="Хяналт, шалгалт хийсэн ажилтан" required>
+<input type="file" id="photo" accept="image/*">
+<input type="date" id="deadline" required>
+<button type="submit">Нэмэх</button>
+</form>
+<h3>Бүх бүртгэл</h3>
+    <table><thead><tr><th>№</th><th>Ангилал</th><th>Илэрсэн үл тохирол / Тайлбар</th><th>Үзлэг хийсэн хугацаа</th><th>Үзлэгийн төрөл</th><th>Хяналт, шалгалт хийсэн ажилтан <br><span style="font-size:12px;color:#1976d2">Баталгаажуулалт</span></th><th>Гүйцэтгэл</th><th>Үйлдэл</th></tr></thead><tbody id="dataTable"></tbody></table>
+<h3>Ангиллын статистик</h3>
+<div class="chart-container">
+<div class="chart-box" style="flex:1;min-width:100%"><table><thead><tr><th>Ангилал</th><th>Нийт үл тохирол</th><th>Хувь (%)</th></tr></thead><tbody id="categorySummary"></tbody><tfoot><tr><td>НИЙТ</td><td id="totalCount">0</td><td>100%</td></tr></tfoot></table></div>
+</div>
+<h3>Гүйцэтгэлийн статистик</h3>
+<div class="chart-container">
+<div class="chart-box"><table id="detailedSummaryTable"><thead><tr><th>Гүйцэтгэл</th><th>Тайлбар</th></tr></thead><tbody id="performanceSummary"></tbody></table></div>
+<div class="chart-box"><canvas id="performanceChart"></canvas></div>
+</div>
+</div>
+<div id="imageModal" class="modal"><span class="close" onclick="closeModal()">&times;</span><img class="modal-content" id="modalImage"></div>
+<div class="autosave-indicator" id="autosaveIndicator">💾 Автомат хадгалагдлаа</div>
+<!-- Monthly inspection type chart -->
+<div class="container" style="margin-top:30px;">
+    <h3>Үзлэгийн төрөл бүрээр сард гарсан тоо</h3>
+    <div style="display:flex;gap:30px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%;">
+        <div style="flex:1;min-width:750px;max-width:900px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <label for="monthSummarySelect" style="font-weight:600;color:#004d40;">Сар:</label>
+                <select id="monthSummarySelect" style="padding:7px 12px;border-radius:4px;font-size:15px;"></select>
+            </div>
+            <table id="monthSummaryTable" style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#b2dfdb;color:#004d40;font-weight:700;font-size:13px">
+                        <th>Үзлэгийн төрөл</th>
+                        <th>Тоо</th>
+                    </tr>
+                </thead>
+                <tbody id="monthSummaryBody"></tbody>
+            </table>
+        </div>
+        <div style="flex:1;min-width:350px;max-width:700px;">
+            <div style="display:flex;align-items:center;gap:15px;justify-content:center;margin-bottom:15px;flex-wrap:wrap">
+                <label for="monthlyTypeSelect" style="font-weight:600;color:#004d40;">Үзлэгийн төрөл:</label>
+                <select id="monthlyTypeSelect" style="padding:8px 12px;border-radius:4px;font-size:15px;"></select>
+            </div>
+            <div class="chart-box" style="max-width:700px;margin:auto;">
+                <canvas id="monthlyTypeChart" width="370" height="260" style="max-width:100%;max-height:260px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+let data=JSON.parse(localStorage.getItem("tableData"))||[];let perfChart=null;
+
+const INSPECTORS = [
+    "Сонгоно уу", 
+    "1-р шатны үзлэг",
+    "2-р шатны үзлэг",
+    "3-р шатны үзлэг",
+    "Ээлжит үзлэг",
+    "Ээлжит бус үзлэг",
+    "НГ-н үзлэг",
+];
+
+document.getElementById("dataForm").addEventListener("submit",e=>{
+    e.preventDefault();
+    let c=document.getElementById("category").value,
+        f=document.getElementById("foundItem").value,
+        o=document.getElementById("owner").value.trim()||"Тодорхойгүй",
+        p=document.getElementById("photo").files[0],
+        d=document.getElementById("deadline").value;
+    
+    if(c&&f&&d){
+        if(p){
+            let r=new FileReader();
+            r.onload=function(event){
+                let base64String = event.target.result.split(",")[1];
+                saveEntry(c,f,o,base64String,d);
+            };
+            r.readAsDataURL(p);
+        }else{
+            saveEntry(c,f,o,"",d);
+        }
+    }
+});
+
+function saveEntry(c,f,o,p,d){
+    data.push({category:c,foundItem:f,photoURL:p,owner:o,deadline:d,inspector:INSPECTORS[0],status:"Биелээгүй"});
+    saveData();
+    document.getElementById("dataForm").reset();
+    loadTable();
+}
+
+function loadTable(){
+    let t=document.getElementById("dataTable"),
+        cs=document.getElementById("categorySummary"),
+        ps=document.getElementById("performanceSummary");
+    
+    t.innerHTML="";
+    cs.innerHTML="";
+    ps.innerHTML="";
+    
+    let cc={},
+        sg={},
+        total=0;
+
+
+    data.forEach((item,i)=>{
+        cc[item.category]=(cc[item.category]||0)+1;
+        total++;
+        sg[item.status]=sg[item.status]||[];
+        sg[item.status].push({foundItem:item.foundItem,owner:item.owner})
+        let inspectorOptions = INSPECTORS.map(name => 
+            `<option value="${name}" ${item.inspector === name ? "selected" : ""}>${name}</option>`
+        ).join('');
+        let r=document.createElement("tr");
+        let photoDisplay = item.photoURL 
+            ? '<img src="data:image/png;base64,'+item.photoURL+'" onclick="openModal(\'data:image/png;base64,'+item.photoURL+'\')">' 
+            : '';
+            r.innerHTML = `
+                <td>${i+1}</td>
+                <td>${item.category}</td>
+                <td style="text-align:left;white-space:pre-wrap;word-wrap:break-word">
+                    <div style="padding:8px">${item.foundItem}</div>
+                    ${photoDisplay}
+                </td>
+                <td>${item.deadline}</td>
+                <td>
+                    <select onchange="updateInspector(${i},this.value)">
+                        ${inspectorOptions}
+                    </select>
+                </td>
+                <td>
+                    <div>${item.owner}</div>
+                    <div style="margin-top:6px">
+                        <span style="font-size:12px;color:#1976d2">Гарын үсэг:</span>
+                        <!-- Add your custom content for Гарын үсэг here -->
+                    </div>
+                </td>
+                <td>
+                    <select onchange="updateStatus(${i},this.value)">
+                        <option ${item.status==="Биелээгүй"?"selected":''}>Биелээгүй</option>
+                        <option ${item.status==="Биелэсэн"?"selected":''}>Биелэсэн</option>
+                        <option ${item.status==="Материал хангагдаагүй"?"selected":''}>Материал хангагдаагүй</option>
+                        <option ${item.status==="Хугацаа болоогүй"?"selected":''}>Хугацаа болоогүй</option>
+                        <option ${item.status==="Засварт өгсөн"?"selected":''}>Засварт өгсөн</option>
+                    </select>
+                </td>
+                <td>
+                    <select onchange="handleAction(${i},this.value)">
+                        <option value="">хадгалах</option>
+                        <option value="delete">Устгах</option>
+                    </select>
+                </td>
+            `;
+        t.appendChild(r);
+    });
+
+    document.getElementById("totalCount").textContent=total;
+    
+    for(let c in cc){
+        let r=document.createElement("tr");
+        r.innerHTML=`<td>${c}</td><td>${cc[c]}</td><td>${((cc[c]/total)*100).toFixed(1)}%</td>`;
+        cs.appendChild(r);
+    }
+
+    const performanceStatuses = ["Биелээгүй", "Биелэсэн", "Материал хангагдаагүй", "Хугацаа болоогүй", "Засварт өгсөн"];
+    let hasPerformanceData = false;
+
+    performanceStatuses.forEach(s => {
+        let items = sg[s] || [];
+        if (items.length > 0) {
+            hasPerformanceData = true;
+            let fr = document.createElement("tr");
+            
+            fr.innerHTML = `
+                <td rowspan="${items.length}">${s} (${items.length})</td>
+                <td><b>${items[0].foundItem}</b> / ${items[0].owner}</td>
+            `;
+            ps.appendChild(fr);
+
+            for (let i = 1; i < items.length; i++) {
+                let nr = document.createElement("tr");
+                nr.innerHTML = `<td><b>${items[i].foundItem}</b> / ${items[i].owner}</td>`;
+                ps.appendChild(nr);
+            }
+        }
+    });
+
+    if (!hasPerformanceData && total > 0) {
+        ps.innerHTML='<tr><td colspan="2" style="text-align:center">Одоогоор бүртгэлүүд статусаар хуваагдаагүй байна.</td></tr>';
+    } else if (total === 0) {
+         ps.innerHTML='<tr><td colspan="2" style="text-align:center">Одоогоор бүртгэл байхгүй байна.</td></tr>';
+    }
+
+    updateCharts(sg);
+}
+
+function updateCharts(sg){
+    let pl=[],pv=[];
+    const performanceStatuses = ["Биелээгүй", "Биелэсэн", "Материал хангагдаагүй", "Хугацаа болоогүй", "Засварт өгсөн"]; 
+    performanceStatuses.forEach(s=>{
+        let c=(sg[s]||[]).length;
+        if(c>0){
+            pl.push(s);
+            pv.push(c);
+        }
+    });
+    let pt=pv.reduce((a,b)=>a+b,0);
+    
+    if(perfChart)perfChart.destroy();
+    perfChart=new Chart(document.getElementById("performanceChart"),{
+        type:'doughnut',
+        data:{
+            labels:pl,
+            datasets:[{
+                data:pv,
+                backgroundColor:['rgba(229,57,53,0.8)','rgba(76,175,80,0.8)','rgba(255,152,0,0.8)','rgba(33,150,243,0.8)','rgba(156,39,176,0.8)'], 
+                borderColor:['rgba(198,40,40,1)','rgba(56,142,60,1)','rgba(245,124,0,1)','rgba(25,118,210,1)','rgba(123,31,162,1)'],
+                borderWidth:3
+            }]
+        },
+        options:{
+            cutout:'55%',
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{
+                    position:'bottom',
+                    labels:{
+                        font:{size:12},
+                        padding:10,
+                        generateLabels:c=>c.data.labels.map((l,i)=>{
+                            let v=c.data.datasets[0].data[i];
+                            let percent = pt > 0 ? ((v/pt)*100).toFixed(1) : 0;
+                            return{
+                                text:l+': '+v+' ('+percent+'%)',
+                                fillStyle:c.data.datasets[0].backgroundColor[i],
+                                index:i
+                            }
+                        })
+                    }
+                },
+                datalabels:{
+                    formatter:(v)=>pt > 0 ? v+'\n'+((v/pt)*100).toFixed(1)+'%' : v,
+                    color:'#fff',
+                    font:{weight:'bold',size:13}
+                }
+            }
+        },
+        plugins:[ChartDataLabels,{
+            id:'centerText',
+            beforeDraw:c=>{
+                let ctx=c.ctx;
+                ctx.save();
+                let x=(c.chartArea.left+c.chartArea.right)/2,
+                    y=(c.chartArea.top+c.chartArea.bottom)/2;
+                ctx.textAlign='center';
+                ctx.textBaseline='middle';
+                ctx.font='bold 24px Montserrat';
+                ctx.fillStyle='#004d40';
+                ctx.fillText(pt,x,y-10);
+                ctx.font='14px Montserrat';
+                ctx.fillStyle='#00796b';
+                ctx.fillText('Нийт',x,y+15);
+                ctx.restore();
+            }
+        }]
+    })
+}
+
+function updateStatus(i,v){
+    data[i].status=v;
+    saveData();
+    loadTable();
+}
+
+function updateInspector(i,v){
+    data[i].inspector=v;
+    saveData();
+}
+
+function handleAction(i,a){
+    if(a==="delete"&&confirm("Устгах уу?")){
+        data.splice(i,1);
+        saveData();
+        loadTable();
+    }
+}
+
+function saveData(){
+    localStorage.setItem("tableData",JSON.stringify(data));
+    showAutosaveIndicator();
+}
+
+function showAutosaveIndicator(){
+    let indicator = document.getElementById("autosaveIndicator");
+    indicator.classList.add("show");
+    setTimeout(() => {
+        indicator.classList.remove("show");
+    }, 2000);
+}
+
+// Автомат хадгалалт - 1 минут тутамд
+setInterval(function(){
+    if(data.length > 0){
+        saveData();
+        console.log("Автомат хадгалалт:", new Date().toLocaleTimeString('mn-MN'));
+    }
+}, 60000); // 60000ms = 1 минут
+
+function openModal(src){
+    document.getElementById("imageModal").style.display="block";
+    document.getElementById("modalImage").src=src;
+}
+
+function closeModal(){
+    document.getElementById("imageModal").style.display="none";
+}
+
+// PDF хадгалах функц устгав
+
+loadTable();
+</script>
+<script>
+// Monthly inspection type chart logic
+let monthlyTypeChart = null;
+function getMonthName(m) {
+    const names = ["1-р сар","2-р сар","3-р сар","4-р сар","5-р сар","6-р сар","7-р сар","8-р сар","9-р сар","10-р сар","11-р сар","12-р сар"];
+    return names[m];
+}
+
+function renderMonthlyTypeChart(type) {
+    // Count per month for selected type
+    let counts = Array(12).fill(0);
+    data.forEach(item => {
+        if(item.inspector === type) {
+            let d = item.deadline;
+            if(d) {
+                let month = new Date(d).getMonth();
+                if(month >= 0 && month < 12) counts[month]++;
+            }
+        }
+    });
+    let labels = counts.map((_,i)=>getMonthName(i));
+    if(monthlyTypeChart) monthlyTypeChart.destroy();
+    monthlyTypeChart = new Chart(document.getElementById("monthlyTypeChart"), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: type + " сард гарсан тоо",
+                data: counts,
+                backgroundColor: 'rgba(33,150,243,0.7)',
+                borderColor: 'rgba(25,118,210,1)',
+                borderWidth: 2,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {display: false},
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#004d40',
+                    font: {weight:'bold',size:16},
+                    formatter: v => v > 0 ? Math.round(v) : '',
+                    display: true
+                }
+            },
+            scales: {
+                x: {title: {display:false}},
+                y: {
+                    title: {display:false},
+                    beginAtZero:true,
+                    stepSize:1,
+                    ticks: {
+                        callback: function(value) { return Number.isInteger(value) ? value : ''; }
+                    }
+                }
+            },
+            maintainAspectRatio: false,
+            responsive: true,
+            aspectRatio: 2.5
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+function setupMonthlyTypeDropdown() {
+    const select = document.getElementById("monthlyTypeSelect");
+    select.innerHTML = INSPECTORS.filter(x=>x!=="Сонгоно уу").map(type => `<option value="${type}">${type}</option>`).join("");
+    select.onchange = function() {
+        renderMonthlyTypeChart(this.value);
+    };
+    // Initial render
+    renderMonthlyTypeChart(select.value);
+}
+
+// --- Month summary table logic ---
+function setupMonthSummaryDropdown() {
+    const select = document.getElementById("monthSummarySelect");
+    select.innerHTML = Array.from({length:12}, (_,i) => `<option value="${i}">${getMonthName(i)}</option>`).join("");
+    select.onchange = function() {
+        renderMonthSummaryTable(parseInt(this.value));
+    };
+    renderMonthSummaryTable(select.value ? parseInt(select.value) : 0);
+}
+
+function renderMonthSummaryTable(monthIdx) {
+    const tbody = document.getElementById("monthSummaryBody");
+    if (!tbody) return;
+    const types = [
+        "1-р шатны үзлэг",
+        "2-р шатны үзлэг",
+        "3-р шатны үзлэг",
+        "Ээлжит үзлэг",
+        "Ээлжит бус үзлэг",
+        "НГ-н үзлэг"
+    ];
+    let rows = "";
+    types.forEach(type => {
+        let count = data.filter(item => item.inspector === type && new Date(item.deadline).getMonth() === monthIdx).length;
+        rows += `<tr><td>${type}</td><td>${count}</td></tr>`;
+    });
+    tbody.innerHTML = rows;
+}
+
+// Re-render chart and summary when data changes
+const origLoadTable = loadTable;
+loadTable = function() {
+    origLoadTable.apply(this, arguments);
+    setupMonthlyTypeDropdown();
+    setupMonthSummaryDropdown();
+};
+// Initial setup if data already loaded
+if(typeof data !== 'undefined' && data.length > 0) {
+    setupMonthlyTypeDropdown();
+    setupMonthSummaryDropdown();
+}
+</script>
+</body>
+</html>

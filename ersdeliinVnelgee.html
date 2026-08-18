@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мэдээлэл Харах</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d0f14;
+            --surface: #161923;
+            --surface2: #1e2435;
+            --border: rgba(255,255,255,0.07);
+            --accent: #4ade80;
+            --accent2: #38bdf8;
+            --accent3: #f472b6;
+            --warn: #fb923c;
+            --danger: #f87171;
+            --text: #e8eaf0;
+            --muted: #6b7280;
+            --low: #4ade80;
+            --medium: #facc15;
+            --high: #fb923c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-mark {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 0 24px rgba(74,222,128,0.25);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .stat-card.low::before { background: var(--low); }
+        .stat-card.medium::before { background: var(--medium); }
+        .stat-card.high::before { background: var(--high); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-top: 8px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: -1px;
+        }
+
+        .stat-card.low .stat-value { color: var(--low); }
+        .stat-card.medium .stat-value { color: var(--medium); }
+        .stat-card.high .stat-value { color: var(--high); }
+
+        .stat-icon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 24px;
+            opacity: 0.3;
+        }
+
+        /* Charts section */
+        .charts-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: border-color 0.2s;
+        }
+
+        .chart-card:hover {
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .chart-card.wide {
+            grid-column: span 2;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
+        /* Tab controls */
+        .chart-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: rgba(74,222,128,0.1);
+            border-color: rgba(74,222,128,0.3);
+            color: var(--accent);
+        }
+
+        .tab-btn:hover:not(.active) {
+            border-color: rgba(255,255,255,0.15);
+            color: var(--text);
+        }
+
+        /* Table section */
+        .table-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toolbar-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 14px 8px 36px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            width: 220px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: rgba(74,222,128,0.4);
+        }
+
+        .search-box input::placeholder { color: var(--muted); }
+
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Filter chips */
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 5px 12px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .chip.all.active { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: var(--text); }
+        .chip.low.active { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.35); color: var(--low); }
+        .chip.medium.active { background: rgba(250,204,21,0.1); border-color: rgba(250,204,21,0.35); color: var(--medium); }
+        .chip.high.active { background: rgba(251,146,60,0.1); border-color: rgba(251,146,60,0.35); color: var(--high); }
+
+        .chip:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent2);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            text-shadow: 0 0 10px rgba(56,189,248,0.12);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+            animation: fadeIn 0.3s ease both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
+        tbody tr:last-child { border-bottom: none; }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+
+        /* Risk badge */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .risk-low { background: rgba(74,222,128,0.12); color: var(--low); }
+        .risk-low .risk-dot { background: var(--low); }
+        .risk-medium { background: rgba(250,204,21,0.12); color: var(--medium); }
+        .risk-medium .risk-dot { background: var(--medium); }
+        .risk-high { background: rgba(251,146,60,0.12); color: var(--high); }
+        .risk-high .risk-dot { background: var(--high); }
+
+        /* Loading state */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Error */
+        .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            gap: 12px;
+        }
+
+        .error-icon { font-size: 36px; }
+        .error-text { color: var(--danger); font-size: 14px; }
+
+        /* Empty */
+        .empty-row td {
+            text-align: center;
+            color: var(--muted);
+            padding: 40px;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr 1fr; }
+            .chart-card.wide { grid-column: span 2; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-card.wide { grid-column: span 1; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-mark">🛡️</div>
+            <div>
+                <h1>Эрсдэлийн мэдээлэл</h1>
+                <p>А-58 эрсдэлийн үнэлгээ</p>
+            </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            <span id="status-text">Уншиж байна...</span>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card low">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-label">Бага эрсдэл</div>
+            <div class="stat-value" id="count-low">—</div>
+        </div>
+        <div class="stat-card medium">
+            <div class="stat-icon">🟡</div>
+            <div class="stat-label">Дунд эрсдэл</div>
+            <div class="stat-value" id="count-medium">—</div>
+        </div>
+        <div class="stat-card high">
+            <div class="stat-icon">🟠</div>
+            <div class="stat-label">Их эрсдэл</div>
+            <div class="stat-value" id="count-high">—</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-section">
+        <div class="section-title">График шинжилгээ</div>
+        <div class="charts-grid">
+
+            <!-- Donut chart -->
+            <div class="chart-card">
+                <div class="chart-title">Эрсдэлийн хуваарилалт</div>
+                <div class="chart-subtitle">Нийт тархалт</div>
+                <div class="chart-wrap">
+                    <canvas id="donut-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Monthly line chart -->
+            <div class="chart-card wide">
+                <div class="chart-title">Цаг хугацааны шинжилгээ</div>
+                <div class="chart-subtitle">Эрсдэлийн хандлага</div>
+                <div class="chart-tabs">
+                    <button class="tab-btn" onclick="switchTab('day')">Өдрөөр</button>
+                    <button class="tab-btn active" onclick="switchTab('month')">Сараар</button>
+                    <button class="tab-btn" onclick="switchTab('year')">Жилээр</button>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="line-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bar chart monthly distribution -->
+            <div class="chart-card wide">
+                <div class="chart-title">Эрсдэлийн ангилал</div>
+                <div class="chart-subtitle">Сар тус бүрийн харьцуулалт</div>
+                <div class="chart-tabs">
+                    <button class="tab-btn active" onclick="switchBarTab('month')">Сараар</button>
+                    <button class="tab-btn" onclick="switchBarTab('year')">Жилээр</button>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="bar-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Heatmap-style risk trend -->
+            <div class="chart-card">
+                <div class="chart-title">Эрсдэлийн эзлэх хувь</div>
+                <div class="chart-subtitle">Нийт бүртгэл дэх хувийн жин</div>
+                <div class="chart-wrap">
+                    <canvas id="radar-chart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-section">
+        <div class="table-toolbar">
+            <div class="toolbar-left">
+                <span class="toolbar-title">Бүх мэдээлэл</span>
+            </div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Хайх..." id="search-input" oninput="filterTable()">
+            </div>
+        </div>
+        <div class="filter-chips" id="filter-chips">
+            <button class="chip all active" onclick="setFilter('all', this)">Бүгд</button>
+            <button class="chip low" onclick="setFilter('low', this)">🟢 Бага</button>
+            <button class="chip medium" onclick="setFilter('medium', this)">🟡 Дунд</button>
+            <button class="chip high" onclick="setFilter('high', this)">🟠 Их</button>
+        </div>
+        <div id="loading-state" class="loading-state">
+            <div class="spinner"></div>
+            <div class="loading-text">Мэдээлэл татаж байна...</div>
+        </div>
+        <div id="error-state" class="error-state" style="display:none;">
+            <div class="error-icon">⚠️</div>
+            <div class="error-text">Мэдээлэл ачаалахад алдаа гарлаа</div>
+        </div>
+        <div class="table-wrap" id="table-wrap" style="display:none;">
+            <table>
+                <thead><tr id="table-header"></tr></thead>
+                <tbody id="table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwC2aI4rO3MoqdkJljBO1XIZFLHqUVxPXdceolkjtj2VBh-tpH7Kyk-WWwWm2jX2k8/exec';
+    const sheetName = 'pd-9';
+
+    // ============ STATE ============
+    let allData = [];
+    let activeFilter = 'all';
+    let searchQuery = '';
+    let lineChartMode = 'month';
+    let barChartMode = 'month';
+
+    // Chart instances
+    let donutChart, lineChart, barChart, radarChart;
+
+    // ============ RISK HELPERS ============
+    const RISK_KEYS = ['low','medium','high'];
+    const RISK_LABELS = { low:'Бага', medium:'Дунд', high:'Их' };
+    const RISK_COLORS = {
+        low: '#4ade80',
+        medium: '#facc15',
+        high: '#fb923c'
+    };
+
+    const RISK_LEVEL_FIELD_CANDIDATES = [
+        'riskLevel',
+        'risk_level',
+        'Risk Level',
+        'RiskLevel',
+        'Эрсдэлийн зэрэг',
+        'Эрсдлийн зэрэг',
+        'Зэрэг'
+    ];
+
+    function getRiskLevelValue(item) {
+        for (const key of RISK_LEVEL_FIELD_CANDIDATES) {
+            if (item[key] !== undefined && item[key] !== null && String(item[key]).trim() !== '') {
+                return String(item[key]).trim();
+            }
+        }
+
+        for (const key of Object.keys(item)) {
+            const normalizedKey = key.toLowerCase();
+            if ((normalizedKey.includes('risk') && normalizedKey.includes('level')) || normalizedKey.includes('эрсдэлийн зэрэг')) {
+                return String(item[key] ?? '').trim();
+            }
+        }
+
+        return '';
+    }
+
+    function detectRisk(item) {
+        const val = getRiskLevelValue(item).toLowerCase();
+        if (val.includes('high') || val.includes('өндөр') || val.includes('их')) return 'high';
+        if (val.includes('medium') || val.includes('дунд')) return 'medium';
+        if (val.includes('low') || val.includes('бага')) return 'low';
+        return 'unknown';
+    }
+
+    function detectDate(item) {
+        for (const k of Object.keys(item)) {
+            const v = item[k];
+            if (v && /\d{4}/.test(v) && !isNaN(Date.parse(v))) return new Date(v);
+        }
+        return null;
+    }
+
+    function formatTableDate(value) {
+        if (!value) return '—';
+
+        const stringValue = String(value).trim();
+        const parsedDate = new Date(stringValue);
+
+        if (isNaN(parsedDate.getTime())) {
+            return stringValue;
+        }
+
+        const year = parsedDate.getFullYear();
+        const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(parsedDate.getDate()).padStart(2, '0');
+        const hours = String(parsedDate.getHours()).padStart(2, '0');
+        const minutes = String(parsedDate.getMinutes()).padStart(2, '0');
+
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    function tryParseJson(text) {
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function tryParseJsonp(text) {
+        const trimmed = String(text || '').trim();
+        const match = trimmed.match(/^[\w$.]+\((.*)\);?$/s);
+        if (!match) {
+            return null;
+        }
+
+        return tryParseJson(match[1]);
+    }
+
+    function normalizeTableRecords(rows) {
+        if (!Array.isArray(rows)) {
+            return [];
+        }
+
+        if (!rows.length) {
+            return [];
+        }
+
+        if (rows.every(row => row && typeof row === 'object' && !Array.isArray(row))) {
+            return rows.map((row, index) => ({
+                ...row,
+                rowNumber: row.rowNumber ?? index + 1
+            }));
+        }
+
+        if (rows.every(Array.isArray)) {
+            const nonEmptyRows = rows.filter(row => row.some(cell => String(cell ?? '').trim() !== ''));
+            if (!nonEmptyRows.length) {
+                return [];
+            }
+
+            const [firstRow, ...restRows] = nonEmptyRows;
+            const normalizedHeaders = firstRow.map((cell, index) => {
+                const label = String(cell ?? '').trim();
+                return label || `Багана ${index + 1}`;
+            });
+
+            return restRows.map((row, rowIndex) => {
+                const record = { rowNumber: rowIndex + 1 };
+                normalizedHeaders.forEach((header, columnIndex) => {
+                    record[header] = row[columnIndex] ?? '';
+                });
+                return record;
+            });
+        }
+
+        return rows.map((value, index) => ({
+            rowNumber: index + 1,
+            Утга: value
+        }));
+    }
+
+    function extractRowsFromPayload(payload, preferredSheetName) {
+        if (!payload) {
+            return [];
+        }
+
+        if (Array.isArray(payload)) {
+            return payload;
+        }
+
+        if (typeof payload !== 'object') {
+            return [];
+        }
+
+        const directCandidates = [
+            payload[preferredSheetName],
+            payload.data,
+            payload.records,
+            payload.rows,
+            payload.result,
+            payload.items,
+            payload.values,
+            payload.sheetData,
+            payload[preferredSheetName?.toLowerCase?.() || ''],
+            payload[preferredSheetName?.toUpperCase?.() || '']
+        ];
+
+        for (const candidate of directCandidates) {
+            if (Array.isArray(candidate)) {
+                return candidate;
+            }
+        }
+
+        if (payload.sheets && typeof payload.sheets === 'object') {
+            const nestedSheet = payload.sheets[preferredSheetName];
+            if (Array.isArray(nestedSheet)) {
+                return nestedSheet;
+            }
+            if (nestedSheet && typeof nestedSheet === 'object') {
+                const nestedRows = extractRowsFromPayload(nestedSheet, preferredSheetName);
+                if (nestedRows.length) {
+                    return nestedRows;
+                }
+            }
+        }
+
+        for (const value of Object.values(payload)) {
+            if (Array.isArray(value)) {
+                return value;
+            }
+            if (value && typeof value === 'object') {
+                const nestedRows = extractRowsFromPayload(value, preferredSheetName);
+                if (nestedRows.length) {
+                    return nestedRows;
+                }
+            }
+        }
+
+        return [];
+    }
+
+    async function fetchJsonpPayload(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = `pdJsonp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+            const script = document.createElement('script');
+            const cleanup = () => {
+                delete window[callbackName];
+                script.remove();
+            };
+
+            window[callbackName] = payload => {
+                cleanup();
+                resolve(payload || null);
+            };
+
+            script.onerror = () => {
+                cleanup();
+                reject(new Error('JSONP ачаалж чадсангүй'));
+            };
+
+            script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
+            document.body.appendChild(script);
+        });
+    }
+
+    // ============ CHART SETUP ============
+    const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#9ca3af', font: { family: 'DM Sans', size: 12 }, boxWidth: 10, padding: 16 }
+            },
+            tooltip: {
+                backgroundColor: '#1e2435',
+                titleColor: '#e8eaf0',
+                bodyColor: '#9ca3af',
+                borderColor: 'rgba(255,255,255,0.07)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+            }
+        }
+    };
+
+    const donutOverlayPlugin = {
+        id: 'donutOverlayPlugin',
+        afterDatasetsDraw(chart) {
+            if (chart.config.type !== 'doughnut') return;
+
+            const { ctx } = chart;
+            const dataset = chart.data.datasets[0];
+            const values = dataset.data || [];
+            const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
+            const meta = chart.getDatasetMeta(0);
+
+            ctx.save();
+
+            meta.data.forEach((arc, index) => {
+                const value = Number(values[index] || 0);
+                if (!value) return;
+
+                const { x, y, startAngle, endAngle, innerRadius, outerRadius } = arc.getProps(
+                    ['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius'],
+                    true
+                );
+
+                const angle = (startAngle + endAngle) / 2;
+                const radius = innerRadius + ((outerRadius - innerRadius) * 0.58);
+                const labelX = x + Math.cos(angle) * radius;
+                const labelY = y + Math.sin(angle) * radius;
+
+                ctx.fillStyle = '#e8eaf0';
+                ctx.font = '600 12px "DM Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(String(value), labelX, labelY);
+            });
+
+            if (meta.data[0]) {
+                const { x, y } = meta.data[0].getProps(['x', 'y'], true);
+
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '500 11px "DM Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Нийт', x, y - 10);
+
+                ctx.fillStyle = '#e8eaf0';
+                ctx.font = '700 24px "DM Mono", monospace';
+                ctx.fillText(String(total), x, y + 14);
+            }
+
+            ctx.restore();
+        }
+    };
+
+    const barValueLabelsPlugin = {
+        id: 'barValueLabelsPlugin',
+        afterDatasetsDraw(chart) {
+            if (chart.config.type !== 'bar') return;
+
+            const { ctx } = chart;
+            ctx.save();
+            ctx.font = '600 11px "DM Mono", monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const meta = chart.getDatasetMeta(datasetIndex);
+
+                meta.data.forEach((bar, index) => {
+                    const value = Number(dataset.data[index] || 0);
+                    if (!value) return;
+
+                    const { x, y, base } = bar.getProps(['x', 'y', 'base'], true);
+                    const labelY = y + ((base - y) / 2);
+                    ctx.fillStyle = '#0d0f14';
+                    ctx.fillText(String(value), x, labelY);
+                });
+            });
+
+            ctx.restore();
+        }
+    };
+
+    Chart.register(donutOverlayPlugin, barValueLabelsPlugin);
+
+    function initDonut(counts) {
+        const ctx = document.getElementById('donut-chart').getContext('2d');
+        donutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: RISK_KEYS.map(k => RISK_LABELS[k]),
+                datasets: [{
+                    data: RISK_KEYS.map(k => counts[k] || 0),
+                    backgroundColor: RISK_KEYS.map(k => RISK_COLORS[k] + '33'),
+                    borderColor: RISK_KEYS.map(k => RISK_COLORS[k]),
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                ...chartDefaults,
+                cutout: '68%',
+                plugins: {
+                    ...chartDefaults.plugins,
+                    legend: { ...chartDefaults.plugins.legend, position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    function buildMonthlyData() {
+        const map = {};
+        allData.forEach(item => {
+            const d = detectDate(item);
+            if (!d) return;
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            const risk = detectRisk(item);
+            if (!RISK_KEYS.includes(risk)) return;
+            if (!map[key]) map[key] = { low:0, medium:0, high:0 };
+            map[key][risk]++;
+        });
+        const sorted = Object.keys(map).sort();
+        return { labels: sorted, data: map };
+    }
+
+    function buildDailyData() {
+        const map = {};
+        allData.forEach(item => {
+            const d = detectDate(item);
+            if (!d) return;
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const risk = detectRisk(item);
+            if (!RISK_KEYS.includes(risk)) return;
+            if (!map[key]) map[key] = { low:0, medium:0, high:0 };
+            map[key][risk]++;
+        });
+        const sorted = Object.keys(map).sort();
+        return { labels: sorted, data: map };
+    }
+
+    function buildYearlyData() {
+        const map = {};
+        allData.forEach(item => {
+            const d = detectDate(item);
+            if (!d) return;
+            const key = String(d.getFullYear());
+            const risk = detectRisk(item);
+            if (!RISK_KEYS.includes(risk)) return;
+            if (!map[key]) map[key] = { low:0, medium:0, high:0 };
+            map[key][risk]++;
+        });
+        const sorted = Object.keys(map).sort();
+        return { labels: sorted, data: map };
+    }
+
+    function getTimeData(mode) {
+        const { labels, data } = mode === 'day'
+            ? buildDailyData()
+            : mode === 'month'
+                ? buildMonthlyData()
+                : buildYearlyData();
+        return { labels, data };
+    }
+
+    function getLineTimeData(mode) {
+        if (mode === 'day') {
+            return getTimeData('day');
+        }
+
+        if (mode === 'year') {
+            const focusYear = '2026';
+            const yearlyData = buildYearlyData();
+
+            return {
+                labels: [focusYear],
+                data: {
+                    [focusYear]: yearlyData.data[focusYear] || { low: 0, medium: 0, high: 0 }
+                }
+            };
+        }
+
+        return getTimeData('month');
+    }
+
+    function initLineChart() {
+        const ctx = document.getElementById('line-chart').getContext('2d');
+        const { labels, data } = getLineTimeData('month');
+
+        lineChart = new Chart(ctx, {
+            type: 'line',
+            data: buildLineDataset(labels, data),
+            options: {
+                ...chartDefaults,
+                scales: {
+                    x: { ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function buildLineDataset(labels, data) {
+        return {
+            labels,
+            datasets: RISK_KEYS.map(k => ({
+                label: RISK_LABELS[k],
+                data: labels.map(l => data[l]?.[k] || 0),
+                borderColor: RISK_COLORS[k],
+                backgroundColor: RISK_COLORS[k] + '15',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+            }))
+        };
+    }
+
+    function switchTab(mode) {
+        lineChartMode = mode;
+        document.querySelectorAll('.chart-card:nth-child(2) .tab-btn').forEach(b => {
+            const buttonMode = b.textContent.includes('Өдрөөр')
+                ? 'day'
+                : b.textContent.includes('Сараар')
+                    ? 'month'
+                    : 'year';
+            b.classList.toggle('active', buttonMode === mode);
+        });
+        const { labels, data } = getLineTimeData(mode);
+        lineChart.data = buildLineDataset(labels, data);
+        lineChart.update();
+    }
+
+    function initBarChart() {
+        const ctx = document.getElementById('bar-chart').getContext('2d');
+        const { labels, data } = getTimeData('month');
+
+        barChart = new Chart(ctx, {
+            type: 'bar',
+            data: buildBarDataset(labels, data),
+            options: {
+                ...chartDefaults,
+                scales: {
+                    x: { stacked: true, ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: {
+                        stacked: true,
+                        ticks: { display: false },
+                        grid: { color: 'rgba(255,255,255,0.04)' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function buildBarDataset(labels, data) {
+        return {
+            labels,
+            datasets: RISK_KEYS.map(k => ({
+                label: RISK_LABELS[k],
+                data: labels.map(l => data[l]?.[k] || 0),
+                backgroundColor: RISK_COLORS[k] + '80',
+                borderColor: RISK_COLORS[k],
+                borderWidth: 1,
+                borderRadius: 4,
+            }))
+        };
+    }
+
+    function switchBarTab(mode) {
+        barChartMode = mode;
+        // Toggle correct tab buttons in bar card
+        const barCard = document.querySelectorAll('.chart-card')[2];
+        barCard.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.textContent.includes(mode === 'month' ? 'Сараар' : 'Жилээр'));
+        });
+        const { labels, data } = getTimeData(mode);
+        barChart.data = buildBarDataset(labels, data);
+        barChart.update();
+    }
+
+    function initRadarChart(counts) {
+        const ctx = document.getElementById('radar-chart').getContext('2d');
+        const total = allData.length || 1;
+        const labels = ['Их', 'Дунд', 'Бага'];
+        const values = [counts.high, counts.medium, counts.low];
+        const percents = values.map(value => Number(((value / total) * 100).toFixed(1)));
+
+        radarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Эзлэх хувь',
+                    data: percents,
+                    backgroundColor: [
+                        RISK_COLORS.high + 'cc',
+                        RISK_COLORS.medium + 'cc',
+                        RISK_COLORS.low + 'cc'
+                    ],
+                    borderColor: [
+                        RISK_COLORS.high,
+                        RISK_COLORS.medium,
+                        RISK_COLORS.low
+                    ],
+                    borderWidth: 1.5,
+                    borderRadius: 8,
+                    barThickness: 18,
+                }]
+            },
+            options: {
+                ...chartDefaults,
+                indexAxis: 'y',
+                plugins: {
+                    ...chartDefaults.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                        ...chartDefaults.plugins.tooltip,
+                        callbacks: {
+                            label(context) {
+                                const index = context.dataIndex;
+                                return `${values[index]} бүртгэл, ${percents[index]}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: '#6b7280',
+                            callback: value => `${value}%`
+                        },
+                        grid: { color: 'rgba(255,255,255,0.06)' }
+                    },
+                    y: {
+                        ticks: { color: '#e8eaf0', font: { family: 'DM Sans', size: 12, weight: '600' } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // ============ TABLE ============
+    function countRisks(data) {
+        const c = { low:0, medium:0, high:0 };
+        data.forEach(item => {
+            const risk = detectRisk(item);
+            if (RISK_KEYS.includes(risk)) {
+                c[risk]++;
+            }
+        });
+        return c;
+    }
+
+    function updateStats(counts) {
+        document.getElementById('count-low').textContent = counts.low;
+        document.getElementById('count-medium').textContent = counts.medium;
+        document.getElementById('count-high').textContent = counts.high;
+    }
+
+    function getRiskBadge(risk) {
+        const label = RISK_LABELS[risk] || risk;
+        return `<span class="risk-badge risk-${risk}"><span class="risk-dot"></span>${label}</span>`;
+    }
+
+    function sortTableData(data) {
+        return [...data].sort((left, right) => {
+            const leftDate = detectDate(left);
+            const rightDate = detectDate(right);
+
+            if (leftDate && rightDate) {
+                return rightDate.getTime() - leftDate.getTime();
+            }
+
+            const leftRow = Number(left.rowNumber || 0);
+            const rightRow = Number(right.rowNumber || 0);
+            return rightRow - leftRow;
+        });
+    }
+
+    function renderTable(data) {
+        const header = document.getElementById('table-header');
+        const body = document.getElementById('table-body');
+        const sortedData = sortTableData(data);
+
+        if (!sortedData.length) {
+            body.innerHTML = '<tr class="empty-row"><td colspan="99">Мэдээлэл олдсонгүй</td></tr>';
+            return;
+        }
+
+        // Build headers once
+        if (!header.hasChildNodes()) {
+            const headers = Object.keys(sortedData[0]).filter(h => h !== 'rowNumber');
+            headers.forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                header.appendChild(th);
+            });
+        }
+
+        const headers = Object.keys(sortedData[0]).filter(h => h !== 'rowNumber');
+        body.innerHTML = '';
+
+        sortedData.forEach((item, i) => {
+            const tr = document.createElement('tr');
+            tr.style.animationDelay = `${i * 0.03}s`;
+            const risk = detectRisk(item);
+
+            headers.forEach(h => {
+                const td = document.createElement('td');
+                const normalizedHeader = h.toLowerCase();
+                const isRiskField = RISK_LEVEL_FIELD_CANDIDATES.includes(h)
+                    || ((normalizedHeader.includes('risk') && normalizedHeader.includes('level'))
+                    || normalizedHeader.includes('эрсдэлийн зэрэг'));
+                const isDateField = normalizedHeader.includes('огноо')
+                    || normalizedHeader.includes('date')
+                    || normalizedHeader.includes('time');
+                if (isRiskField) {
+                    td.innerHTML = getRiskBadge(risk);
+                } else if (isDateField) {
+                    td.textContent = formatTableDate(item[h]);
+                } else {
+                    td.textContent = item[h] ?? '—';
+                }
+                tr.appendChild(td);
+            });
+
+            body.appendChild(tr);
+        });
+    }
+
+    function getFilteredData() {
+        return allData.filter(item => {
+            const risk = detectRisk(item);
+            const matchFilter = activeFilter === 'all' || risk === activeFilter;
+            const q = searchQuery.toLowerCase();
+            const matchSearch = !q || Object.values(item).some(v => String(v).toLowerCase().includes(q));
+            return matchFilter && matchSearch;
+        });
+    }
+
+    function filterTable() {
+        searchQuery = document.getElementById('search-input').value;
+        renderTable(getFilteredData());
+    }
+
+    function setFilter(f, el) {
+        activeFilter = f;
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        filterTable();
+    }
+
+    // ============ FETCH ============
+    async function fetchData() {
+        try {
+            const endpoint = new URL(scriptURL);
+            endpoint.searchParams.set('sheet', sheetName);
+            endpoint.searchParams.set('t', Date.now().toString());
+
+            let payload = null;
+
+            try {
+                const response = await fetch(endpoint.toString(), { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const raw = await response.text();
+                payload = tryParseJson(raw) || tryParseJsonp(raw);
+
+                if (!payload && raw.trim()) {
+                    throw new Error('JSON parse алдаа');
+                }
+            } catch (fetchError) {
+                payload = await fetchJsonpPayload(endpoint.toString());
+            }
+
+            allData = normalizeTableRecords(extractRowsFromPayload(payload, sheetName));
+
+            const counts = countRisks(allData);
+            updateStats(counts);
+
+            // Charts
+            initDonut(counts);
+            initLineChart();
+            initBarChart();
+            initRadarChart(counts);
+
+            // Table
+            renderTable(getFilteredData());
+
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('table-wrap').style.display = 'block';
+            document.getElementById('error-state').style.display = 'none';
+            document.getElementById('status-text').textContent = `${sheetName} - ${allData.length} бичлэг ачааллаа · Source: Google Apps Script`;
+
+        } catch (error) {
+            console.error('Алдаа:', error);
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'flex';
+            document.getElementById('status-text').textContent = 'Алдаа гарлаа';
+        }
+    }
+
+    fetchData();
+</script>
+</body>
+</html>

@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Төмөр Замын Менежментийн Систем</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+Mongolian&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0a0e1a;
+      --surface:   #0f1628;
+      --panel:     #141d35;
+      --border:    #1e2d52;
+      --accent:    #1a73e8;
+      --accent2:   #00c2ff;
+      --gold:      #f0a500;
+      --danger:    #e84343;
+      --success:   #00c896;
+      --text:      #d0daf0;
+      --text-dim:  #6a7a9a;
+      --text-head: #ffffff;
+      --rail:      #243356;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Rajdhani', 'Noto Sans Mongolian', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      width: 100vw;
+      padding: 0;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(26,115,232,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26,115,232,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: relative;
+      z-index: 10;
+      background: linear-gradient(135deg, #0d1529 0%, #111e3a 50%, #0d1529 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      box-shadow: 0 4px 30px rgba(26,115,232,.25);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(26,115,232,.5);
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .header-title span:first-child {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-head);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .header-title span:last-child {
+      font-size: 11px;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .4; }
+    }
+
+    .header-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ── RAIL DECORATION ── */
+    .rail-track {
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--gold) 0, var(--gold) 30px,
+        transparent 30px, transparent 50px
+      );
+      opacity: .6;
+    }
+
+    /* ── MAIN WRAPPER ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100vw;
+      max-width: none;
+      margin: 0;
+      padding: 32px 40px 60px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .section-bar {
+      width: 4px;
+      height: 36px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+      border-radius: 2px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-head);
+      letter-spacing: .5px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .section-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      margin-top: 2px;
+      letter-spacing: 2px;
+    }
+
+    .row-count {
+      margin-left: auto;
+      background: rgba(26,115,232,.15);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    /* ── TABLE CONTAINER ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      display: block;
+    }
+
+    .table-wrap thead {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: linear-gradient(90deg, #0d1a35 0%, #112040 50%, #0d1a35 100%);
+    }
+
+    .table-wrap tbody {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    /* ── TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+
+    thead tr {
+      background: linear-gradient(90deg, #0d1a35 0%, #112040 50%, #0d1a35 100%);
+    }
+
+    thead th {
+      padding: 16px 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: relative;
+    }
+
+    thead th::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .5;
+    }
+
+    /* Column widths */
+    col.c-req  { width: 130px; }
+    col.c-con  { width: 180px; }
+    col.c-desc { width: 220px; }
+    col.c-img  { width: 300px; }
+    col.c-res  { width: 328px; }
+    col.c-rec  { width: 200px; }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(30,45,82,.7);
+      transition: background .2s;
+    }
+
+    tbody tr:hover {
+      background: rgba(26,115,232,.07);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(255,255,255,.015);
+    }
+
+    tbody tr:nth-child(even):hover {
+      background: rgba(26,115,232,.07);
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      vertical-align: middle;
+      overflow-y: visible;
+      word-break: break-word;
+      max-width: 1px;
+      max-height: 80px;
+      border-right: 1.5px solid var(--border);
+    }
+
+    /* Сүүлийн багана босоо зураасгүй */
+    tbody td:last-child {
+      border-right: none;
+    }
+
+    /* Req label cell */
+    .req-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold);
+      white-space: nowrap;
+      background: rgba(240,165,0,.08);
+      border-left: 3px solid var(--gold);
+      padding-left: 12px !important;
+    }
+
+    .table-input.req-label {
+      border: none;
+      background: transparent;
+      color: var(--gold);
+      font-weight: 600;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding-left: 0;
+    }
+
+    /* Эхний багана доор байрлах req-label textarea-ийн гаднах хүрээг арилгах */
+    td .table-textarea.req-label {
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      border-radius: 0 !important;
+      border-left: 3px solid var(--gold) !important;
+      padding-left: 12px !important;
+      color: #1976d2 !important; /* Цэнхэр өнгө */
+      font-weight: bold;
+    }
+
+    /* Inputs & textareas */
+    .table-input,
+    .table-textarea {
+      width: 100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      transition: border-color .2s, background .2s, box-shadow .2s, color .2s;
+      outline: none;
+      padding: 7px 10px;
+      overflow: visible;
+      white-space: pre-line;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      overflow-y: visible;
+      max-height: 80px;
+    }
+
+    /* Бусад баганы textarea, input цэсний хүрээг арилгах */
+    td:not(:first-child) .table-textarea,
+    td:not(:first-child) .table-input {
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      border-radius: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    /* Сонголтын өнгө */
+    select.table-input.color-1 { background: #e6fff7 !important; color: #00c896 !important; border-color: #00c896 !important; font-weight: bold; }
+    select.table-input.color-2 { background: #e3f0ff !important; color: #1976d2 !important; border-color: #1976d2 !important; font-weight: bold; }
+    select.table-input.color-3 { background: #fff8e1 !important; color: #f0a500 !important; border-color: #f0a500 !important; font-weight: bold; }
+    select.table-input.color-4 { background: #ffeaea !important; color: #e84343 !important; border-color: #e84343 !important; font-weight: bold; }
+
+    .table-input:focus,
+    .table-textarea:focus {
+      border-color: var(--accent);
+      background: rgba(26,115,232,.08);
+      box-shadow: 0 0 0 3px rgba(26,115,232,.15);
+    }
+
+    .table-input::placeholder,
+    .table-textarea::placeholder {
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .table-textarea {
+      resize: none;
+      min-height: 68px;
+      line-height: 1.5;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden !important;
+      /* Доторх текстийг босоо болон хэвтээ голлуулна */
+    }
+
+    /* Textarea доторх scrollbar болон resize тэмдэгийг арилгах */
+    .table-textarea::-webkit-scrollbar {
+      display: none;
+    }
+    .table-textarea {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE, Edge */
+    }
+
+    /* Image upload cell */
+    .img-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .img-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: nowrap;
+      width: 100%;
+      min-height: 60px;
+      overflow-x: auto;
+      justify-content: center;
+      align-items: flex-end;
+      flex-grow: 1;
+    }
+    .img-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      width: 100%;
+      max-width: 120px;
+      flex: 1 1 0;
+    }
+    .img-list img {
+      width: 48px;
+      min-width: 48px;
+      max-width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1.5px solid #ccc;
+      transition: box-shadow .2s;
+      display: block;
+    }
+    .img-list img:hover {
+      box-shadow: 0 0 0 2px #1976d2;
+    }
+    .img-remove-btn {
+      margin-top: 8px;
+      background: #e84343;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 60px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background .2s;
+    }
+    .img-remove-btn:hover {
+      background: #b71c1c;
+    }
+    .img-add-btn {
+      font-size: 15px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: none;
+      background: #f0a500;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(240,165,0,.15);
+      transition: background .2s, box-shadow .2s;
+      padding: 0;
+    }
+    .img-add-btn:hover {
+      background: #ffd166;
+      color: #a66c00;
+      box-shadow: 0 0 0 2px #ffd166;
+    }
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ── FADE-IN ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .table-wrap {
+      animation: fadeUp .5s ease both;
+    }
+
+    /* Зураг томруулах modal */
+    .img-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      padding: 8px;
+      background: rgba(3, 7, 18, 0.96);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    .img-modal.active {
+      display: flex;
+    }
+    .img-modal img {
+      width: auto;
+      height: auto;
+      max-width: calc(100vw - 16px);
+      max-height: calc(100vh - 16px);
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 0 24px #000a;
+      cursor: auto;
+    }
+    .img-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 48px;
+      color: #fff;
+      cursor: pointer;
+      z-index: 10001;
+      background: none;
+      border: none;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-title">
+      <span style="font-size: large;">замын 2-р ангийн 9-р хэсэг /менежмент, аудитын бүртгэл-2026/</span>
+    </div>
+  </div>
+</header>
+
+<!-- RAIL DECORATION -->
+<!-- <div class="rail-track"></div> -->
+
+<!-- MAIN -->
+<main class="wrapper">
+  <div id="selectCounter" style="position: absolute; top: 24px; right: 48px; z-index: 20; background: rgba(255,255,255,0.95); color: #222; border-radius: 18px; padding: 8px 28px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: bold; box-shadow: 0 4px 24px rgba(26,115,232,.13); border: 2px solid #1976d2; display: flex; align-items: center; gap: 22px; min-width: 80px; justify-content: center; backdrop-filter: blur(2px);">
+    <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 14px; background: #00c896; border-radius: 50%; display: inline-block;"></span>Давуу тал: <span id="count-1" style="color: #00c896;">0</span></span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 14px; background: #1976d2; border-radius: 50%; display: inline-block;"></span>Тохирол: <span id="count-2" style="color: #1976d2;">0</span></span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 14px; background: #f0a500; border-radius: 50%; display: inline-block;"></span>Жижиг үл тохирол: <span id="count-3" style="color: #f0a500;">0</span></span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 14px; height: 14px; background: #e84343; border-radius: 50%; display: inline-block;"></span>Том үл тохирол: <span id="count-4" style="color: #e84343;">0</span></span>
+  </div>
+  <div class="section-header" style="position: relative;">
+    <!-- <button id="shareBtn" style="position:absolute; right:0; top:0; background:var(--accent); color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:15px; font-family:'IBM Plex Mono',monospace; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px rgba(26,115,232,.13);">Хуваалцах</button> -->
+  </div>
+
+  <!-- <div id="shareLinkModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; color:#222; border-radius:12px; padding:32px 28px; min-width:320px; max-width:90vw; box-shadow:0 8px 40px rgba(0,0,0,.25); display:flex; flex-direction:column; align-items:center; gap:18px;">
+      <div style="font-size:17px; font-weight:bold; margin-bottom:8px;">Хуваалцах линк</div>
+      <input id="shareLinkInput" style="width:100%; font-size:15px; padding:8px 10px; border:1.5px solid #1976d2; border-radius:6px;" readonly>
+      <button onclick="document.getElementById('shareLinkModal').style.display='none'" style="margin-top:10px; background:var(--accent); color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:15px; cursor:pointer;">Хаах</button>
+    </div>
+  </div> -->
+  <div class="table-wrap">
+    <table id="recordTable">
+      <colgroup>
+        <col class="c-req">
+        <col class="c-con">
+        <col class="c-desc">
+        <col class="c-img">
+        <col class="c-res">
+        <col class="c-rec">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Үйл явц, шаардлагууд</th>
+          <th>Агуулга</th>
+          <th>Тэмдэглэл</th>
+          <th>баримт, нотолгоо</th>
+          <th>аудитын үр дүн</th>
+          <th>Сайжруулах зөвлөмж</th>
+        </tr>
+      </thead>
+      <tbody id="requirementList" data-allow-view-mode-edit="true">
+        <!-- Rows generated by JS -->
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Modal for image preview -->
+<div class="img-modal" id="imgModal">
+  <button class="img-modal-close" id="imgModalClose">×</button>
+  <img src="" id="imgModalImg" alt="">
+</div>
+
+<script>
+  // --- SHARE BUTTON FUNCTIONALITY ---
+  // Хуваалцах товч болон modal-уудыг устгасан тул холбоотой JS-ийг устгав
+
+  // --- ХУВААЛЦСАН ЛИНКЭЭР ОРЖ ИРСЭН ҮЕД ---
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    if(params.has('data')){
+      try {
+        const b64 = params.get('data');
+        const json = decodeURIComponent(escape(atob(b64)));
+        const allData = JSON.parse(json);
+        // Table data
+        if(allData.table && Array.isArray(allData.table)){
+          setTimeout(()=>{
+            document.querySelectorAll('#requirementList tr').forEach((tr,i)=>{
+              const row = allData.table[i]||[];
+              tr.querySelectorAll('textarea, input[type=text], select').forEach((el,j)=>{
+                if(row[j]!==undefined) el.value=row[j];
+              });
+            });
+          }, 200);
+        }
+        // Images
+        if(allData.images && typeof allData.images==='object'){
+          setTimeout(()=>{
+            document.querySelectorAll('#requirementList tr').forEach((tr,trIndex)=>{
+              const cell = tr.querySelector('.img-cell');
+              if(!cell) return;
+              const imgList = cell.querySelector('.img-list');
+              imgList.innerHTML = '';
+              (allData.images[trIndex]||[]).forEach(src=>{
+                const imgItem = document.createElement('div');
+                imgItem.className = 'img-item';
+                const img = document.createElement('img');
+                img.src = src;
+                img.onclick = () => showImgModal(img.src);
+                const btn = document.createElement('button');
+                btn.className = 'img-remove-btn';
+                btn.innerHTML = 'Устгах';
+                btn.onclick = function(e) {
+                  e.stopPropagation();
+                  imgItem.remove();
+                  saveImages(cell);
+                };
+                imgItem.appendChild(img);
+                imgItem.appendChild(btn);
+                imgList.appendChild(imgItem);
+              });
+            });
+          }, 300);
+        }
+      } catch(e){ alert('Өгөгдлийг уншиж чадсангүй!'); }
+    }
+  })();
+  const labels = [
+    'Байгууллагын төлөв байдал, манлайлал, төлөвлөлт, НМТ-ны бодлого, ерөнхий  шаардлага','Сонирхогч талууд, ажилтнуудын ба сонирхогч талуудын хэрэгцээ','Нэгдсэн менежментийн тогтолцооны хамрах хүрээг тодорхойлох','Нэгдсэн менежментийн тогтолцоо ба үйл явц','Манлайлал ба үүрэг амлалт',
+    'Нэгдсэн менежментийн тогтол-цооны бодлого','Ажилтнуудын оролцоо ба зөвлөлдөөн','Текст 17, Текст 18, Текст 19',
+    'Текст 20','Текст 21','Текст 22','Текст 23','Текст 24',
+    'Текст 25','Текст 26','Текст 27','Текст 28','Текст 29',
+    'Текст 30','Текст 31','Текст 32','Текст 33','Текст 34',
+    'Текст 35','Текст 36',
+    '', '', '', '' // Сүүлд нэмэгдсэн 4 хоосон мөрийг бүртгэх
+  ];
+
+  // 'Нэгдсэн менежментийн тогтол-цооны бодлого' мөрийн дараа шинэ мөр динамикаар оруулах
+  const labelsWithInsert = [];
+  labels.forEach((label, i) => {
+    labelsWithInsert.push(label);
+    if (label === 'Нэгдсэн менежментийн тогтол-цооны бодлого') {
+      labelsWithInsert.push('Байгууллага дахь үүрэг хариуцлага эрх мэдэл');
+    }
+  });
+
+  const tbody = document.getElementById('requirementList');
+
+  // Мөр нэгтгэх тохиргоо: {start: эхлэх индекс, rowspan: хэдэн мөр нэгтгэх}
+  const mergeRows = [
+    { start: 9, rowspan: 2 }, // 10, 11-р мөр
+    { start: 19, rowspan: 2 }, // 20, 21-р мөр
+    { start: 27, rowspan: 2 } // 28, 29-р мөр
+  ];
+
+  labelsWithInsert.forEach((label, i) => {
+    // Мөр нэгтгэх тохиргоо байгаа эсэхийг шалгах
+    const merge = mergeRows.find(m => m.start === i);
+    const isMergedChild = mergeRows.some(m => i > m.start && i < m.start + m.rowspan);
+
+    if (merge) {
+      // Эхний багана rowspan-тай, merged-row класс
+      const tr = document.createElement('tr');
+      tr.classList.add('merged-row');
+      tr.innerHTML = `
+        <td class="req-merge" rowspan="${merge.rowspan}">
+          <textarea class="table-textarea req-label" placeholder="Шаардлага оруулах…">${label}</textarea>
+        </td>
+        <td><textarea class="table-textarea content-label" placeholder="Агуулга оруулах…">Текст</textarea></td>
+        <td><textarea class="table-textarea" placeholder="Дэлгэрэнгүй тайлбар…"></textarea></td>
+        <td><div class="img-cell"><div class="img-list"></div><button type="button" class="img-add-btn" onclick="triggerFile(this)">+</button><input type="file" accept="image/*" style="display:none" multiple onchange="previewImages(this)"></div></td>
+        <td><select class="table-input"><option value="1">Давуу тал</option><option value="2">Тохирол</option><option value="3">Жижиг үл тохирол</option><option value="4">Том үл тохирол</option></select></td>
+        <td><textarea class="table-textarea rec-label" placeholder="Зөвлөмж оруулах…">Текст</textarea></td>
+      `;
+      tbody.appendChild(tr);
+    } else if (isMergedChild) {
+      // Мөр нэгтгэлийн үргэлжлэл: эхний багана байхгүй, merged-row класс
+      const tr = document.createElement('tr');
+      tr.classList.add('merged-row');
+      tr.innerHTML = `
+        <td><textarea class="table-textarea content-label" placeholder="Агуулга оруулах…">Текст</textarea></td>
+        <td><textarea class="table-textarea" placeholder="Дэлгэрэнгүй тайлбар…"></textarea></td>
+        <td><div class="img-cell"><div class="img-list"></div><button type="button" class="img-add-btn" onclick="triggerFile(this)">+</button><input type="file" accept="image/*" style="display:none" multiple onchange="previewImages(this)"></div></td>
+        <td><select class="table-input"><option value="1">Давуу тал</option><option value="2">Тохирол</option><option value="3">Жижиг үл тохирол</option><option value="4">Том үл тохирол</option></select></td>
+        <td><textarea class="table-textarea rec-label" placeholder="Зөвлөмж оруулах…">Текст</textarea></td>
+      `;
+      tbody.appendChild(tr);
+    } else if (label === 'Текст 17, Текст 18, Текст 19') {
+      // ...хуучин код хэвээр...
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="req-merge" rowspan="3">
+          <textarea class="table-textarea req-label" placeholder="Эрсдэл болон боломжуудыг авч үзэх арга хэмжээ">Эрсдэл болон боломжуудыг авч үзэх арга хэмжээ</textarea>
+        </td>
+        <td><textarea class="table-textarea content-label" placeholder="Агуулга оруулах…">Текст</textarea></td>
+        <td><textarea class="table-textarea" placeholder="Дэлгэрэнгүй тайлбар…"></textarea></td>
+        <td><div class="img-cell"><div class="img-list"></div><button type="button" class="img-add-btn" onclick="triggerFile(this)">+</button><input type="file" accept="image/*" style="display:none" multiple onchange="previewImages(this)"></div></td>
+        <td><select class="table-input"><option value="1">Давуу тал</option><option value="2">Тохирол</option><option value="3">Жижиг үл тохирол</option><option value="4">Том үл тохирол</option></select></td>
+        <td><textarea class="table-textarea rec-label" placeholder="Зөвлөмж оруулах…">Текст</textarea></td>
+      `;
+      tbody.appendChild(tr);
+      for (let j = 0; j < 2; j++) {
+        const tr2 = document.createElement('tr');
+        tr2.innerHTML = `
+          <td><textarea class="table-textarea content-label" placeholder="Агуулга оруулах…">Текст</textarea></td>
+          <td><textarea class="table-textarea" placeholder="Дэлгэрэнгүй тайлбар…"></textarea></td>
+          <td><div class="img-cell"><div class="img-list"></div><button type="button" class="img-add-btn" onclick="triggerFile(this)">+</button><input type="file" accept="image/*" style="display:none" multiple onchange="previewImages(this)"></div></td>
+          <td><select class="table-input"><option value="1">Давуу тал</option><option value="2">Тохирол</option><option value="3">Жижиг үл тохирол</option><option value="4">Том үл тохирол</option></select></td>
+          <td><textarea class="table-textarea rec-label" placeholder="Зөвлөмж оруулах…">Текст</textarea></td>
+        `;
+        tbody.appendChild(tr2);
+      }
+    } else if (label !== 'Текст 18' && label !== 'Текст 19') {
+      // Энгийн мөрүүд
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <textarea class="table-textarea req-label" placeholder="Шаардлага оруулах…">${label}</textarea>
+        </td>
+        <td><textarea class="table-textarea content-label" placeholder="Агуулга оруулах…">Текст</textarea></td>
+        <td><textarea class="table-textarea" placeholder="Дэлгэрэнгүй тайлбар…"></textarea></td>
+        <td><div class="img-cell"><div class="img-list"></div><button type="button" class="img-add-btn" onclick="triggerFile(this)">+</button><input type="file" accept="image/*" style="display:none" multiple onchange="previewImages(this)"></div></td>
+        <td><select class="table-input"><option value="1">Давуу тал</option><option value="2">Тохирол</option><option value="3">Жижиг үл тохирол</option><option value="4">Том үл тохирол</option></select></td>
+        <td><textarea class="table-textarea rec-label" placeholder="Зөвлөмж оруулах…">Текст</textarea></td>
+      `;
+      tbody.appendChild(tr);
+    }
+  });
+
+    // ...хоосон мөрийг labels дээр бүртгэсэн тул энд давхар нэмэх шаардлагагүй...
+
+  function triggerFile(btn) {
+    btn.parentElement.querySelector('input[type=file]').click();
+  }
+
+  function previewImages(input) {
+    const cell = input.closest('.img-cell');
+    const imgList = cell.querySelector('.img-list');
+    let currentCount = imgList.querySelectorAll('.img-item').length;
+    const files = Array.from(input.files).slice(0, 5 - currentCount);
+    files.forEach(file => {
+      if (imgList.querySelectorAll('.img-item').length >= 5) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const imgItem = document.createElement('div');
+        imgItem.className = 'img-item';
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        img.onclick = () => showImgModal(img.src);
+        const btn = document.createElement('button');
+        btn.className = 'img-remove-btn';
+        btn.innerHTML = 'Устгах';
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          imgItem.remove();
+          saveImages(cell);
+        };
+        imgItem.appendChild(img);
+        imgItem.appendChild(btn);
+        imgList.appendChild(imgItem);
+        saveImages(cell);
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  }
+
+  // Зураг бүрийг localStorage-д хадгалах, устгах үед хадгалах
+  function saveImages(cell) {
+    // img-cell бүрт parent tr index-ээр хадгална
+    const tr = cell.closest('tr');
+    const trIndex = Array.from(tr.parentNode.children).indexOf(tr);
+    const imgList = cell.querySelector('.img-list');
+    const imgs = Array.from(imgList.querySelectorAll('img')).map(img => img.src);
+    let auditImages = JSON.parse(localStorage.getItem('auditImages') || '{}');
+    auditImages[trIndex] = imgs;
+    localStorage.setItem('auditImages', JSON.stringify(auditImages));
+  }
+
+  // Хуудас ачааллахад зургуудыг сэргээх
+  window.addEventListener('DOMContentLoaded', function() {
+    // ...хуучин код...
+    setTimeout(restoreImages, 100);
+  });
+
+  function restoreImages() {
+    let auditImages = JSON.parse(localStorage.getItem('auditImages') || '{}');
+    document.querySelectorAll('#requirementList tr').forEach((tr, trIndex) => {
+      const cell = tr.querySelector('.img-cell');
+      if (!cell) return;
+      const imgList = cell.querySelector('.img-list');
+      imgList.innerHTML = '';
+      (auditImages[trIndex] || []).forEach(src => {
+        const imgItem = document.createElement('div');
+        imgItem.className = 'img-item';
+        const img = document.createElement('img');
+        img.src = src;
+        img.onclick = () => showImgModal(img.src);
+        const btn = document.createElement('button');
+        btn.className = 'img-remove-btn';
+        btn.innerHTML = 'Устгах';
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          imgItem.remove();
+          saveImages(cell);
+        };
+        imgItem.appendChild(img);
+        imgItem.appendChild(btn);
+        imgList.appendChild(imgItem);
+      });
+    });
+  }
+
+  function showImgModal(src) {
+    const modal = document.getElementById('imgModal');
+    const modalImg = document.getElementById('imgModalImg');
+    modalImg.src = src;
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+  }
+
+  function hideImgModal() {
+    document.getElementById('imgModal').classList.remove('active');
+    document.getElementById('imgModalImg').src = '';
+    document.body.classList.remove('modal-open');
+  }
+
+  document.getElementById('imgModalClose').onclick = function() {
+    hideImgModal();
+  };
+
+  document.getElementById('imgModal').onclick = function(e) {
+    if (e.target === this) hideImgModal();
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hideImgModal();
+  });
+
+  // Бүх текст болон select-ийн утгыг localStorage-д хадгалах
+  function saveTableData() {
+    const data = [];
+    document.querySelectorAll('#requirementList tr').forEach(tr => {
+      const row = [];
+      tr.querySelectorAll('textarea, input[type=text], select').forEach(el => {
+        row.push(el.value);
+      });
+      data.push(row);
+    });
+    localStorage.setItem('auditTableData', JSON.stringify(data));
+  }
+
+  // localStorage-с өгөгдлийг сэргээх
+  function loadTableData() {
+    const data = JSON.parse(localStorage.getItem('auditTableData') || '[]');
+    if (!data.length) return;
+    document.querySelectorAll('#requirementList tr').forEach((tr, i) => {
+      const row = data[i] || [];
+      tr.querySelectorAll('textarea, input[type=text], select').forEach((el, j) => {
+        if (row[j] !== undefined) el.value = row[j];
+      });
+    });
+  }
+
+  function unlockRequirementListControls() {
+    const list = document.getElementById('requirementList');
+    if (!list) {
+      return;
+    }
+
+    list.querySelectorAll('textarea, input, select, button').forEach(el => {
+      if ('readOnly' in el) {
+        el.readOnly = false;
+      }
+      if ('disabled' in el) {
+        el.disabled = false;
+      }
+      delete el.dataset.viewModeReadonly;
+      delete el.dataset.viewModeDisabled;
+    });
+  }
+
+  // Хэрэглэгчийн гараас өөрчлөлт орох бүрт автоматаар хадгална
+  document.addEventListener('input', function(e) {
+    if (e.target.closest('#requirementList')) {
+      saveTableData();
+    }
+  });
+
+    window.addEventListener('DOMContentLoaded', function() {
+      loadTableData();
+      updateSelectCounter();
+      updateSelectColors();
+      unlockRequirementListControls();
+      setTimeout(unlockRequirementListControls, 200);
+    });
+
+    document.addEventListener('input', function(e) {
+      if (e.target.closest('#requirementList')) {
+        saveTableData();
+        if (e.target.tagName === 'SELECT') {
+          updateSelectCounter();
+          updateSelectColors();
+        }
+      }
+    });
+
+    function updateSelectCounter() {
+      // Сонголтуудыг ангиллаар нь тоолох
+      const selects = document.querySelectorAll('#requirementList select');
+      const counts = { '1': 0, '2': 0, '3': 0, '4': 0 };
+      selects.forEach(sel => {
+        if (counts[sel.value] !== undefined) counts[sel.value]++;
+      });
+      for (let k = 1; k <= 4; k++) {
+        document.getElementById('count-' + k).textContent = counts[k];
+      }
+    }
+
+    function updateSelectColors() {
+      const selects = document.querySelectorAll('#requirementList select.table-input');
+      selects.forEach(sel => {
+        sel.classList.remove('color-1', 'color-2', 'color-3', 'color-4');
+        if (sel.value === '1') sel.classList.add('color-1');
+        else if (sel.value === '2') sel.classList.add('color-2');
+        else if (sel.value === '3') sel.classList.add('color-3');
+        else if (sel.value === '4') sel.classList.add('color-4');
+      });
+    }
+
+  unlockRequirementListControls();
+</script>
+</body>
+</html>

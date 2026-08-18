@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПАССПОРТЫН ҮЗЛЭГ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rail: #1a1a2e;
+            --rail-mid: #16213e;
+            --rail-light: #0f3460;
+            --accent: #e94560;
+            --accent2: #f5a623;
+            --green: #00d4aa;
+            --text: #e8e8e8;
+            --muted: #7f8c8d;
+            --border: rgba(255,255,255,0.08);
+            --card: rgba(255,255,255,0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--rail);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px),
+                repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.012) 40px, rgba(255,255,255,0.012) 41px);
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text);
+        }
+        .header h1 span { color: var(--text); }
+        .header p { color: var(--muted); font-size: 0.75rem; margin-top: 6px; letter-spacing: 2px; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* LEFT PANEL */
+        .left-panel { display: flex; flex-direction: column; gap: 16px; }
+
+        .panel-card {
+            background: var(--rail-mid);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .panel-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text);
+            padding: 12px 16px;
+            background: rgba(233,69,96,0.08);
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-body { padding: 16px; }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .input-group label { font-size: 0.7rem; color: var(--muted); letter-spacing: 1px; }
+        .input-group input {
+            background: var(--rail);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 9px 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+
+        .btn {
+            width: 100%;
+            padding: 11px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #c0392b; transform: translateY(-1px); }
+        .btn.secondary {
+            background: transparent;
+            border: 1px solid var(--accent2);
+            color: var(--accent2);
+            margin-top: 6px;
+        }
+        .btn.secondary:hover { background: rgba(245,166,35,0.1); }
+
+        /* SEARCH PANEL */
+        .search-input-wrap { position: relative; margin-bottom: 10px; }
+        .search-input-wrap input {
+            background: var(--rail);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 9px 12px 9px 36px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+        .search-input-wrap input:focus { outline: none; border-color: var(--green); }
+        .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.9rem; }
+
+        .search-results { max-height: 320px; overflow-y: auto; }
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--border);
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: rgba(255,255,255,0.05); }
+        .sri-label { font-size: 0.78rem; }
+        .sri-label span { color: var(--accent2); font-weight: 500; }
+        .mark-btn {
+            background: none;
+            border: 1px solid var(--green);
+            color: var(--green);
+            border-radius: 4px;
+            padding: 3px 9px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            transition: all 0.15s;
+        }
+        .mark-btn:hover { background: var(--green); color: var(--rail); }
+        .mark-btn.marked { background: var(--green); color: var(--rail); }
+        .mark-btn-range {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.55rem;
+            letter-spacing: 0.5px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.8);
+            color: var(--rail);
+            font-weight: 600;
+        }
+        .sri-count {
+            font-size: 0.7rem;
+            color: var(--accent2);
+            background: rgba(245,166,35,0.15);
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-right: 6px;
+        }
+
+        .input-group select {
+            background: var(--rail);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 9px 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+        }
+        .sequence-feedback {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box {
+            background: var(--rail);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-box.full { grid-column: 1 / -1; }
+        .stat-num {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .stat-num-input {
+            width: 100%;
+            text-align: center;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 6px;
+            color: inherit;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        .stat-num-input:focus { outline: none; border-color: var(--green); }
+        .stat-num.accent { color: var(--accent); }
+        .stat-num.green { color: var(--green); }
+        .stat-num.orange { color: var(--accent2); }
+        .stat-lbl { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+
+        /* CONSECUTIVE TABLE */
+        .consec-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .consec-table th {
+            background: rgba(255,255,255,0.05);
+            color: var(--muted);
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 7px 10px;
+            text-align: left;
+        }
+        .consec-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
+        .consec-table tr:last-child td { border-bottom: none; }
+        .consec-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.68rem;
+            font-weight: 500;
+        }
+        .badge-2 { background: rgba(127,140,141,0.16); color: var(--text); }
+        .badge-3 { background: rgba(0,212,170,0.15); color: var(--green); }
+        .badge-4 { background: rgba(245,166,35,0.15); color: var(--accent2); }
+        .badge-5 { background: rgba(233,69,96,0.15); color: var(--accent); }
+
+        .point-chip-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+        .point-chip {
+            border: 1px solid var(--border);
+            background: var(--rail);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .point-chip:hover { border-color: var(--accent2); color: var(--accent2); }
+        .point-chip.active {
+            border-color: var(--green);
+            background: rgba(0,212,170,0.18);
+            color: var(--green);
+            font-weight: 600;
+        }
+        .km-dup-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+        .km-dup-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text); }
+        .km-dup-row span:first-child { color: var(--muted); }
+        .replace-cell { display: flex; flex-direction: column; gap: 6px; }
+        .replace-chip { display: inline-block; padding: 2px 8px; border-radius: 10px; background: rgba(233,69,96,0.15); color: var(--accent); font-size: 0.68rem; margin-right: 4px; }
+        .row-delete-btn {
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--text);
+            border-radius: 5px;
+            padding: 3px 8px;
+            font-size: 0.68rem;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+        }
+        .row-delete-btn:hover { background: rgba(233,69,96,0.12); }
+
+        /* RIGHT PANEL - KM blocks */
+
+        .km-container { display: flex; flex-direction: column; gap: 16px; }
+
+        .km-block {
+            background: var(--rail-mid);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .km-header {
+            background: linear-gradient(90deg, var(--rail-light), rgba(15,52,96,0.5));
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .km-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            color: var(--accent2);
+        }
+        .km-total-badge {
+            background: rgba(233,69,96,0.15);
+            border: 1px solid rgba(233,69,96,0.3);
+            color: var(--text);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: 'Oswald', sans-serif;
+        }
+
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            padding: 14px;
+            background: rgba(0,0,0,0.15);
+        }
+
+        .unit-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .unit-item label {
+            font-size: 0.65rem;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+        .unit-item input {
+            background: var(--rail);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 5px;
+            padding: 6px 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            text-align: center;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+        .unit-item input:focus { outline: none; border-color: var(--accent2); }
+        .unit-item input.marked {
+            border-color: var(--green);
+            background: rgba(0,212,170,0.08);
+            color: var(--green);
+        }
+
+        /* CONSECUTIVE MARKED TABLE */
+        .consec-marked-section {
+            background: var(--rail-mid);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+        .empty-state p { font-size: 0.8rem; letter-spacing: 1px; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--rail); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Дэр модны <span>тооллого</span></h1>
+    <p>хавар/намрын пасспортын үззлэг</p>
+</div>
+
+<div class="main-grid">
+    <!-- LEFT -->
+    <div class="left-panel">
+
+        <!-- Add KM -->
+        <div class="panel-card">
+            <div class="panel-title">Километр байршил</div>
+            <div class="panel-body">
+                <div class="input-group">
+                    <label>КМ ДУГААР</label>
+                    <input type="number" id="kmInput" placeholder="Жишээ: 5">
+                </div>
+                <div class="input-group">
+                    <label>ҮЕ ТОО</label>
+                    <input type="number" id="unitInput" placeholder="Жишээ: 40">
+                </div>
+                <button class="btn" onclick="addKilometer()">КМ НЭМЭХ</button>
+            </div>
+        </div>
+
+        <!-- Batch Mark -->
+        <div class="panel-card">
+            <div class="panel-title">Дараалсан Цэг Тэмдэглэх</div>
+            <div class="panel-body">
+                <div class="input-group">
+                    <label>КМ Сонгох</label>
+                    <select id="rangeKmSelect" onchange="refreshStageOptions()">
+                        <option value="">КМ нэмнэ үү</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Үе</label>
+                    <select id="rangeStageSelect" onchange="updateSequenceFeedback()" disabled>
+                        <option value="">КМ сонгоно уу</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Дараалсан цэгүүд бол (15, 16, 17 гэсэн/, /хэлбэртэй)</label>
+                    <input type="text" id="rangePointsInput" placeholder="25-28, 30, 32" oninput="updateSequenceFeedback()">
+                </div>
+                <button class="btn" onclick="markConsecutiveRange()">Тэнцэхгүй дэр  тэмдэглэх</button>
+                <div class="sequence-feedback" id="sequenceFeedback"></div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="panel-card">
+            <div class="panel-title">Нийт статистик</div>
+            <div class="panel-body">
+                <div class="stats-grid">
+                    <div class="stat-box full">
+                        <div class="stat-num accent" id="statTotalSleepers">0</div>
+                        <div class="stat-lbl">НИЙТ ДЭР МОД (ширхэг)</div>
+                    </div>
+                    <div class="stat-box">
+                        <input type="number" class="stat-num stat-num-input green" id="statMarked" value="0" min="0">
+                        <div class="stat-lbl">ТӨМӨР БЕТОН ДЭР</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num orange" id="statKmCount">0</div>
+                        <div class="stat-lbl">КМ ТОО</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" style="color:#74b9ff" id="statTotalEntries">0</div>
+                        <div class="stat-lbl">ТЭНЦЭХГҮЙ ДЭР</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" style="color:#a29bfe" id="stat3">0</div>
+                        <div class="stat-lbl">3 ДАРААЛСАН </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num orange" id="stat4">0</div>
+                        <div class="stat-lbl">4 ДАРААЛСАН </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num accent" id="stat5">0</div>
+                        <div class="stat-lbl">5 ДАРААЛСАН </div>
+                    </div>
+                    <div class="stat-box full">
+                        <div class="stat-num" style="color:#ff7675" id="statReplaceTotal">0</div>
+                        <div class="stat-lbl">НИЙТ СОЛИХ ДЭР МОД</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+        <!-- Consecutive marked table -->
+        <div class="panel-card consec-marked-section" id="consecSection" style="display:none; margin-bottom:16px;">
+            <div class="panel-title">⚠️ Дараалан тэмдэглэсэн тэнцэхгүй дэрүүд</div>
+            <div class="panel-body" style="padding:10px 10px 0;">
+                <div class="km-dup-list" id="replaceKmTotals"></div>
+            </div>
+            <div class="panel-body" style="padding:0;">
+                <table class="consec-table">
+                    <thead>
+                        <tr>
+                            <th>КМ</th>
+                            <th>БҮРТГЭЛ / ҮЕ</th>
+                            <th>ДАРААЛСАН ЦЭГҮҮД</th>
+                            <th>СОЛИХ</th>
+                            <th>АНГИЛАЛ</th>
+                            <th>ҮЙЛДЭЛ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consecTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="km-container" id="kilometersContainer">
+            <div class="empty-state">
+                <div class="icon">🛤️</div>
+                <p>Зүүн талын цэснээс КМ нэмнэ үү</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let totalData = {};   // { km: [val, val, ...] }
+let markedData = {};  // { km: [bool, bool, ...] }
+let kmOrder = [];
+let sequenceSelections = {}; // { "{km}-{stage}": [ { points: [], display: '', total: 0, runs: '' } ] }
+let replaceSelections = {}; // { runKey: [point1, point2, ...] }
+
+function compareKmValues(a, b) {
+    const numA = Number(a);
+    const numB = Number(b);
+    const bothNumeric = !Number.isNaN(numA) && !Number.isNaN(numB);
+    if (bothNumeric) return numA - numB;
+    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function reorderKmBlocks() {
+    const container = document.getElementById('kilometersContainer');
+    if (!container) return;
+
+    const existingBlocks = Array.from(container.querySelectorAll('.km-block'));
+    existingBlocks.forEach(block => {
+        const km = String(block.id || '').replace('km-block-', '');
+        if (km && !kmOrder.includes(km)) kmOrder.push(km);
+    });
+
+    kmOrder.sort(compareKmValues);
+    kmOrder.forEach(km => {
+        const block = document.getElementById(`km-block-${km}`);
+        if (block) container.appendChild(block);
+    });
+}
+
+function addKilometer() {
+    const km = document.getElementById('kmInput').value.trim();
+    const units = parseInt(document.getElementById('unitInput').value);
+    if (!km || !units || units < 1) return alert("Утга бүрэн оруулна уу!");
+    if (totalData[km]) return alert(`${km}-р КМ аль хэдийн нэмэгдсэн байна!`);
+
+    totalData[km] = new Array(units).fill(0);
+    markedData[km] = new Array(units).fill(false);
+    kmOrder.push(km);
+
+    const container = document.getElementById('kilometersContainer');
+    // Remove empty state
+    const empty = container.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const kmDiv = document.createElement('div');
+    kmDiv.className = 'km-block';
+    kmDiv.id = `km-block-${km}`;
+    kmDiv.innerHTML = `
+        <div class="km-header">
+            <span class="km-title">📍 ${km}-р КИЛОМЕТР &nbsp;<span style="color:var(--muted);font-size:0.75rem;font-family:IBM Plex Mono">(${units} үе)</span></span>
+            <span class="km-total-badge">Нийт: <b id="total-km-${km}">0</b> ш</span>
+        </div>
+        <div class="unit-grid" id="grid-${km}"></div>
+    `;
+    container.appendChild(kmDiv);
+
+    const grid = document.getElementById(`grid-${km}`);
+    for (let i = 1; i <= units; i++) {
+        const unitDiv = document.createElement('div');
+        unitDiv.className = 'unit-item';
+        unitDiv.innerHTML = `
+            <label>${i}-р үе</label>
+            <input type="number" id="unit-${km}-${i-1}" value="0" oninput="updateCount('${km}', ${i-1}, this.value)">
+        `;
+        grid.appendChild(unitDiv);
+    }
+
+    document.getElementById('kmInput').value = '';
+    document.getElementById('unitInput').value = '';
+    reorderKmBlocks();
+    updateStats();
+    renderSearch();
+    refreshConsecutiveSelectors();
+}
+
+function updateCount(km, idx, value) {
+    totalData[km][idx] = parseInt(value) || 0;
+    const kmSum = totalData[km].reduce((a,b) => a+b, 0);
+    document.getElementById(`total-km-${km}`).innerText = kmSum.toLocaleString();
+    updateStats();
+}
+
+function setMark(km, idx, state) {
+    if (!markedData[km]) return;
+    markedData[km][idx] = state;
+    const inputEl = document.getElementById(`unit-${km}-${idx}`);
+    if (inputEl) {
+        inputEl.classList.toggle('marked', state);
+    }
+    if (!state) {
+        clearReplaceSelectionsForStage(km, idx + 1);
+        delete sequenceSelections[`${km}-${idx + 1}`];
+        updateSequenceFeedback();
+    }
+    updateStats();
+    renderSearch();
+    renderConsecTable();
+}
+
+function toggleMark(km, idx) {
+    setMark(km, idx, !markedData[km][idx]);
+}
+
+function updateStats() {
+    let grand = 0;
+    for (let km in totalData) grand += totalData[km].reduce((a,b)=>a+b,0);
+    document.getElementById('statTotalSleepers').innerText = grand.toLocaleString();
+    document.getElementById('statKmCount').innerText = kmOrder.length;
+
+    // statMarked is manual input by user
+
+    // Consecutive point counts (KM-ээс үл хамааран)
+    const pointRuns = getGlobalConsecutivePointRuns();
+    const c3 = pointRuns.filter(r => r.len === 3).length;
+    const c4 = pointRuns.filter(r => r.len === 4).length;
+    const c5 = pointRuns.filter(r => r.len >= 5).length;
+    document.getElementById('stat3').innerText = c3;
+    document.getElementById('stat4').innerText = c4;
+    document.getElementById('stat5').innerText = c5;
+
+    const totalEntries = getTotalSequenceEntryCount();
+    document.getElementById('statTotalEntries').innerText = totalEntries;
+    document.getElementById('statReplaceTotal').innerText = getTotalReplaceCount();
+}
+
+function getTotalReplaceCount() {
+    return Object.values(replaceSelections).reduce((sum, points) => {
+        const list = Array.isArray(points) ? points : [];
+        return sum + list.length;
+    }, 0);
+}
+
+function getTotalSequenceEntryCount() {
+    return Object.values(sequenceSelections).reduce((sum, rawSelections) => {
+        const selections = Array.isArray(rawSelections) ? rawSelections : (rawSelections ? [rawSelections] : []);
+        const pointsCount = selections.reduce((selectionSum, selection) => {
+            if (!selection || !Array.isArray(selection.points)) return selectionSum;
+            return selectionSum + selection.points.length;
+        }, 0);
+        return sum + pointsCount;
+    }, 0);
+}
+
+function getGlobalConsecutivePointRuns() {
+    const runs = [];
+    Object.entries(sequenceSelections).forEach(([key, rawSelections]) => {
+        const selections = Array.isArray(rawSelections) ? rawSelections : [rawSelections];
+        selections.forEach(selection => {
+            if (!selection || !Array.isArray(selection.points) || selection.points.length === 0) return;
+            const sorted = selection.points
+                .filter(point => Number.isInteger(point))
+                .sort((a, b) => a - b);
+            const localRuns = buildPointRuns(sorted).map(run => ({
+                ...run,
+                len: run.end - run.start + 1,
+                key
+            }));
+            runs.push(...localRuns);
+        });
+    });
+    return runs;
+}
+
+function getRecordedPointRuns() {
+    const rows = [];
+    Object.entries(sequenceSelections).forEach(([key, rawSelections]) => {
+        const [km, stageRaw] = key.split('-');
+        const stage = parseInt(stageRaw, 10);
+        const selections = Array.isArray(rawSelections) ? rawSelections : [rawSelections];
+        selections.forEach((selection, index) => {
+            if (!selection || !Array.isArray(selection.points) || selection.points.length === 0) return;
+            const sorted = selection.points
+                .filter(point => Number.isInteger(point))
+                .sort((a, b) => a - b);
+            const localRuns = buildPointRuns(sorted).map(run => ({
+                km,
+                stage,
+                start: run.start,
+                end: run.end,
+                len: run.end - run.start + 1,
+                entryNo: index + 1,
+                points: Array.from({ length: run.end - run.start + 1 }, (_, i) => run.start + i),
+                runKey: buildRunKey(km, stage, index + 1, run.start, run.end)
+            })).filter(run => run.len >= 2);
+            rows.push(...localRuns);
+        });
+    });
+    return rows;
+}
+
+function buildRunKey(km, stage, entryNo, start, end) {
+    return `${km}|${stage}|${entryNo}|${start}|${end}`;
+}
+
+function clearReplaceSelectionsForStage(km, stage) {
+    const prefix = `${km}|${stage}|`;
+    Object.keys(replaceSelections).forEach(key => {
+        if (key.startsWith(prefix)) delete replaceSelections[key];
+    });
+}
+
+function getConsecutiveGroups() {
+    const groups = [];
+    for (let km of kmOrder) {
+        if (!markedData[km]) continue;
+        const arr = markedData[km];
+        let i = 0;
+        while (i < arr.length) {
+            if (arr[i]) {
+                let j = i;
+                while (j < arr.length && arr[j]) j++;
+                const len = j - i;
+                if (len >= 3) {
+                    const values = totalData[km]
+                        ? totalData[km].slice(i, j)
+                        : [];
+                    groups.push({ km, start: i + 1, end: j, len, values });
+                }
+                i = j;
+            } else {
+                i++;
+            }
+        }
+    }
+    return groups;
+}
+
+function renderConsecTable() {
+    const groups = getRecordedPointRuns();
+    const tbody = document.getElementById('consecTableBody');
+    const section = document.getElementById('consecSection');
+    pruneInvalidReplaceSelections(groups);
+
+    if (groups.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+    renderReplaceTotalsByKm(groups);
+    tbody.innerHTML = groups.map(g => {
+        const cls = g.len >= 5 ? 'badge-5' : g.len === 4 ? 'badge-4' : g.len === 3 ? 'badge-3' : 'badge-2';
+        const label = g.len >= 5 ? `${g.len} цэг` : `${g.len} цэг`;
+        const pointsDisplay = `${g.stage}-р үе / #${g.entryNo}`;
+        const selectedReplace = Array.isArray(replaceSelections[g.runKey]) ? replaceSelections[g.runKey] : [];
+        const chips = (g.points || []).map(point => {
+            const isActive = selectedReplace.includes(point);
+            return `<button class="point-chip ${isActive ? 'active' : ''}" onclick="selectConsecutivePoint('${g.km}', ${g.stage}, ${g.entryNo}, ${g.start}, ${g.end}, ${point})">${point}</button>`;
+        }).join('');
+        const valuesDisplay = `<div class="point-chip-wrap">${chips}</div>`;
+        const selectedDisplay = selectedReplace.length
+            ? selectedReplace.map(point => `<span class="replace-chip">${point}</span>`).join('')
+            : '<span style="color:var(--muted);font-size:0.68rem;">Сонгосон тоо алга</span>';
+        const replaceCell = `<div class="replace-cell"><div>${selectedDisplay}</div></div>`;
+        return `<tr>
+            <td><span style="color:var(--accent2);font-weight:600">${g.km} КМ</span></td>
+            <td>${pointsDisplay}</td>
+            <td>${valuesDisplay}</td>
+            <td>${replaceCell}</td>
+            <td><span class="badge ${cls}">${label}</span></td>
+            <td><button class="row-delete-btn" onclick="removeConsecutiveRow('${g.km}', ${g.stage}, ${g.entryNo}, ${g.start}, ${g.end})">Устгах</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function removeConsecutiveRow(km, stage, entryNo, start, end) {
+    const key = `${km}-${stage}`;
+    if (!sequenceSelections[key]) return;
+
+    const entries = Array.isArray(sequenceSelections[key])
+        ? sequenceSelections[key]
+        : [sequenceSelections[key]];
+    const index = entryNo - 1;
+    if (!entries[index] || !Array.isArray(entries[index].points)) return;
+
+    const updatedPoints = entries[index].points.filter(point => point < start || point > end);
+    if (updatedPoints.length === 0) {
+        entries.splice(index, 1);
+    } else {
+        const uniqueSorted = Array.from(new Set(updatedPoints)).sort((a, b) => a - b);
+        entries[index] = {
+            points: uniqueSorted,
+            display: uniqueSorted.join(', '),
+            runs: describePointRuns(uniqueSorted),
+            total: uniqueSorted.length
+        };
+    }
+
+    if (entries.length === 0) {
+        clearReplaceSelectionsForStage(km, stage);
+        delete sequenceSelections[key];
+        setMark(km, stage - 1, false);
+        return;
+    }
+
+    sequenceSelections[key] = entries;
+    updateSequenceFeedback();
+    renderConsecTable();
+    renderSearch();
+    updateStats();
+}
+
+function pruneInvalidReplaceSelections(groups) {
+    const validKeys = new Set(groups.map(g => g.runKey));
+    Object.keys(replaceSelections).forEach(key => {
+        if (!validKeys.has(key)) delete replaceSelections[key];
+    });
+}
+
+function renderReplaceTotalsByKm(groups) {
+    const container = document.getElementById('replaceKmTotals');
+    if (!container) return;
+    const totals = {};
+    groups.forEach(group => {
+        const selected = Array.isArray(replaceSelections[group.runKey]) ? replaceSelections[group.runKey] : [];
+        totals[group.km] = (totals[group.km] || 0) + selected.length;
+    });
+    const html = Object.keys(totals).length
+        ? Object.entries(totals).map(([km, count]) => `<div class="km-dup-row"><span>${km} КМ нийт солих</span><b>${count} дэр мод</b></div>`).join('')
+        : '<div class="km-dup-row"><span>Нийт солих</span><b>0 дэр мод</b></div>';
+    container.innerHTML = html;
+}
+
+function selectConsecutivePoint(km, stage, entryNo, start, end, point) {
+    const runKey = buildRunKey(km, stage, entryNo, start, end);
+    if (!Array.isArray(replaceSelections[runKey])) replaceSelections[runKey] = [];
+    if (replaceSelections[runKey].includes(point)) {
+        replaceSelections[runKey] = replaceSelections[runKey].filter(p => p !== point);
+    } else {
+        replaceSelections[runKey].push(point);
+        replaceSelections[runKey].sort((a, b) => a - b);
+    }
+
+    if (replaceSelections[runKey].length === 0) {
+        delete replaceSelections[runKey];
+    }
+    renderConsecTable();
+    updateStats();
+}
+
+function renderSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const container = document.getElementById('searchResults');
+    if (!searchInput || !container) return;
+    const q = searchInput.value.toLowerCase();
+
+    if (kmOrder.length === 0) {
+        container.innerHTML = `<div style="color:var(--muted);font-size:0.75rem;text-align:center;padding:20px;">Км нэмсний дараа хайлт хийнэ үү</div>`;
+        return;
+    }
+
+    let html = '';
+    for (let km of kmOrder) {
+        if (!totalData[km]) continue;
+        const units = totalData[km].length;
+        for (let i = 0; i < units; i++) {
+            const label = `${km} км — ${i+1}-р үе`;
+            if (q && !label.toLowerCase().includes(q)) continue;
+            const isMarked = markedData[km][i];
+            const val = totalData[km][i];
+            const seqEntries = sequenceSelections[`${km}-${i+1}`];
+            const normalizedEntries = Array.isArray(seqEntries) ? seqEntries : (seqEntries ? [seqEntries] : []);
+            const lastEntry = normalizedEntries.length ? normalizedEntries[normalizedEntries.length - 1] : null;
+            const seqSpan = lastEntry
+                ? `<span class="mark-btn-range">Сүүлд: ${lastEntry.display}${lastEntry.total ? ` (${lastEntry.total} цэг)` : ''} • Нийт ${normalizedEntries.length} удаа</span>`
+                : '';
+            html += `<div class="search-result-item">
+                <div>
+                    <div class="sri-label"><span>${km} КМ</span> / ${i+1}-р үе</div>
+                    ${val > 0 ? `<span class="sri-count">${val} ш</span>` : ''}
+                </div>
+                <button class="mark-btn ${isMarked?'marked':''}" onclick="toggleMark('${km}', ${i})">
+                    ${isMarked ? '✓ Тэмдэглэсэн' : 'Тэмдэглэх'}
+                    ${seqSpan}
+                </button>
+            </div>`;
+        }
+    }
+    container.innerHTML = html || `<div style="color:var(--muted);font-size:0.75rem;text-align:center;padding:20px;">Хайлтын үр дүн олдсонгүй</div>`;
+}
+
+function refreshConsecutiveSelectors() {
+    reorderKmBlocks();
+    const kmSelect = document.getElementById('rangeKmSelect');
+    if (!kmSelect) return;
+    const previous = kmSelect.value;
+    kmSelect.innerHTML = '<option value="">+ КМ нэмнэ үү</option>';
+    kmOrder.forEach(km => {
+        const option = document.createElement('option');
+        option.value = km;
+        option.textContent = `${km} КМ`;
+        kmSelect.appendChild(option);
+    });
+    kmSelect.value = kmOrder.includes(previous) ? previous : '';
+    refreshStageOptions();
+}
+
+function refreshStageOptions() {
+    const km = document.getElementById('rangeKmSelect').value;
+    const stageSelect = document.getElementById('rangeStageSelect');
+    if (!stageSelect) return;
+    if (!km || !totalData[km]) {
+        stageSelect.innerHTML = '<option value="">КМ сонгоно уу</option>';
+        stageSelect.disabled = true;
+        updateSequenceFeedback();
+        return;
+    }
+    const previousStage = stageSelect.value;
+    stageSelect.disabled = false;
+    stageSelect.innerHTML = '';
+    for (let i = 1; i <= totalData[km].length; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${i}-р үе`;
+        stageSelect.appendChild(option);
+    }
+    if (previousStage && parseInt(previousStage) <= totalData[km].length) {
+        stageSelect.value = previousStage;
+    }
+    updateSequenceFeedback();
+}
+
+function updateSequenceFeedback() {
+    const km = document.getElementById('rangeKmSelect')?.value;
+    const stage = document.getElementById('rangeStageSelect')?.value;
+    const rawPoints = document.getElementById('rangePointsInput')?.value;
+    const feedback = document.getElementById('sequenceFeedback');
+    if (!feedback) return;
+    const key = km && stage ? `${km}-${stage}` : '';
+    if (key && sequenceSelections[key]) {
+        const entries = Array.isArray(sequenceSelections[key]) ? sequenceSelections[key] : [sequenceSelections[key]];
+        const latest = entries[entries.length - 1] || {};
+        const { display, runs, total } = latest;
+        const runLabel = runs ? ` (${runs})` : '';
+        feedback.innerText = `${km} КМ ${stage}-р үе: ${display || '-'}${runLabel}${total ? ` — ${total} цэг` : ''} • Нийт ${entries.length} удаа бүртгэсэн`;
+        return;
+    }
+    if (rawPoints && rawPoints.trim()) {
+        const { points, display, runs } = describeInputPoints(rawPoints);
+        if (points.length > 0) {
+            const runLabel = runs ? ` (${runs})` : '';
+            feedback.innerText = `Сонгосон цэгүүд: ${display}${runLabel}`;
+            return;
+        }
+    }
+    feedback.innerText = '';
+}
+
+function markConsecutiveRange() {
+    const km = document.getElementById('rangeKmSelect').value;
+    const stage = parseInt(document.getElementById('rangeStageSelect').value);
+    const rawPoints = document.getElementById('rangePointsInput').value;
+    if (!km) return alert('КМ -ээ сонгоно уу.');
+    if (!stage || isNaN(stage)) return alert('Үе -г заавал сонгоно уу.');
+    if (!rawPoints || !rawPoints.trim()) return alert('Дараалсан цэгүүдийг оруулна уу.');
+    const { points, display, runs } = describeInputPoints(rawPoints);
+    if (points.length === 0) return alert('Ядаж нэг цэг оруулна уу.');
+    const key = `${km}-${stage}`;
+    if (!Array.isArray(sequenceSelections[key])) sequenceSelections[key] = [];
+    sequenceSelections[key].push({ points, display, runs, total: points.length });
+    setMark(km, stage - 1, true);
+    document.getElementById('rangePointsInput').value = '';
+    document.getElementById('sequenceFeedback').innerText = `${km} КМ ${stage}-р үе: ${display}${runs ? ` (${runs})` : ''} • Нийт ${sequenceSelections[key].length} удаа бүртгэв`;
+}
+
+function describeInputPoints(rawPoints) {
+    const parsed = parsePointInput(rawPoints);
+    const unique = Array.from(new Set(parsed)).sort((a, b) => a - b);
+    const display = unique.join(', ');
+    const runs = describePointRuns(unique);
+    return { points: unique, display, runs };
+}
+
+function parsePointInput(raw) {
+    if (!raw) return [];
+    const tokens = raw.split(',').map(part => part.trim()).filter(Boolean);
+    const points = [];
+    tokens.forEach(token => {
+        const rangeMatch = token.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (rangeMatch) {
+            let start = parseInt(rangeMatch[1], 10);
+            let end = parseInt(rangeMatch[2], 10);
+            if (isNaN(start) || isNaN(end)) return;
+            if (start > end) [start, end] = [end, start];
+            for (let num = start; num <= end; num++) {
+                points.push(num);
+            }
+            return;
+        }
+
+        const single = parseInt(token, 10);
+        if (!isNaN(single)) points.push(single);
+    });
+    return points;
+}
+
+function describePointRuns(points) {
+    const runs = buildPointRuns(points);
+    if (!runs.length) return '';
+    return runs.map(r => r.start === r.end ? `${r.start}` : `${r.start}-${r.end}`).join(', ');
+}
+
+function buildPointRuns(points) {
+    if (!points.length) return [];
+    const runs = [];
+    let start = points[0];
+    let prev = points[0];
+    for (let i = 1; i < points.length; i++) {
+        const current = points[i];
+        if (current === prev + 1) {
+            prev = current;
+            continue;
+        }
+        runs.push({ start, end: prev });
+        start = current;
+        prev = current;
+    }
+    runs.push({ start, end: prev });
+    return runs;
+}
+
+// Init
+reorderKmBlocks();
+updateStats();
+renderSearch();
+refreshConsecutiveSelectors();
+</script>
+</body>
+</html>

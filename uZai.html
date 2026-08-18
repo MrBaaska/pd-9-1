@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Төмөр Замын Уулзварын Зайн Хяналт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1520;
+  --bg-panel:#0f1e30;
+  --bg-panel-2:#142943;
+  --bg-input:#0c1927;
+  --border:#20385230;
+  --border-strong:#2a4562;
+  --text:#e6edf6;
+  --text-muted:#7e93ad;
+  --accent:#3f8cc9;
+  --accent-soft:#3f8cc922;
+  --rail-amber:#f5a623;
+  --signal-green:#33cc8c;
+  --signal-green-soft:#33cc8c22;
+  --signal-amber:#f5a623;
+  --signal-amber-soft:#f5a62322;
+  --signal-red:#ef5164;
+  --signal-red-soft:#ef516422;
+  --highlight-warn:#ffd93d;
+  --highlight-danger:#ef5164;
+  --display-font:'Rajdhani', sans-serif;
+  --body-font:'Inter', sans-serif;
+  --mono-font:'JetBrains Mono', monospace;
+  --radius:8px;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:var(--body-font);
+  background:
+    radial-gradient(circle at 15% 0%, #123252 0%, transparent 45%),
+    radial-gradient(circle at 85% 100%, #0d2338 0%, transparent 45%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding-bottom:48px;
+}
+
+/* ===== Rail-tie divider, the signature decorative motif ===== */
+.rail-divider{
+  height:14px;
+  background-image: repeating-linear-gradient(90deg, var(--border-strong) 0 3px, transparent 3px 22px);
+  position:relative;
+  opacity:.7;
+}
+.rail-divider::before, .rail-divider::after{
+  content:"";
+  position:absolute;
+  left:0; right:0;
+  height:2px;
+  background:var(--border-strong);
+}
+.rail-divider::before{ top:2px; }
+.rail-divider::after{ bottom:2px; }
+
+/* ===== Header ===== */
+header{
+  padding:28px clamp(16px,4vw,48px) 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.brand-icon{
+  width:46px;height:46px;
+  border-radius:10px;
+  background:linear-gradient(145deg, var(--bg-panel-2), var(--bg-panel));
+  border:1px solid var(--border-strong);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.brand-icon svg{ width:26px;height:26px; }
+h1{
+  font-family:var(--display-font);
+  font-weight:700;
+  font-size:clamp(20px,2.6vw,28px);
+  letter-spacing:.3px;
+  margin:0;
+  line-height:1.15;
+}
+.brand-sub{
+  font-size:12px;
+  color:var(--text-muted);
+  margin-top:3px;
+  letter-spacing:.4px;
+}
+
+/* Signal lamp — aggregate system status, the page's signature interactive element */
+.system-signal{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:var(--bg-panel);
+  border:1px solid var(--border-strong);
+  border-radius:999px;
+  padding:8px 18px 8px 8px;
+}
+.lamp{
+  width:16px;height:16px;
+  border-radius:50%;
+  background:var(--signal-green);
+  box-shadow:0 0 10px 2px var(--signal-green-soft), inset 0 0 3px rgba(0,0,0,.4);
+  animation:pulse 2.4s ease-in-out infinite;
+  flex-shrink:0;
+}
+.lamp.amber{ background:var(--signal-amber); box-shadow:0 0 10px 2px var(--signal-amber-soft), inset 0 0 3px rgba(0,0,0,.4); }
+.lamp.red{ background:var(--signal-red); box-shadow:0 0 10px 2px var(--signal-red-soft), inset 0 0 3px rgba(0,0,0,.4); animation-duration:1.1s; }
+@keyframes pulse{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.55; }
+}
+.system-signal-text{
+  font-family:var(--mono-font);
+  font-size:12.5px;
+  color:var(--text-muted);
+}
+.system-signal-text b{ color:var(--text); font-weight:600; }
+
+/* ===== Toolbar ===== */
+.toolbar{
+  margin:18px clamp(16px,4vw,48px) 0;
+  background:var(--bg-panel);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius);
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  gap:22px;
+  flex-wrap:wrap;
+}
+.toolbar-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.toolbar-label{
+  font-size:11.5px;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.threshold-input{
+  width:52px;
+  background:var(--bg-input);
+  border:1px solid var(--border-strong);
+  color:var(--text);
+  font-family:var(--mono-font);
+  font-size:13px;
+  border-radius:5px;
+  padding:5px 6px;
+  text-align:center;
+}
+.threshold-input:focus, .field:focus, .cell-input:focus{
+  outline:2px solid var(--accent);
+  outline-offset:1px;
+  background:#0e2135;
+}
+.spacer{ flex:1; }
+.btn{
+  border:1px solid var(--border-strong);
+  background:var(--bg-panel-2);
+  color:var(--text);
+  font-family:var(--body-font);
+  font-weight:600;
+  font-size:12.5px;
+  padding:9px 16px;
+  border-radius:6px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:background .15s, border-color .15s, transform .1s;
+  white-space:nowrap;
+}
+.btn:hover{ background:#1a3350; border-color:var(--accent); }
+.btn:active{ transform:translateY(1px); }
+.btn-primary{ background:var(--accent); border-color:var(--accent); color:#04121f; }
+.btn-primary:hover{ background:#5aa1d8; }
+.btn-danger{ color:var(--signal-red); }
+.btn-danger:hover{ border-color:var(--signal-red); background:var(--signal-red-soft); }
+.save-status{
+  font-family:var(--mono-font);
+  font-size:11.5px;
+  color:var(--text-muted);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.save-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--signal-green);
+  transition:background .2s;
+}
+.save-dot.saving{ background:var(--rail-amber); }
+
+/* ===== Table container ===== */
+.table-wrap{
+  margin:16px clamp(16px,4vw,48px) 0;
+  background:var(--bg-panel);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.table-scroll{
+  overflow-x:auto;
+  max-width:100%;
+}
+table{
+  border-collapse:collapse;
+  width:100%;
+  font-family:var(--mono-font);
+  font-size:11.5px;
+}
+th, td{
+  border:1px solid var(--border-strong);
+  padding:5px 4px;
+  text-align:center;
+  min-width:30px;
+  white-space:nowrap;
+}
+thead th{
+  background:var(--bg-panel-2);
+  color:var(--text-muted);
+  font-family:var(--body-font);
+  font-weight:600;
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+thead tr:first-child th{ padding:10px 6px; }
+tbody tr:nth-child(odd){ background:#0d1d2f; }
+tbody tr:nth-child(even){ background:#0f2236; }
+tbody tr:hover{ background:#15304c; }
+
+.field, .cell-input{
+  width:100%;
+  border:none;
+  background:transparent;
+  color:var(--text);
+  text-align:center;
+  font-family:var(--mono-font);
+  font-size:11.5px;
+  padding:2px 0;
+  border-radius:3px;
+}
+.cell-input{ width:26px; }
+.field-no{ width:32px; font-weight:700; color:var(--accent); }
+.field-km{ width:44px; }
+.field-temp{ width:34px; }
+.dir-select{
+  background:var(--bg-input);
+  color:var(--text);
+  border:1px solid var(--border-strong);
+  border-radius:4px;
+  font-family:var(--body-font);
+  font-size:11px;
+  padding:2px 2px;
+}
+.dir-select.bar{ color:var(--accent); }
+.dir-select.zuun{ color:var(--rail-amber); }
+
+td.cell-warn{ background:var(--highlight-warn) !important; color:#1a1400; font-weight:700; }
+td.cell-danger{ background:var(--highlight-danger) !important; color:#fff; font-weight:700; }
+
+.sum-cell{ font-weight:700; color:var(--text); background:#132842; }
+.avg-cell{ color:var(--text-muted); }
+.diff-badge{
+  display:inline-block;
+  min-width:34px;
+  padding:2px 6px;
+  border-radius:5px;
+  font-weight:700;
+}
+.diff-positive{ background:var(--signal-green-soft); color:var(--signal-green); }
+.diff-negative{ background:var(--signal-red-soft); color:var(--signal-red); }
+
+.row-del-btn{
+  background:none;
+  border:1px solid var(--border-strong);
+  color:var(--text-muted);
+  border-radius:5px;
+  width:24px;height:24px;
+  cursor:pointer;
+  font-size:13px;
+  line-height:1;
+}
+.row-del-btn:hover{ border-color:var(--signal-red); color:var(--signal-red); background:var(--signal-red-soft); }
+
+.empty-state{
+  padding:40px 20px;
+  text-align:center;
+  color:var(--text-muted);
+  font-family:var(--body-font);
+}
+
+/* ===== Legend / footer ===== */
+.legend{
+  margin:18px clamp(16px,4vw,48px) 0;
+  display:flex;
+  gap:22px;
+  flex-wrap:wrap;
+  align-items:center;
+  font-size:12px;
+  color:var(--text-muted);
+}
+.legend-item{ display:flex; align-items:center; gap:7px; }
+.swatch{ width:13px;height:13px;border-radius:3px; flex-shrink:0; }
+.swatch.warn{ background:var(--highlight-warn); }
+.swatch.danger{ background:var(--highlight-danger); }
+.swatch.pos{ background:var(--signal-green); }
+.swatch.neg{ background:var(--signal-red); }
+
+footer{
+  margin:26px clamp(16px,4vw,48px) 0;
+  color:var(--text-muted);
+  font-size:11px;
+  text-align:center;
+}
+
+@media (max-width:640px){
+  header{ padding:20px 14px 14px; }
+  .toolbar, .table-wrap, .legend{ margin-left:14px; margin-right:14px; }
+  .toolbar{ gap:14px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="3" width="16" height="13" rx="3" stroke="#3f8cc9" stroke-width="1.6"/>
+        <circle cx="8" cy="19" r="1.4" fill="#f5a623"/>
+        <circle cx="16" cy="19" r="1.4" fill="#f5a623"/>
+        <path d="M7 8h10M7 11.5h10" stroke="#3f8cc9" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M6 16l-2 3M18 16l2 3" stroke="#3f8cc9" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Уулзварын Зайн Хяналт</h1>
+      <div class="brand-sub">Төмөр замын уулзвар дахь галт тэрэгний зайн хугацааны бүртгэл</div>
+    </div>
+  </div>
+
+  <div class="system-signal" title="Нийт системийн байдал">
+    <span class="lamp" id="systemLamp"></span>
+    <span class="system-signal-text" id="systemLampText">Ачааллаж байна…</span>
+  </div>
+</header>
+
+<div class="rail-divider"></div>
+
+<div class="toolbar">
+  <div class="toolbar-group">
+    <span class="toolbar-label">Анхааруулах ≤</span>
+    <input type="number" id="warnThreshold" class="threshold-input" value="6" min="0">
+  </div>
+  <div class="toolbar-group">
+    <span class="toolbar-label">Аюултай ≤</span>
+    <input type="number" id="dangerThreshold" class="threshold-input" value="3" min="0">
+  </div>
+
+  <div class="toolbar-group">
+    <button class="btn btn-primary" id="addRowBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#04121f" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Мөр нэмэх
+    </button>
+    <button class="btn" id="resetBtn">Жишээ өгөгдөл</button>
+    <button class="btn btn-danger" id="clearBtn">Хоослох</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="save-status">
+    <span class="save-dot" id="saveDot"></span>
+    <span id="saveText">Хадгалагдсан</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div class="table-scroll">
+    <table id="railwayTable">
+      <thead>
+        <tr>
+          <th rowspan="2">№</th>
+          <th rowspan="2">t°<br>Агаар</th>
+          <th rowspan="2">З/т<br>(км)</th>
+          <th rowspan="2">Чиглэл</th>
+          <th colspan="40">Үеийн дугаар (минут)</th>
+          <th rowspan="2">Нийт</th>
+          <th rowspan="2">Дундаж</th>
+          <th rowspan="2">t хамаарсан<br>уулзвар</th>
+          <th rowspan="2">Зөрүү</th>
+          <th rowspan="2"></th>
+        </tr>
+        <tr id="periodHeaderRow"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    Өгөгдөл алга байна. "Мөр нэмэх" товч дарж эхний бичлэгээ үүсгэнэ үү.
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="swatch warn"></span> Богино зай — анхааруулах хэмжээнээс бага</div>
+  <div class="legend-item"><span class="swatch danger"></span> Маш богино зай — аюултай хэмжээнээс бага</div>
+  <div class="legend-item"><span class="swatch pos"></span> Зөрүү эерэг — хугацаандаа багтсан</div>
+  <div class="legend-item"><span class="swatch neg"></span> Зөрүү сөрөг — хугацаа хэтэрсэн</div>
+</div>
+
+<script>
+const N_PERIODS = 40;
+const STORAGE_KEY = 'railwayJunctionData_v1';
+const THRESH_KEY = 'railwayJunctionThresholds_v1';
+
+// ---- Build the 40 period header cells ----
+(function buildPeriodHeader(){
+  const row = document.getElementById('periodHeaderRow');
+  let html = '';
+  for(let i=1;i<=N_PERIODS;i++){ html += `<th>${i}</th>`; }
+  row.innerHTML = html;
+})();
+
+// ---- Default sample data (converted from the original two-record example) ----
+function defaultData(){
+  return [
+    { id: cryptoRandomId(), no:1, temp:-1, km:371, dir:'бар',  tLimit:540, values:[7,18,7,10,12,14,17,4,12,14,14,16,14,10,12,10,10,6,15,7,13,11,7,6,5,9,6,18,9,10,10,12,5,15,7,7,10,9,4,15] },
+    { id: cryptoRandomId(), no:1, temp:-1, km:371, dir:'зуун', tLimit:540, values:[5,12,18,13,12,7,14,13,10,10,15,9,9,12,15,9,9,10,3,14,8,0,7,8,9,13,6,6,12,8,6,14,8,7,9,8,6,10,7,8] },
+    { id: cryptoRandomId(), no:2, temp:2,  km:372, dir:'бар',  tLimit:480, values:[1,11,7,12,14,21,4,9,14,15,18,9,16,13,16,17,9,12,20,10,17,18,13,8,8,16,15,10,18,5,13,9,12,8,10,10,17,10,10,9] },
+    { id: cryptoRandomId(), no:2, temp:2,  km:372, dir:'зуун', tLimit:480, values:[9,9,9,8,18,14,2,3,6,10,5,7,7,1,9,2,9,7,5,15,9,13,9,9,22,10,12,10,18,7,15,15,9,16,10,15,10,10,16,16] }
+  ];
+}
+
+function cryptoRandomId(){
+  return 'r' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+}
+
+function emptyRow(no){
+  return { id: cryptoRandomId(), no: no||'', temp:'', km:'', dir:'бар', tLimit:'', values:new Array(N_PERIODS).fill('') };
+}
+
+// ---- State ----
+let state = { rows: [] };
+let thresholds = { warn:6, danger:3 };
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed.rows)) return parsed;
+    }
+  }catch(e){ console.warn('Хадгалагдсан өгөгдөл уншихад алдаа гарлаа', e); }
+  return { rows: defaultData() };
+}
+
+function loadThresholds(){
+  try{
+    const raw = localStorage.getItem(THRESH_KEY);
+    if(raw){ const p = JSON.parse(raw); if(typeof p.warn==='number' && typeof p.danger==='number') return p; }
+  }catch(e){}
+  return { warn:6, danger:3 };
+}
+
+let saveTimer = null;
+function scheduleSave(){
+  const dot = document.getElementById('saveDot');
+  const text = document.getElementById('saveText');
+  dot.classList.add('saving');
+  text.textContent = 'Хадгалж байна…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(THRESH_KEY, JSON.stringify(thresholds));
+      dot.classList.remove('saving');
+      const now = new Date();
+      text.textContent = 'Хадгалагдсан · ' + now.toLocaleTimeString('mn-MN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    }catch(e){
+      dot.classList.remove('saving');
+      text.textContent = 'Хадгалж чадсангүй';
+    }
+  }, 450);
+}
+
+// ---- Calculations ----
+function computeRow(row){
+  const nums = row.values.map(v => (v===''||v===null||v===undefined) ? null : Number(v));
+  const validNums = nums.filter(v => v!==null && !isNaN(v));
+  const sum = validNums.reduce((a,b)=>a+b, 0);
+  const avg = validNums.length ? (sum/validNums.length) : 0;
+  const limit = (row.tLimit===''||row.tLimit===null||isNaN(Number(row.tLimit))) ? null : Number(row.tLimit);
+  const diff = (limit===null) ? null : (limit - sum);
+  return { sum, avg, diff, limit };
+}
+
+function cellStatusClass(val){
+  if(val===''||val===null||val===undefined) return '';
+  const n = Number(val);
+  if(isNaN(n)) return '';
+  if(n < thresholds.danger) return 'cell-danger';
+  if(n < thresholds.warn) return 'cell-warn';
+  return '';
+}
+
+// ---- Rendering ----
+function render(){
+  const tbody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+
+  if(state.rows.length === 0){
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+    updateSystemLamp();
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  let html = '';
+  state.rows.forEach(row => {
+    const { sum, avg, diff } = computeRow(row);
+    html += `<tr data-id="${row.id}">`;
+    html += `<td><input class="field field-no" data-field="no" type="text" value="${escAttr(row.no)}"></td>`;
+    html += `<td><input class="field field-temp" data-field="temp" type="text" value="${escAttr(row.temp)}"></td>`;
+    html += `<td><input class="field field-km" data-field="km" type="text" value="${escAttr(row.km)}"></td>`;
+    html += `<td><select class="dir-select ${row.dir==='бар'?'bar':'zuun'}" data-field="dir">
+                <option value="бар" ${row.dir==='бар'?'selected':''}>бар</option>
+                <option value="зуун" ${row.dir==='зуун'?'selected':''}>зуун</option>
+              </select></td>`;
+
+    for(let i=0;i<N_PERIODS;i++){
+      const v = row.values[i];
+      const cls = cellStatusClass(v);
+      html += `<td class="${cls}"><input class="cell-input" data-field="cell" data-idx="${i}" type="text" inputmode="decimal" value="${escAttr(v)}"></td>`;
+    }
+
+    html += `<td class="sum-cell">${sum}</td>`;
+    html += `<td class="avg-cell">${avg.toFixed(1)}</td>`;
+    html += `<td><input class="field field-km" data-field="tLimit" type="text" value="${escAttr(row.tLimit)}"></td>`;
+    html += `<td>${diff===null ? '<span class="text-muted">—</span>' : `<span class="diff-badge ${diff>=0?'diff-positive':'diff-negative'}">${diff}</span>`}</td>`;
+    html += `<td><button class="row-del-btn" data-action="delete" title="Мөр устгах">✕</button></td>`;
+    html += `</tr>`;
+  });
+
+  tbody.innerHTML = html;
+  updateSystemLamp();
+}
+
+function escAttr(v){
+  if(v===null||v===undefined) return '';
+  return String(v).replace(/"/g,'&quot;');
+}
+
+function updateSystemLamp(){
+  const lamp = document.getElementById('systemLamp');
+  const text = document.getElementById('systemLampText');
+  if(state.rows.length === 0){
+    lamp.className = 'lamp';
+    text.innerHTML = 'Өгөгдөл алга';
+    return;
+  }
+  let hasDanger = false, hasWarn = false, hasNegative = false;
+  state.rows.forEach(row=>{
+    const { diff } = computeRow(row);
+    if(diff!==null && diff < 0) hasNegative = true;
+    row.values.forEach(v=>{
+      const cls = cellStatusClass(v);
+      if(cls === 'cell-danger') hasDanger = true;
+      else if(cls === 'cell-warn') hasWarn = true;
+    });
+  });
+  if(hasDanger || hasNegative){
+    lamp.className = 'lamp red';
+    text.innerHTML = '<b>Аюултай</b> — хэм хэтэрсэн утга бий';
+  } else if(hasWarn){
+    lamp.className = 'lamp amber';
+    text.innerHTML = '<b>Анхаар</b> — богино зайтай мөрүүд бий';
+  } else {
+    lamp.className = 'lamp';
+    text.innerHTML = '<b>Хэвийн</b> — бүх зай хэвийн хэмжээнд';
+  }
+}
+
+// ---- Event delegation on the table body ----
+document.getElementById('tableBody').addEventListener('input', (e)=>{
+  const target = e.target;
+  const tr = target.closest('tr');
+  if(!tr) return;
+  const id = tr.dataset.id;
+  const row = state.rows.find(r=>r.id===id);
+  if(!row) return;
+
+  const field = target.dataset.field;
+  if(field === 'cell'){
+    const idx = Number(target.dataset.idx);
+    row.values[idx] = target.value === '' ? '' : target.value;
+    // live update this cell's highlight + row totals without full re-render (keeps focus)
+    const td = target.closest('td');
+    td.className = cellStatusClass(target.value);
+    updateRowTotalsInPlace(tr, row);
+  } else if(field === 'tLimit' || field === 'no' || field === 'temp' || field === 'km'){
+    row[field] = target.value;
+    if(field === 'tLimit'){ updateRowTotalsInPlace(tr, row); }
+  }
+  updateSystemLamp();
+  scheduleSave();
+});
+
+document.getElementById('tableBody').addEventListener('change', (e)=>{
+  const target = e.target;
+  if(target.dataset.field === 'dir'){
+    const tr = target.closest('tr');
+    const row = state.rows.find(r=>r.id===tr.dataset.id);
+    if(row){
+      row.dir = target.value;
+      target.className = 'dir-select ' + (row.dir==='бар'?'bar':'zuun');
+      scheduleSave();
+    }
+  }
+});
+
+document.getElementById('tableBody').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-action="delete"]');
+  if(!btn) return;
+  const tr = btn.closest('tr');
+  const id = tr.dataset.id;
+  if(confirm('Энэ мөрийг устгах уу?')){
+    state.rows = state.rows.filter(r=>r.id!==id);
+    render();
+    scheduleSave();
+  }
+});
+
+function updateRowTotalsInPlace(tr, row){
+  const { sum, avg, diff } = computeRow(row);
+  tr.querySelector('.sum-cell').textContent = sum;
+  tr.querySelector('.avg-cell').textContent = avg.toFixed(1);
+  const diffCell = tr.children[tr.children.length - 2];
+  diffCell.innerHTML = diff===null ? '<span class="text-muted">—</span>' : `<span class="diff-badge ${diff>=0?'diff-positive':'diff-negative'}">${diff}</span>`;
+}
+
+// ---- Toolbar actions ----
+document.getElementById('addRowBtn').addEventListener('click', ()=>{
+  const lastNo = state.rows.length ? state.rows[state.rows.length-1].no : 0;
+  const nextNo = (typeof lastNo === 'number' || !isNaN(Number(lastNo))) ? (Number(lastNo)||0) + 1 : '';
+  state.rows.push(emptyRow(nextNo));
+  render();
+  scheduleSave();
+  const tbody = document.getElementById('tableBody');
+  tbody.scrollIntoView({ behavior:'smooth', block:'end' });
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Одоогийн өгөгдлийг жишээ өгөгдлөөр солих уу?')){
+    state.rows = defaultData();
+    render();
+    scheduleSave();
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if(confirm('Бүх өгөгдлийг устгах уу? Энэ үйлдлийг буцаах боломжгүй.')){
+    state.rows = [];
+    render();
+    scheduleSave();
+  }
+});
+
+document.getElementById('warnThreshold').addEventListener('input', (e)=>{
+  thresholds.warn = Number(e.target.value) || 0;
+  render();
+  scheduleSave();
+});
+document.getElementById('dangerThreshold').addEventListener('input', (e)=>{
+  thresholds.danger = Number(e.target.value) || 0;
+  render();
+  scheduleSave();
+});
+
+// ---- Init ----
+(function init(){
+  const loaded = loadState();
+  state.rows = loaded.rows;
+  thresholds = loadThresholds();
+  document.getElementById('warnThreshold').value = thresholds.warn;
+  document.getElementById('dangerThreshold').value = thresholds.danger;
+  render();
+})();
+</script>
+
+</body>
+</html>

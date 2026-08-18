@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Замын 9-р хэсэг — Удирдлагын систем</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-deep:      #050d1a;
+      --bg-panel:     #071428;
+      --bg-card:      #0b1e3a;
+      --bg-hover:     #0f2547;
+      --accent:       #00d4ff;
+      --accent2:      #09f372;
+      --accent3:      #ffd700;
+      --danger:       #ff3d3d;
+      --text-primary: #e8f4fd;
+      --text-muted:   #6a8bae;
+      --border:       rgba(0,212,255,0.15);
+      --border-glow:  rgba(0,212,255,0.35);
+      --rail-stripe:  repeating-linear-gradient(
+        90deg,
+        transparent 0px, transparent 18px,
+        rgba(0,212,255,0.06) 18px, rgba(0,212,255,0.06) 20px
+      );
+      --topbar-height: 64px;
+      --topbar-font-size: 16px;
+      --content-max: 1680px;
+      --shell-gap: clamp(12px, 2vw, 24px);
+      --shell-pad: clamp(12px, 2vw, 28px);
+      --sidebar-width: 320px;
+      --frame-min-height: calc(100dvh - var(--topbar-height) - var(--shell-gap));
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.45;
+    }
+    body.sidebar-open {
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════ TOP NAV ═══════════════════════ */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: linear-gradient(180deg, #020912 0%, var(--bg-panel) 100%);
+      border-bottom: 1px solid var(--border-glow);
+      box-shadow: 0 2px 30px rgba(0,212,255,0.08);
+    }
+
+    .topbar::before {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--accent), transparent);
+      animation: scanline 4s linear infinite;
+    }
+    @keyframes scanline {
+      0%   { opacity: 0.3; }
+      50%  { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+
+    .topbar-inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 0 var(--shell-pad);
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .sidebar-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glow);
+      background: rgba(0, 212, 255, 0.08);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .sidebar-toggle:hover {
+      background: rgba(0, 212, 255, 0.16);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* Logo */
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      animation: fadeBlur 1.2s ease-out both;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    @keyframes fadeBlur {
+      from { filter: blur(10px); opacity: 0; letter-spacing: 0.5em; }
+      to   { filter: blur(0);    opacity: 1; letter-spacing: normal; }
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 16px rgba(0,212,255,0.4);
+    }
+    .logo-text {
+      font-size: var(--topbar-font-size);
+      font-weight: 800;
+      color: var(--accent2);
+      letter-spacing: 0.02em;
+      margin-left: -6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logo-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* Nav links */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      list-style: none;
+    }
+    .nav-links > li {
+      position: relative;
+    }
+    .nav-links > li > a,
+    .nav-links > li > span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: var(--topbar-font-size);
+      font-weight: 600;
+      color: #9bbbd8;
+      text-decoration: none;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-links > li > a:hover,
+    .nav-links > li > span:hover,
+    .nav-links > li.open > a,
+    .nav-links > li.open > span {
+      color: var(--accent);
+      background: rgba(0,212,255,0.08);
+    }
+    .nav-links > li > span .caret {
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+    .nav-links > li.open > span .caret { transform: rotate(180deg); }
+
+    /* Dropdown */
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 220px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 10px;
+      padding: 6px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.22s ease;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(0,212,255,0.08);
+      z-index: 200;
+    }
+    .nav-links > li.open .dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: var(--topbar-font-size);
+      color: #9bbbd8;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .dropdown a:hover {
+      color: var(--accent2);
+      background: rgba(9,243,114,0.08);
+      padding-left: 16px;
+    }
+    .dropdown a::before {
+      content: '›';
+      color: var(--accent);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* Status bar */
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: var(--topbar-font-size);
+      color: var(--text-muted);
+    }
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-glow);
+      background: rgba(0, 212, 255, 0.08);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .mode-badge.editable {
+      border-color: rgba(9,243,114,0.35);
+      background: rgba(9,243,114,0.12);
+      color: #baffdb;
+    }
+    .mode-badge.readonly {
+      border-color: rgba(255,159,67,0.35);
+      background: rgba(255,159,67,0.12);
+      color: #ffe0ba;
+    }
+    .auth-btn {
+      border: 1px solid var(--border-glow);
+      background: rgba(0, 212, 255, 0.08);
+      color: var(--text-primary);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .auth-btn:hover {
+      background: rgba(0, 212, 255, 0.16);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 6px var(--accent2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+    .clock {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: var(--topbar-font-size);
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+
+    /* ═══════════════════════ LAYOUT ═══════════════════════ */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      margin-top: var(--topbar-height);
+      min-height: calc(100dvh - var(--topbar-height));
+    }
+
+    /* ═══════════════════════ SIDEBAR ═══════════════════════ */
+    .sidebar {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      position: sticky;
+      top: var(--topbar-height);
+      height: calc(100vh - var(--topbar-height));
+    }
+
+    .sidebar-header {
+      padding: 20px 18px 12px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav { padding: 10px 10px; }
+
+    .sidebar-item {
+      margin-bottom: 2px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #7a9bbf;
+      text-decoration: none;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.18s;
+      border: 1px solid transparent;
+      user-select: none;
+      line-height: 1.35;
+    }
+    .sidebar-link:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+      border-color: var(--border);
+      padding-left: 16px;
+    }
+    .sidebar-link.active {
+      color: var(--accent);
+      background: rgba(0,212,255,0.07);
+      border-color: var(--border-glow);
+    }
+    .sidebar-link.danger-link {
+      color: #7a9bbf;
+    }
+    .sidebar-link.danger-link:hover {
+      background: rgba(255,61,61,0.1);
+      border-color: rgba(255,61,61,0.3);
+    }
+    .sidebar-link i {
+      width: 20px;
+      font-size: 16px;
+      text-align: center;
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+    .sidebar-link.danger-link i { color: var(--accent); }
+
+    /* Sub-menu toggle */
+    .sidebar-item.has-sub > .sidebar-link::after {
+      content: '›';
+      margin-left: auto;
+      font-size: 18px;
+      transition: transform 0.2s;
+      color: var(--text-muted);
+    }
+    .sidebar-item.has-sub.open > .sidebar-link::after {
+      transform: rotate(90deg);
+    }
+    .sidebar-sub {
+      display: none;
+      padding: 4px 0 6px 34px;
+    }
+    .sidebar-item.open > .sidebar-sub { display: block; }
+    .sidebar-sub a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6a8bae;
+      text-decoration: none;
+      border-radius: 7px;
+      transition: all 0.15s;
+    }
+    .sidebar-sub a::before {
+      content: '─';
+      font-size: 10px;
+      color: var(--border-glow);
+    }
+    .sidebar-sub a:hover {
+      color: var(--accent2);
+      background: rgba(9,243,114,0.05);
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 14px;
+    }
+
+    /* ═══════════════════════ MAIN CONTENT ═══════════════════════ */
+    .main {
+      min-width: 0;
+      background: var(--bg-deep);
+      background-image: var(--rail-stripe);
+      overflow: auto;
+      padding: var(--shell-gap);
+    }
+
+    /* Welcome / Dashboard panel */
+    .dashboard {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+    }
+    .dash-hero {
+      position: relative;
+      background: linear-gradient(135deg, #071428 0%, #0a1e3d 60%, #071428 100%);
+      border: 1px solid var(--border-glow);
+      border-radius: 14px;
+      padding: clamp(24px, 3vw, 40px);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .dash-hero::before {
+      content: '';
+      position: absolute;
+      right: -60px; top: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(0,212,255,0.07) 0%, transparent 70%);
+    }
+    .dash-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+    }
+    .dash-eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .dash-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .dash-title span { color: var(--accent2); }
+    .dash-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 500px;
+    }
+
+    /* Stat cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .stat-card:hover {
+      border-color: var(--border-glow);
+      box-shadow: 0 0 20px rgba(0,212,255,0.08);
+      transform: translateY(-2px);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+    .stat-card.green::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .stat-card.gold::before  { background: linear-gradient(90deg, var(--accent3), transparent); }
+    .stat-card.red::before   { background: linear-gradient(90deg, var(--danger), transparent); }
+
+    .stat-icon {
+      font-size: 22px;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .stat-card.green .stat-icon { color: var(--accent2); }
+    .stat-card.gold  .stat-icon { color: var(--accent3); }
+    .stat-card.red   .stat-icon { color: var(--danger); }
+
+    .stat-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .stat-badge {
+      position: absolute;
+      top: 16px; right: 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(9,243,114,0.12);
+      color: var(--accent2);
+    }
+    .stat-badge.warn { background: rgba(255,215,0,0.12); color: var(--accent3); }
+    .stat-badge.bad  { background: rgba(255,61,61,0.12);  color: var(--danger); }
+
+    /* Info frame area */
+    .content-frame-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      height: auto;
+      min-height: 520px;
+      min-height: var(--frame-min-height);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    }
+    .main.tushaal-expanded {
+      padding: 0;
+      overflow: hidden;
+    }
+    .main.tushaal-expanded .dashboard {
+      height: calc(100dvh - var(--topbar-height));
+    }
+    .main.tushaal-expanded .content-frame-wrap {
+      height: calc(100dvh - var(--topbar-height));
+      min-height: calc(100dvh - var(--topbar-height));
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      box-shadow: none;
+    }
+    .main.tushaal-expanded #content-frame {
+      min-height: calc(100dvh - var(--topbar-height) - 54px);
+    }
+    .frame-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      min-height: 54px;
+    }
+    .frame-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+    }
+    #content-frame {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      min-height: 620px;
+      border: none;
+      display: block;
+      background: transparent;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      inset: 64px 0 0 0;
+      background: rgba(2, 9, 18, 0.64);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+      z-index: 1090;
+    }
+    .sidebar-overlay.is-visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: #1a3050; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* Alert highlight */
+    .sidebar-link.active-alert {
+      color: var(--danger) !important;
+      background: rgba(255,61,61,0.1) !important;
+      border-color: rgba(255,61,61,0.35) !important;
+      animation: alertPulse 1.5s ease-in-out infinite;
+    }
+    .copyright-badge {
+      position: fixed;
+      right: 18px;
+      bottom: 16px;
+      z-index: 1200;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glow);
+      background: rgba(2, 9, 18, 0.88);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      animation: copyrightPulse 33s linear infinite;
+    }
+    .copyright-badge span {
+      color: var(--accent2);
+    }
+    @keyframes copyrightPulse {
+      0%, 90.9% {
+        opacity: 0;
+        visibility: hidden;
+      }
+      90.91%, 100% {
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: none; }
+      50%       { box-shadow: 0 0 14px rgba(255,61,61,0.4); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      :root {
+        --topbar-font-size: 15px;
+      }
+      .topbar-inner {
+        padding: 0 16px;
+      }
+      .topbar-status {
+        gap: 10px;
+      }
+      :root {
+        --sidebar-width: 280px;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar-toggle {
+        display: inline-flex;
+      }
+      .nav-links {
+        display: none;
+      }
+      .layout {
+        display: block;
+      }
+      .sidebar {
+        position: fixed;
+        top: var(--topbar-height);
+        left: 0;
+        bottom: 0;
+        width: min(82vw, 320px);
+        height: auto;
+        z-index: 1100;
+        transform: translateX(-100%);
+        transition: transform 0.24s ease, box-shadow 0.24s ease;
+      }
+      .sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: 18px 0 40px rgba(0, 0, 0, 0.45);
+      }
+      .dashboard {
+        width: 100%;
+      }
+      .main {
+        padding: 12px;
+      }
+      .main.tushaal-expanded {
+        padding: 0;
+      }
+      .content-frame-wrap {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        min-height: calc(100dvh - 104px);
+        display: block;
+        overflow: visible;
+      }
+      #content-frame {
+        flex: none;
+        min-height: calc(100dvh - 160px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --topbar-height: 72px;
+        --topbar-font-size: 14px;
+      }
+      .topbar-inner {
+        padding: 10px 14px;
+        min-height: var(--topbar-height);
+        height: auto;
+      }
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+      }
+      .topbar-status .status-badge span {
+        display: none;
+      }
+      .dashboard {
+        width: 100%;
+      }
+      .main {
+        padding: 10px;
+      }
+      .dash-hero {
+        padding: 20px 18px;
+      }
+      .dash-title {
+        font-size: 22px;
+      }
+      .dash-desc {
+        font-size: 13px;
+      }
+      .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .stat-card {
+        padding: 16px;
+      }
+      .stat-value {
+        font-size: 24px;
+      }
+      .content-frame-wrap {
+        min-height: calc(100dvh - 92px);
+        border-radius: 14px;
+      }
+      .frame-titlebar {
+        padding: 10px 12px;
+        flex-wrap: wrap;
+        min-height: 48px;
+      }
+      .sidebar {
+        width: min(88vw, 320px);
+      }
+      .copyright-badge {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --shell-gap: 8px;
+        --topbar-font-size: 13px;
+      }
+      .main {
+        padding: 8px;
+      }
+      .topbar-inner {
+        padding: 10px 12px;
+        gap: 10px;
+      }
+      .topbar-left {
+        gap: 10px;
+      }
+      .topbar-status {
+        gap: 8px;
+      }
+      .logo-sub {
+        display: none;
+      }
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+      .dash-title {
+        font-size: 20px;
+      }
+      .content-frame-wrap {
+        min-height: calc(100dvh - 86px);
+        border-radius: 12px;
+      }
+      #content-frame {
+        min-height: calc(100dvh - 142px);
+      }
+      .copyright-badge {
+        right: 10px;
+        bottom: 10px;
+        max-width: calc(100vw - 20px);
+        padding: 8px 10px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ TOP NAV ═══════════════════════ -->
+<header class="topbar">
+  <div class="topbar-inner">
+
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Цэс нээх">
+        <i class="fa fa-bars"></i>
+      </button>
+
+      <a href="#" class="logo-wrap">
+
+      </a>
+    </div>
+
+    <ul class="nav-links" id="topNav">
+      <li><a href="#" data-page-key="Тушаал, стандарт"><i class="fa fa-file-lines" style="margin-right:4px"></i>Тушаал, стандарт</a></li>
+      <li><a href="#" data-page-key="Цахилгаан"><i class="fa fa-bolt" style="margin-right:4px"></i>Цахилгаан</a></li>
+
+      <li>
+        <span onclick="toggleNav(this)">
+          <i class="fa fa-calendar-check"></i> Төлөвлөгөө
+          <i class="fa fa-chevron-down caret"></i>
+        </span>
+        <ul class="dropdown">
+          <li><a href="#" data-page-key="Төлөвлөгөө / Оны зорилтот төлөвлөгөө">Оны зорилтот төлөвлөгөө</a></li>
+          <li><a href="#" data-page-key="Төлөвлөгөө / Сарын ажлын төлөвлөгөө">Сарын ажлын төлөвлөгөө</a></li>
+          <li><a href="#" data-page-key="Төлөвлөгөө / ХАБЭА-н чиглэлээр хэрэгжүүлэх ажлын төлөвлөгөө">ХАБЭА-н чиглэлээр хэрэгжүүлэх ажлын төлөвлөгөө</a></li>
+          <li><a href="#" data-page-key="Төлөвлөгөө / ГТХАБ-н чиглэлээр хэрэгжүүлэх ажлын төлөвлөгөө">ГТХАБ-н чиглэлээр хэрэгжүүлэх ажлын төлөвлөгөө</a></li>
+          <li><a href="#" data-page-key="Төлөвлөгөө / Өвөлжилтийн бэлтгэл ажлыг хангах төлөвлөгөө">Өвөлжилтийн бэлтгэл ажлыг хангах төлөвлөгөө</a></li>
+        </ul>
+      </li>
+
+      <li>
+        <span onclick="toggleNav(this)">
+          <i class="fa fa-hard-hat"></i> ХАБЭА
+          <i class="fa fa-chevron-down caret"></i>
+        </span>
+        <ul class="dropdown">
+          <li><a href="#" data-page-key="ХАБЭА / Улирлын үзлэг">Улирлын үзлэг</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / НГ-н үзлэг">НГ-н үзлэг</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / 3-н шатны үзлэг">3-н шатны үзлэг</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / Хөдөлмөрийн нөхцөлийн үнэлгээ">Хөдөлмөрийн нөхцөлийн үнэлгээ</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / Эрсдэлийн үнэлгээ">Эрсдэлийн үнэлгээ</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / Ажлын тусгай хувцас хамгаалах хэрэгсэл">Ажлын тусгай хувцас хамгаалах хэрэгсэл</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / Сэтгэл ханамжийн судалгаа">Сэтгэл ханамжийн судалгаа</a></li>
+          <li><a href="#" data-page-key="ХАБЭА / ҮЭХ зүгээс зохион байгуулсан ажил">ҮЭХ зүгээс зохион байгуулсан ажил</a></li>
+        </ul>
+      </li>
+
+      <li>
+        <span onclick="toggleNav(this)">
+          <i class="fa fa-road"></i> ГТХАБ
+          <i class="fa fa-chevron-down caret"></i>
+        </span>
+        <ul class="dropdown">
+          <li><a href="#" data-page-key="ГТХАБ / Улирлын үзлэг">Улирлын үзлэг</a></li>
+          <li><a href="#" data-page-key="ГТХАБ / Баллын төлөвлөгөө-Гүйцэтгэл">Баллын төлөвлөгөө-Гүйцэтгэл</a></li>
+          <li><a href="#" data-page-key="ГТХАБ / Гэмтэлтэй зам төмрийн судалгаа">Гэмтэлтэй зам төмрийн судалгаа</a></li>
+          <li><a href="#" data-page-key="Паспортын үзлэг">Паспортын үзлэг</a></li>
+          <li><a href="#" data-page-key="ГТХАБ / Гүүр, хоолой хиймэл төхөөрөмж">Гүүр, хоолой хиймэл төхөөрөмж</a></li>
+          <li><a href="#" data-page-key="ГТХАБ / Гарам">Гарам</a></li>
+        </ul>
+      </li>
+
+      <li><a href="#" data-page-key="Үүрэг даалгавар"><i class="fa fa-clipboard-list"></i>Үүрэг даалгавар</a></li>
+    </ul>
+    <div class="topbar-status">
+      <div class="mode-badge readonly" id="editModeBadge"><i class="fa fa-eye"></i><span>Харах горим</span></div>
+      <button class="auth-btn" id="editModeButton" type="button">Кодоор нэвтрэх</button>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ═══════════════════════ LAYOUT ═══════════════════════ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">⬡ Үйл ажиллагаа</div>
+    <nav class="sidebar-nav">
+
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link" id="irts-link" data-page-key="Ирц бүртгэл"><i class="fa fa-calendar-check"></i> Ирц бүртгэл</a>
+      </div>
+
+      <div class="sidebar-item has-sub" onclick="toggleSub(this)">
+        <div class="sidebar-link"><i class="fa fa-book-open"></i> Аюулгүй ажиллагааны зааварчилгаа</div>
+        <div class="sidebar-sub">
+          <a href="#" id="zoovorchilgoo-link" data-page-key="Зааварчилгаа / Зам засвар">Зам засвар</a>
+          <a href="#" data-page-key="Зааварчилгаа / Тор засагч">Тор засагч</a>
+          <a href="#" data-page-key="Зааварчилгаа / Үерийн эргүүл">Үерийн эргүүл</a>
+          <a href="#" data-page-key="Зааварчилгаа / Ажил удирдагч">Ажил удирдагч</a>
+          <a href="#" data-page-key="Зааварчилгаа / Зам сум цэвэрлэгч">Зам сум цэвэрлэгч</a>
+          <a href="#" data-page-key="Зааварчилгаа / Жолооч">Жолооч</a>
+          <a href="#" data-page-key="Зааварчилгаа / Сахиул">Сахиул</a>
+          <a href="#" data-page-key="Зааварчилгаа / Гармын жижүүр">Гармын жижүүр</a>
+          <a href="#" data-page-key="Зааварчилгаа / Сэвийн оператор">Сэвийн оператор</a>
+          <a href="#" data-page-key="Зааварчилгаа / Тогооч">Тогооч</a>
+          <a href="#" data-page-key="Зааварчилгаа / Ээлжит давтан">Ээлжит давтан</a>
+        </div>
+      </div>
+
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link" id="burtgel-link" data-page-key="Бүртгэл"><i class="fa fa-folder-open"></i> Зааварчилгаа авсан ажилтаны бүртгэл</a>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link danger-link" id="toggle-alert" data-page-key="Менежментийн нэгдсэн тогтолцоо">
+          <i class="fa fa-sitemap"></i> Менежментийн нэгдсэн тогтолцоо
+        </a>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-item has-sub" onclick="toggleSub(this)">
+        <div class="sidebar-link"><i class="fa fa-database"></i> Судалгаа, бүртгэл</div>
+        <div class="sidebar-sub">
+          <a href="#" id="ajiltan-link" data-page-key="Ажилтануудын мэдээлэл">Ажилтануудын мэдээлэл</a>
+          <a href="#" id="sum-link" data-page-key="Суман шилжүүлгийн бүртгэл">Суман шилжүүлгийн бүртгэл</a>
+          <a href="#" data-page-key="Малтай айлын судалгаа">Малтай айлын судалгаа</a>
+          <a href="#" data-page-key="Гүүр, хоолойн судалгаа">Гүүр, хоолойн судалгаа</a>
+          <a href="#" data-page-key="ПУ-5 дэр модны судалгаа">ПУ-5 дэр модны судалгаа</a>
+          <a href="#" data-page-key="ПУ-2 зам төмрийн судалгаа">ПУ-2 зам төмрийн судалгаа</a>
+          <a href="#" data-page-key="нөөц зам төмрийн судалгаа">Нөөц зам төмрийн судалгаа</a>
+          <a href="#" data-page-key="уулзварын зайн судалгаа">Уулзварын зайн судалгаа</a>
+        </div>
+      </div>
+
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link" id="habea-link" data-page-key="ХАБЭА-н үзлэг"><i class="fa fa-layer-group"></i>ХАБЭА-н үзлэг</a>
+      </div>
+
+      <div class="sidebar-item">
+          <a href="#" class="sidebar-link" id="passport-link" data-page-key="Паспортын үзлэг"><i class="fa fa-calculator"></i> Паспортын үзлэг</a>
+      </div>
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link" data-page-key="ХАБЭА / Эрсдэлийн үнэлгээ" id="ersdel-link"><i class="fa fa-chart-bar"></i> Эрсдэлийн үнэлгээ</a>
+      </div>
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link" id="tech-link" data-page-key="Замын техникийн байдал"><i class="fa fa-gauge-high"></i> Замын техникийн байдал</a>
+      </div>
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link" id="heseg-link" data-page-key="Хэсгийн танилцуулга"><i class="fa fa-id-card"></i> Хэсгийн танилцуулга</a>
+      </div>
+        <div class="sidebar-item">
+          <a href="#" class="sidebar-link" id="ai-link" data-page-key="AI туслах"><i class="fa fa-robot"></i> AI туслах</a>
+        </div>
+
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="dashboard" id="dashboard">
+
+      
+
+      <div class="content-frame-wrap">
+        <div class="frame-titlebar">
+          <div class="frame-dot" style="background:#ff5f56"></div>
+          <div class="frame-dot" style="background:#ffbd2e"></div>
+          <div class="frame-dot" style="background:#27c93f"></div>
+          <span id="frame-title-label" style="margin-left:8px; font-family:'Share Tech Mono',monospace; font-size:11px;">ХЭСГИЙН ТАНИЛЦУУЛГА</span>
+        </div>
+        <iframe id="content-frame" src="./heseg.html" frameborder="0" allow="camera *; microphone *; autoplay *; clipboard-write *; encrypted-media *; gyroscope *; picture-in-picture *; fullscreen *"></iframe>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<div class="copyright-badge">© <span>B.Baasanjargal</span> | Зохиогчийн эрхээр хуулиар хамгаалагдсан</div>
+
+<script>
+  let pageMap = {};
+  const EDIT_ACCESS_CODE = '54@928#16';
+  const UI_STORAGE_KEYS = {
+    lastPage: 'ubtz:index:last-page',
+    editMode: 'ubtz:index:edit-mode'
+  };
+  const FRAME_STORAGE_PREFIX = 'ubtz:autosave:';
+
+  function readEditMode() {
+    try {
+      return sessionStorage.getItem(UI_STORAGE_KEYS.editMode) === 'true';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function writeEditMode(isEditable) {
+    try {
+      sessionStorage.setItem(UI_STORAGE_KEYS.editMode, isEditable ? 'true' : 'false');
+    } catch (error) {
+      console.warn('Edit mode state write failed:', error);
+    }
+  }
+
+  function updateEditModeUi() {
+    const badge = document.getElementById('editModeBadge');
+    const button = document.getElementById('editModeButton');
+    const editable = readEditMode();
+    if (badge) {
+      badge.classList.toggle('editable', editable);
+      badge.classList.toggle('readonly', !editable);
+      badge.innerHTML = editable
+        ? '<i class="fa fa-pen-to-square"></i><span>Засварлах горим</span>'
+        : '<i class="fa fa-eye"></i><span>Харах горим</span>';
+    }
+    if (button) {
+      button.textContent = editable ? 'Гарах' : 'Кодоор нэвтрэх';
+    }
+  }
+
+  function setElementEditability(element, editable) {
+    if (!(element instanceof element.ownerDocument.defaultView.HTMLElement)) {
+      return;
+    }
+
+    const allowInteractiveContainer = element.closest('[data-allow-view-mode-edit="true"]');
+    if (allowInteractiveContainer) {
+      return;
+    }
+
+    if (element.dataset.allowViewModeEdit === 'true') {
+      return;
+    }
+
+    if (editable) {
+      if (element.dataset.viewModeDisabled === 'true') {
+        element.disabled = false;
+        delete element.dataset.viewModeDisabled;
+      }
+      if (element.dataset.viewModeReadonly === 'true') {
+        element.readOnly = false;
+        delete element.dataset.viewModeReadonly;
+      }
+      if (element.dataset.viewModeContenteditable === 'true') {
+        element.contentEditable = 'true';
+        delete element.dataset.viewModeContenteditable;
+      }
+      return;
+    }
+
+    if (element.matches('input, textarea')) {
+      if (!element.readOnly) {
+        element.readOnly = true;
+        element.dataset.viewModeReadonly = 'true';
+      }
+      return;
+    }
+
+    if (element.matches('select, button')) {
+      if (!element.disabled) {
+        element.disabled = true;
+        element.dataset.viewModeDisabled = 'true';
+      }
+      return;
+    }
+
+    if (element.isContentEditable) {
+      element.contentEditable = 'false';
+      element.dataset.viewModeContenteditable = 'true';
+    }
+  }
+
+  function applyFrameAccessMode(frame) {
+    try {
+      const doc = frame && frame.contentDocument;
+      if (!doc || !doc.body) {
+        return;
+      }
+
+      const frameSrc = String(frame.getAttribute('src') || frame.src || '').toLowerCase();
+      if (frameSrc.includes('bvrtgel.html')) {
+        return;
+      }
+
+      const editable = readEditMode();
+      doc.querySelectorAll('input, textarea, select, button, [contenteditable="true"]').forEach(function(element) {
+        setElementEditability(element, editable);
+      });
+    } catch (error) {
+      console.warn('Frame access mode skipped:', error);
+    }
+  }
+
+  function setupFrameAccessControl(frame) {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.body) {
+        return;
+      }
+
+      applyFrameAccessMode(frame);
+
+      if (frame._accessModeObserver) {
+        frame._accessModeObserver.disconnect();
+      }
+
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType !== 1) {
+              return;
+            }
+            if (node.matches && node.matches('input, textarea, select, button, [contenteditable="true"]')) {
+              setElementEditability(node, readEditMode());
+            }
+            if (node.querySelectorAll) {
+              node.querySelectorAll('input, textarea, select, button, [contenteditable="true"]').forEach(function(element) {
+                setElementEditability(element, readEditMode());
+              });
+            }
+          });
+        });
+      });
+      observer.observe(doc.body, { childList: true, subtree: true });
+      frame._accessModeObserver = observer;
+    } catch (error) {
+      console.warn('Frame access control binding skipped:', error);
+    }
+  }
+
+  function refreshCurrentFrameAccessMode() {
+    const frame = document.getElementById('content-frame');
+    if (frame) {
+      applyFrameAccessMode(frame);
+    }
+    updateEditModeUi();
+  }
+
+  function handleEditModeButton() {
+    if (readEditMode()) {
+      writeEditMode(false);
+      refreshCurrentFrameAccessMode();
+      return;
+    }
+
+    const code = prompt('Засварлах код оруулна уу:');
+    if (code === null) {
+      return;
+    }
+
+    if (code === EDIT_ACCESS_CODE) {
+      writeEditMode(true);
+      refreshCurrentFrameAccessMode();
+      alert('Засварлах горим идэвхжлээ.');
+      return;
+    }
+
+    alert('Код буруу байна. Харах горим хэвээр үлдлээ.');
+  }
+
+  function readLastPage() {
+    try {
+      return sessionStorage.getItem(UI_STORAGE_KEYS.lastPage);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeLastPage(pageKey) {
+    try {
+      sessionStorage.setItem(UI_STORAGE_KEYS.lastPage, pageKey);
+    } catch (error) {
+      console.warn('Last page state write failed:', error);
+    }
+  }
+
+  const staticPageFallbacks = {
+      'Ирц бүртгэл': 'irts.html',
+    'Өдөр тутмын зааварчилгаа': 'zoovorchilgoo.html',
+    'Зааварчилгаа / Зам засвар': 'zoovorchilgoo.html',
+    'Цахилгаан': 'tsahilgaan.html',
+    'Төлөвлөгөө / Сарын ажлын төлөвлөгөө': 'sariin.html',
+    'Шийдвэр': 'shiidwer.html',
+    'Үүрэг даалгавар': 'ita.html',
+    'Менежментийн нэгдсэн тогтолцоо': 'anhaar.html',
+    'Ажилтануудын мэдээлэл': 'ajiltan.html',
+    'Суман шилжүүлгийн бүртгэл': 'sum.html',
+    'Малтай айлын судалгаа': 'torZasagch.html',
+    'Гүүр, хоолойн судалгаа': 'isso.html',
+    'ПУ-5 дэр модны судалгаа': 'pu5.html',
+    'ПУ-2 зам төмрийн судалгаа': 'gemtelteiZT.html',
+    'нөөц зам төмрийн судалгаа': 'nootsZT.html',
+    'уулзварын зайн судалгаа': 'uZai.html',
+    'ХАБЭА-н үзлэг': 'habea.html',
+    'Паспортын үзлэг': 'passport.html',
+    'Замын техникийн байдал': 'tech.html',
+    'Хэсгийн танилцуулга': 'heseg.html',
+    'Бүртгэл': 'bvrtgel.html'
+  };
+
+  function findPageElement(pageKey) {
+    return Array.from(document.querySelectorAll('[data-page-key]')).find(function(element) {
+      return element.dataset.pageKey === pageKey;
+    }) || null;
+  }
+
+  function normalizeFramePath(src) {
+    try {
+      const url = new URL(src, window.location.href);
+      const parts = url.pathname.split('/');
+      return parts[parts.length - 1] || 'page';
+    } catch (error) {
+      return String(src || 'page').replace(/[^a-zA-Z0-9_.-]/g, '_');
+    }
+  }
+
+  function getAutosaveStorageKey(frame) {
+    return FRAME_STORAGE_PREFIX + normalizeFramePath(frame.getAttribute('src') || frame.src);
+  }
+
+  function getElementDomPath(element) {
+    const segments = [];
+    let node = element;
+    while (node && node.nodeType === 1 && node !== node.ownerDocument.body) {
+      let segment = node.tagName.toLowerCase();
+      if (node.id) {
+        segment += '#' + node.id;
+        segments.unshift(segment);
+        break;
+      }
+      const parent = node.parentElement;
+      if (!parent) {
+        segments.unshift(segment);
+        break;
+      }
+      const siblings = Array.from(parent.children).filter(function(child) {
+        return child.tagName === node.tagName;
+      });
+      if (siblings.length > 1) {
+        segment += ':nth-of-type(' + (siblings.indexOf(node) + 1) + ')';
+      }
+      segments.unshift(segment);
+      node = parent;
+    }
+    return segments.join('>');
+  }
+
+  function getElementAutosaveKey(element) {
+    if (element.dataset.autosaveKey) {
+      return 'data:' + element.dataset.autosaveKey;
+    }
+    if (element.id) {
+      return 'id:' + element.id;
+    }
+    if (element.name) {
+      return 'name:' + element.name + ':' + element.type;
+    }
+    return 'path:' + getElementDomPath(element);
+  }
+
+  function shouldAutosaveElement(element) {
+    if (!(element instanceof element.ownerDocument.defaultView.HTMLElement)) {
+      return false;
+    }
+    if (element.matches('[data-no-autosave], input[type="password"], input[type="file"], input[type="submit"], input[type="button"], input[type="reset"], button')) {
+      return false;
+    }
+    return element.matches('input, textarea, select') || element.isContentEditable;
+  }
+
+  function readElementState(element) {
+    if (element.matches('input[type="checkbox"], input[type="radio"]')) {
+      return { type: 'checked', value: element.checked };
+    }
+    if (element.matches('select[multiple]')) {
+      return {
+        type: 'multi-select',
+        value: Array.from(element.selectedOptions).map(function(option) {
+          return option.value;
+        })
+      };
+    }
+    if (element.isContentEditable) {
+      return { type: 'html', value: element.innerHTML };
+    }
+    return { type: 'value', value: element.value };
+  }
+
+  function writeElementState(element, state) {
+    if (!state) {
+      return;
+    }
+    if (state.type === 'checked' && element.matches('input[type="checkbox"], input[type="radio"]')) {
+      element.checked = Boolean(state.value);
+    } else if (state.type === 'multi-select' && element.matches('select[multiple]')) {
+      Array.from(element.options).forEach(function(option) {
+        option.selected = Array.isArray(state.value) && state.value.includes(option.value);
+      });
+    } else if (state.type === 'html' && element.isContentEditable) {
+      element.innerHTML = state.value || '';
+    } else if ('value' in element) {
+      element.value = state.value == null ? '' : state.value;
+    }
+  }
+
+  function dispatchAutosaveEvents(element) {
+    ['input', 'change'].forEach(function(type) {
+      element.dispatchEvent(new Event(type, { bubbles: true }));
+    });
+  }
+
+  function loadAutosavePayload(storageKey) {
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || '{}');
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function saveAutosavePayload(storageKey, payload) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch (error) {
+      console.warn('Autosave data write failed:', error);
+    }
+  }
+
+  function setupFrameAutosave(doc, storageKey) {
+    if (doc.documentElement.dataset.autosaveReady === 'true') {
+      return;
+    }
+    doc.documentElement.dataset.autosaveReady = 'true';
+
+    const payload = loadAutosavePayload(storageKey);
+
+    function restoreElement(element) {
+      if (!shouldAutosaveElement(element) || element.dataset.autosaveRestored === 'true') {
+        return;
+      }
+      const key = getElementAutosaveKey(element);
+      const savedState = payload[key];
+      if (savedState) {
+        writeElementState(element, savedState);
+        dispatchAutosaveEvents(element);
+      }
+      element.dataset.autosaveRestored = 'true';
+    }
+
+    function bindElement(element) {
+      if (!shouldAutosaveElement(element) || element.dataset.autosaveBound === 'true') {
+        return;
+      }
+      restoreElement(element);
+      const persist = function() {
+        payload[getElementAutosaveKey(element)] = readElementState(element);
+        saveAutosavePayload(storageKey, payload);
+      };
+      element.addEventListener('input', persist);
+      element.addEventListener('change', persist);
+      if (element.isContentEditable) {
+        element.addEventListener('blur', persist);
+      }
+      element.dataset.autosaveBound = 'true';
+    }
+
+    function scan(root) {
+      if (shouldAutosaveElement(root)) {
+        bindElement(root);
+      }
+      root.querySelectorAll('input, textarea, select, [contenteditable="true"]').forEach(bindElement);
+    }
+
+    scan(doc.body);
+
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) {
+            scan(node);
+          }
+        });
+      });
+    });
+    observer.observe(doc.body, { childList: true, subtree: true });
+  }
+
+  function injectFrameStyles(doc) {
+    if (doc.getElementById('copilot-frame-responsive-style')) {
+      return;
+    }
+    const style = doc.createElement('style');
+    style.id = 'copilot-frame-responsive-style';
+    style.textContent = [
+      'html { width: 100%; -webkit-text-size-adjust: 100%; }',
+      'body { width: 100% !important; max-width: none !important; margin: 0 !important; overflow-x: auto; }',
+      'img, svg { max-width: 100%; height: auto; }',
+      'iframe { max-width: 100%; }',
+      'input, textarea, select { max-width: 100%; }',
+      '.container, .wrapper, .dashboard, .main-content { width: 100% !important; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }',
+      '.table-container, .table-wrapper, [class*="table-container"], [class*="table-wrapper"] { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }',
+      '@media (max-width: 768px) {',
+      '  body { min-width: 0 !important; }',
+      '}'
+    ].join(' ');
+    doc.head.appendChild(style);
+  }
+
+  function getFrameContentHeight(doc) {
+    const root = doc.documentElement;
+    const body = doc.body;
+    const firstChild = body && body.firstElementChild;
+    return Math.max(
+      root ? root.scrollHeight : 0,
+      root ? root.offsetHeight : 0,
+      body ? body.scrollHeight : 0,
+      body ? body.offsetHeight : 0,
+      firstChild ? firstChild.scrollHeight : 0,
+      firstChild ? firstChild.offsetHeight : 0
+    );
+  }
+
+  function getMobileFrameMinHeight() {
+    const topbarHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-height')) || 64;
+    const main = document.querySelector('.main');
+    const frameTitle = document.querySelector('.frame-titlebar');
+    const mainStyles = main ? getComputedStyle(main) : null;
+    const paddingTop = mainStyles ? parseFloat(mainStyles.paddingTop) || 0 : 0;
+    const paddingBottom = mainStyles ? parseFloat(mainStyles.paddingBottom) || 0 : 0;
+    const frameTitleHeight = frameTitle ? frameTitle.getBoundingClientRect().height : 54;
+    return Math.max(420, window.innerHeight - topbarHeight - paddingTop - paddingBottom - frameTitleHeight - 8);
+  }
+
+  function syncFrameSize(frame) {
+    const wrap = frame.closest('.content-frame-wrap');
+    if (!wrap) {
+      return;
+    }
+
+    if (!window.matchMedia('(max-width: 1024px)').matches) {
+      wrap.style.height = '';
+      wrap.style.minHeight = '';
+      frame.style.height = '';
+      frame.style.minHeight = '';
+      frame.style.flex = '';
+      return;
+    }
+
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.body) {
+        return;
+      }
+      const minFrameHeight = getMobileFrameMinHeight();
+      const contentHeight = Math.max(minFrameHeight, getFrameContentHeight(doc) + 8);
+      wrap.style.height = 'auto';
+      wrap.style.minHeight = '';
+      frame.style.flex = 'none';
+      frame.style.minHeight = minFrameHeight + 'px';
+      frame.style.height = contentHeight + 'px';
+    } catch (error) {
+      console.warn('Frame size sync skipped:', error);
+    }
+  }
+
+  function bindFrameAutoHeight(frame) {
+    try {
+      const doc = frame.contentDocument;
+      if (frame._copilotSizeObserver) {
+        frame._copilotSizeObserver.disconnect();
+        frame._copilotSizeObserver = null;
+      }
+
+      if (!doc || !doc.body) {
+        syncFrameSize(frame);
+        return;
+      }
+
+      const refreshSize = function() {
+        requestAnimationFrame(function() {
+          syncFrameSize(frame);
+        });
+      };
+
+      const resizeObserver = new ResizeObserver(refreshSize);
+      resizeObserver.observe(doc.documentElement);
+      resizeObserver.observe(doc.body);
+      if (doc.body.firstElementChild) {
+        resizeObserver.observe(doc.body.firstElementChild);
+      }
+
+      frame._copilotSizeObserver = resizeObserver;
+      refreshSize();
+    } catch (error) {
+      console.warn('Frame auto-height binding skipped:', error);
+    }
+  }
+
+  function ensureFrameViewport(doc) {
+    if (doc.querySelector('meta[name="viewport"]')) {
+      return;
+    }
+    const meta = doc.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1.0';
+    doc.head.appendChild(meta);
+  }
+
+  function enhanceFrame(frame) {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.head || !doc.body) {
+        return;
+      }
+      ensureFrameViewport(doc);
+      injectFrameStyles(doc);
+      bindFrameAutoHeight(frame);
+      syncFrameSize(frame);
+      const autosaveMeta = doc.querySelector('meta[name="copilot-frame-autosave"]');
+      const autosaveDisabled = autosaveMeta && String(autosaveMeta.getAttribute('content') || '').toLowerCase() === 'off';
+      if (!autosaveDisabled) {
+        setupFrameAutosave(doc, getAutosaveStorageKey(frame));
+      }
+      setupFrameAccessControl(frame);
+    } catch (error) {
+      console.warn('Frame enhancements skipped:', error);
+    }
+  }
+
+  function setSidebarOpen(isOpen) {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    document.body.classList.toggle('sidebar-open', isOpen);
+    if (sidebar) {
+      sidebar.classList.toggle('is-open', isOpen);
+    }
+    if (overlay) {
+      overlay.classList.toggle('is-visible', isOpen);
+    }
+  }
+
+  function closeSidebar() {
+    setSidebarOpen(false);
+  }
+
+  async function loadPageMap() {
+    try {
+      const response = await fetch('./pages.json', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('pages.json ачаалж чадсангүй');
+      }
+      pageMap = await response.json();
+    } catch (error) {
+      console.error(error);
+      pageMap = {};
+    }
+  }
+
+  function resolvePageSrc(pageKey, fallbackTitle) {
+    const mappedSrc = pageMap[pageKey] || staticPageFallbacks[pageKey];
+    if (mappedSrc) {
+      if (mappedSrc.startsWith('./') || mappedSrc.startsWith('../') || /^https?:\/\//i.test(mappedSrc)) {
+        return mappedSrc;
+      }
+      return './' + mappedSrc;
+    }
+    return './section-placeholder.html#' + encodeURIComponent(fallbackTitle || pageKey);
+  }
+
+  function setActiveSidebarLink(activeLink) {
+    document.querySelectorAll('.sidebar-link.active').forEach(function(link) {
+      link.classList.remove('active');
+    });
+    const alertLink = document.getElementById('toggle-alert');
+    if (alertLink) {
+      alertLink.classList.remove('active-alert');
+    }
+    if (activeLink && activeLink.classList.contains('sidebar-link')) {
+      activeLink.classList.add('active');
+      if (activeLink.id === 'toggle-alert') {
+        activeLink.classList.add('active-alert');
+      }
+    }
+  }
+
+  function closeTopNavMenus() {
+    document.querySelectorAll('.nav-links > li').forEach(function(item) {
+      item.classList.remove('open');
+    });
+  }
+
+  function loadFramePage(pageKey, clickedElement) {
+    const frame = document.getElementById('content-frame');
+    const frameTitle = document.getElementById('frame-title-label');
+    const main = document.querySelector('.main');
+    const titleText = clickedElement.textContent.trim().replace(/\s+/g, ' ');
+    const isTushaalPage = pageKey === 'Тушаал, стандарт' || pageKey === 'уулзварын зайн судалгаа';
+
+    if (main) {
+      main.classList.toggle('tushaal-expanded', isTushaalPage);
+    }
+
+    frame.src = resolvePageSrc(pageKey, titleText);
+    writeLastPage(pageKey);
+    if (frameTitle) {
+      frameTitle.textContent = titleText.toUpperCase();
+    }
+    setActiveSidebarLink(clickedElement.closest('.sidebar-link'));
+    closeTopNavMenus();
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+      closeSidebar();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    await loadPageMap();
+
+    const frame = document.getElementById('content-frame');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const editModeButton = document.getElementById('editModeButton');
+
+    updateEditModeUi();
+
+    if (frame) {
+      frame.addEventListener('load', function() {
+        enhanceFrame(frame);
+      });
+    }
+
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        setSidebarOpen(!(sidebar && sidebar.classList.contains('is-open')));
+      });
+    }
+
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    if (editModeButton) {
+      editModeButton.addEventListener('click', handleEditModeButton);
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeSidebar();
+      }
+    });
+
+    window.addEventListener('resize', function() {
+      if (frame) {
+        syncFrameSize(frame);
+      }
+      if (!window.matchMedia('(max-width: 1024px)').matches) {
+        closeSidebar();
+      }
+    });
+
+
+    // Custom handler for Эрсдэлийн үнэлгээ
+    const ersdelLink = document.getElementById('ersdel-link');
+    if (ersdelLink) {
+      ersdelLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const frame = document.getElementById('content-frame');
+        const frameTitle = document.getElementById('frame-title-label');
+        frame.src = './ersdeliinVnelgee.html';
+        writeLastPage('ХАБЭА / Эрсдэлийн үнэлгээ');
+        if (frameTitle) {
+          frameTitle.textContent = 'ЭРСДЭЛИЙН ҮНЭЛГЭЭ';
+        }
+        setActiveSidebarLink(ersdelLink.closest('.sidebar-link'));
+        closeTopNavMenus();
+        if (window.matchMedia('(max-width: 1024px)').matches) {
+          closeSidebar();
+        }
+      });
+    }
+
+    document.querySelectorAll('[data-page-key]:not([id="ersdel-link"])').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        loadFramePage(this.dataset.pageKey, this);
+      });
+    });
+
+    const savedPageKey = readLastPage();
+    const initialElement = savedPageKey ? findPageElement(savedPageKey) : null;
+    if (initialElement) {
+      loadFramePage(savedPageKey, initialElement);
+    } else {
+      const defaultSidebarLink = document.getElementById('heseg-link');
+      if (defaultSidebarLink) {
+        setActiveSidebarLink(defaultSidebarLink);
+      }
+    }
+  });
+
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('mn-MN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  setInterval(updateClock, 1000); updateClock();
+
+  // Date
+  const d = new Date();
+  const todayDate = document.getElementById('todayDate');
+  if (todayDate) {
+    todayDate.textContent =
+      d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0');
+  }
+
+  // Top nav dropdown toggle
+  function toggleNav(el) {
+    const li = el.parentElement;
+    const wasOpen = li.classList.contains('open');
+    document.querySelectorAll('.nav-links > li').forEach(l => l.classList.remove('open'));
+    if (!wasOpen) li.classList.add('open');
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.nav-links')) {
+      document.querySelectorAll('.nav-links > li').forEach(l => l.classList.remove('open'));
+    }
+  });
+
+  // Sidebar sub toggle
+  function toggleSub(item) {
+    item.classList.toggle('open');
+  }
+
+  window.addEventListener('load', function() {
+    const frame = document.getElementById('content-frame');
+    if (frame) {
+      syncFrameSize(frame);
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ажлын заавар хуудас</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #e3f0fc;
+            min-height: 100vh;
+            padding: 8px;
+            color: #fff;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(280px, 0.85fr);
+            grid-template-rows: auto 1fr auto; 
+            gap: 16px;
+            width: min(calc(100vw - 24px), 1760px);
+            max-width: 100%;
+            margin: 0 auto;
+            background: #e3f0fc;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(67, 160, 71, 0.15);
+            min-height: calc(100vh - 16px);
+            height: auto;
+            overflow-y: auto; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: #e3f0fc;
+            padding: 30px;
+            color: #fff;
+            position: relative;
+            overflow: visible;
+            grid-column: 1 / -1;
+            grid-row: 1;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .header h1 {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            font-size: 28px;
+        }
+
+        .header h1 {
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+        }
+
+        .header-form {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .header-form > * {
+            flex: 0 1 auto;
+        }
+
+        .header-form span {
+            font-weight: 700;
+            font-size: 16px;
+            color: #222;
+            text-shadow: none;
+            background: #d0e7fa;
+            padding: 10px 16px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .header-form span:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .header-form input, .header-form select {
+            padding: 10px 15px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.98);
+            font-size: 14px;
+            font-weight: 600px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 100%;
+            min-height: 44px;
+        }
+
+        .header-form input:focus, .header-form select:focus {
+            outline: none;
+            border-color: #f093fb;
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 25px rgba(240, 147, 251, 0.4);
+        }
+
+        .header-form input:hover, .header-form select:hover {
+            border-color: rgba(255,255,255,0.6);
+            transform: scale(1.02);
+        }
+
+        .header-form input[type="number"] {
+            width: 130px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .header-form input[type="datetime-local"] {
+            min-width: min(220px, 100%);
+        }
+
+        .header-form select {
+            min-width: 180px;
+        }
+
+        #location1,
+        #location2 {
+            min-width: 180px;
+        }
+
+        #workType {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            white-space: nowrap;
+            position: absolute;
+            inset: 0;
+        }
+
+        .work-type-select-wrap {
+            position: relative;
+            display: inline-block;
+            flex: 0 1 auto;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .work-type-sizer {
+            display: block;
+            visibility: hidden;
+            white-space: nowrap;
+            padding: 10px 42px 10px 15px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+        /* main-content acts as a wrapper so children can be positioned in the outer grid */
+        .main-content {
+            display: contents;
+        }
+
+        .video-section {
+            grid-column: 1 / 3;
+            grid-row: 2;
+            background: #d0e7fa;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(229, 57, 53, 0.08);
+            min-width: 0;
+        }
+
+        .video-section h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .video-section select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .video-url-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .video-url-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            font-size: 13px;
+        }
+
+        .video-url-input button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .video-url-input button:hover {
+            transform: translateY(-1px);
+        }
+
+        .video-section select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #videoContainer, #restrictionVideoContainer {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            min-height: 402.02px;
+            height: 430px;
+        }
+
+        #videoContainer:hover, #restrictionVideoContainer:hover {
+            transform: scale(1.02);
+        }
+
+        #safetyVideo, #safetyYoutube, #restrictionVideo {
+            width: 100%;
+            display: block;
+            background: #000;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-actions {
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .video-link {
+            font-size: 14px;
+            color: #0f62fe;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,98,254,0.25);
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .video-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .two-video-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .video-box {
+                        background: #e3f0fc !important;
+                        border-radius: 15px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            flex: 1;
+            min-width: 200px;
+            width: 100%;
+        }
+
+        html, body {
+            height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-height: calc(100vh - 16px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 900px) {
+            .two-video-row {
+                grid-template-columns: 1fr;
+            }
+            #videoContainer, #restrictionVideoContainer {
+                max-height: 240px;
+            }
+            .video-box label, .video-section h2 {
+                font-size: 16px;
+            }
+        }
+
+        .worker-section {
+            background: linear-gradient(135deg, #43a047 0%, #e53935 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(67, 160, 71, 0.08);
+            min-width: 0;
+        }
+
+        .worker-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .worker-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .worker-form input {
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .name-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 240px;
+            flex: 1 1 300px;
+        }
+
+        .name-selector-head {
+            display: none;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .name-selector-head input {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .name-selector-head button {
+            flex: 0 0 auto;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #2563eb 100%);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .name-selector-head button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+        }
+
+        .name-selector-head .name-add-hint {
+            display: none;
+        }
+
+        .name-selector-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #475569;
+            font-weight: 700;
+            padding: 0 2px;
+        }
+
+        .name-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.96);
+            max-height: 292px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .recent-selection-panel {
+            display: none;
+            margin-top: 8px;
+            border: 2px solid #93c5fd;
+            border-radius: 10px;
+            background: #eff6ff;
+            padding: 10px;
+            max-height: none;
+            overflow: visible;
+        }
+
+        .recent-selection-entry {
+            border-top: 1px dashed #93c5fd;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .recent-selection-entry:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .recent-selection-title {
+            color: #1e3a8a;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .recent-selection-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 6px;
+        }
+
+        .recent-selection-item {
+            background: #dbeafe;
+            color: #0f172a;
+            border-radius: 8px;
+            padding: 7px 9px;
+            font-size: 13px;
+            font-weight: 700;
+            border-left: 4px solid #2563eb;
+        }
+
+        .name-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid transparent;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .name-option:hover {
+            border-color: #93c5fd;
+            background: #eff6ff;
+        }
+
+        .name-option input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: #2563eb;
+            flex: 0 0 auto;
+        }
+
+        .name-option-body {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .name-option-text {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: visible;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .name-option-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .name-option-action {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 7px;
+            background: #e2e8f0;
+            color: #0f172a;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, transform 0.2s ease;
+            flex: 0 0 auto;
+        }
+
+        .name-option-action:hover {
+            transform: translateY(-1px);
+        }
+
+        .name-option-action.edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .name-option-action.delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .name-option.is-selected {
+            background: #dbeafe;
+            border-color: #60a5fa;
+        }
+
+        .name-options-empty {
+            grid-column: 1 / -1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px dashed #94a3b8;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .name-options-empty strong {
+            color: #0f172a;
+        }
+
+        .name-selector-summary {
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .worker-form input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #add-worker {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #add-worker:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #add-worker:active {
+            transform: translateY(0);
+        }
+
+        #worker-list {
+            list-style: none;
+            padding: 0;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        #worker-list li {
+            background: linear-gradient(135deg, #464b4e 0%, #4e6b89 100%);
+            margin: 8px 0;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #worker-list li:hover {
+            transform: translateX(5px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .footer { display: contents; }
+
+        .footer-section.nemelt { grid-column: 1; grid-row: 3; }
+        .footer-section.batlav { grid-column: 2; grid-row: 3; }
+
+        .worker-section {
+            grid-column: 3;
+            grid-row: 2 / 4;
+            align-self: stretch;
+            justify-self: stretch;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: none;
+            height: auto;
+            background: white;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .footer-section {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(67, 160, 71, 0.08);
+            background: #111;
+            min-width: 0;
+        }
+
+        .footer-section h2 {
+            color: #fff;
+        }
+
+        .nemelt {
+            background: #e3f0fc !important;
+        }
+
+        .batlav {
+            background: #e3f0fc !important;
+        }
+
+        .footer-section h2 {
+            color: #fff;
+        }
+
+        .footer-section select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.95);
+            transition: all 0.3s ease;
+        }
+
+        .footer-section select:focus {
+            outline: none;
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+
+        .footer-section textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 1.25em;
+            font-weight: 700;
+            color: #111;
+            text-align: justify;
+            text-justify: inter-word;
+            resize: vertical;
+            min-height: 150px;
+            background: rgba(255,255,255,0.95);
+            transition: all 0.3s ease;
+        }
+
+        .footer-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .footer-section label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(124, 58, 237, 0.35);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .pdf-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Saved records section */
+        .saved-records-section {
+            grid-column: 1 / -1;
+            grid-row: 4;
+            padding: 25px;
+            background: linear-gradient(135deg, #43a047 0%, #e53935 100%);
+            border-radius: 15px;
+            margin: 0;
+            min-width: 0;
+        }
+
+        .saved-records-section h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .records-day-group {
+            margin-bottom: 20px;
+        }
+
+        .records-day-title {
+            margin: 0 0 10px 0;
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.85);
+            border-left: 4px solid #e53935;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .record-card {
+            background: #fff;
+            color: #222;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(67, 160, 71, 0.08);
+            border-left: 4px solid #e53935;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0f2fe;
+        }
+
+        .record-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0369a1;
+        }
+
+        .record-date {
+            font-size: 14px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .record-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .record-field {
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .record-field strong {
+            display: block;
+            color: #475569;
+            font-size: 12px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .record-field span {
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .workers-list {
+            grid-column: 1 / -1;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .workers-list h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .workers-list ul {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .workers-list li {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: black;
+            border-left: 3px solid #e53935;
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto auto auto; }
+            .video-section { grid-column: 1; }
+            .footer-section.nemelt, .footer-section.batlav { grid-column: 1; }
+            .worker-section { grid-column: 1; grid-row: auto; max-height: none; overflow: visible; }
+            .saved-records-section { grid-column: 1; grid-row: 5; }
+            
+            .header h1 { font-size: 22px; }
+            .header-form { gap: 6px; }
+            .header-form span { font-size: 11px; padding: 5px 8px; }
+            .header-form input, .header-form select { font-size: 11px; padding: 5px 8px; }
+            .header-form input[type="number"] { width: 70px; }
+            .header-form input[type="datetime-local"] { min-width: 160px; }
+            .header-form select { min-width: 140px; max-width: 100%; }
+            .work-type-sizer { font-size: 11px; padding: 5px 34px 5px 8px; }
+            #workType { min-width: 0; }
+        }
+
+        @media (min-width: 901px) {
+            .header-form select {
+                max-width: 220px;
+            }
+
+            #workType {
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+        <!-- ...existing code... -->
+        <div class="container">
+        <div class="header">
+            <h1 style="text-align:center; color: #000; width:100%; font-size:1.4em;">Ажлын газрын байршил</h1>
+            <div class="header-form">
+                <input type="datetime-local" id="workDate">
+                <span>ӨДӨР</span>
+                <select id="location1">
+                     <option value="АМГАЛАН">АМГАЛАН</option>
+                    <option value="ТУУЛ">ТУУЛ</option>
+                    <option value="ХОНХОР">ХОНХОР</option>
+                    <option value="БУМБАТ">БУМБАТ</option>
+                    <option value="БАЯН">БАЯН</option>
+                    <option value="ХАЙРХАН">ХАЙРХАН</option>
+                    <option value="ХООЛТ">ХООЛТ</option>
+                    <option value="ЦАГААН ХЯР">ЦАГААН ХЯР</option>
+                    <option value="ЧУЛУУТ">ЧУЛУУТ</option>
+                    <option value="ХАНГАЙ">ХАНГАЙ</option>
+                </select>
+                <span>ӨРТӨӨ/ЗӨРЛӨГ-С</span>
+                <select id="location2">
+                    <option value="АМГАЛАН">АМГАЛАН</option>
+                    <option value="ТУУЛ">ТУУЛ</option>
+                    <option value="ХОНХОР">ХОНХОР</option>
+                    <option value="БУМБАТ">БУМБАТ</option>
+                    <option value="БАЯН">БАЯН</option>
+                    <option value="ХАЙРХАН">ХАЙРХАН</option>
+                    <option value="ХООЛТ">ХООЛТ</option>
+                    <option value="ЦАГААН ХЯР">ЦАГААН ХЯР</option>
+                    <option value="ЧУЛУУТ">ЧУЛУУТ</option>
+                    <option value="ХАНГАЙ">ХАНГАЙ</option>
+                </select>
+                <span>ХООРОНДЫН ЗАМЫН</span>
+                <input type="number" id="distance1" placeholder="0">
+                <span>КМ-ИЙН</span>
+                <input type="number" id="meter1" placeholder="0">
+                <span>ЗУУTAAC</span>
+                <input type="number" id="distance2" placeholder="0">
+                <span>КМ-ИЙН</span>
+                <input type="number" id="meter2" placeholder="0">
+                <span>ЗУУТЫГ ДУУCТАЛ</span>
+                <span class="work-type-select-wrap">
+                    <span id="workTypeSizer" class="work-type-sizer" aria-hidden="true"></span>
+                    <select id="workType">
+                        <option value="СУМЫН БАШМАК ЦЭВЭРЛЭХ, ГЭМТЭЛ ЗАСАХ">СУМЫН БАШМАК ЦЭВЭРЛЭХ, ГЭМТЭЛ ЗАСАХ</option>
+                        <option value="ДЭР МОД НЭГЧИЛЭН СОЛИХ">ДЭР МОД НЭГЧИЛЭН СОЛИХ</option>
+                        <option value="ЧИГ ТАТАХ">ЧИГ ТАТАХ</option>
+                        <option value="ТУСГААРЛАХ УУЛЗВАР ЗАДАЛЖ ЦЭВЭРЛЭХ">ТУСГААРЛАХ УУЛЗВАР ЗАДАЛЖ ЦЭВЭРЛЭХ</option>
+                        <option value="ШУУДУУ СЭРГЭЭХ">ШУУДУУ СЭРГЭЭХ</option>
+                        <option value="ЗАМ ТӨМРИЙН ШАМРАЛТ АВАХ">ЗАМ ТӨМРИЙН ДУХНЫ ШАМРАЛТ АВАХ</option>
+                        <option value="ТӨМӨР БЕТОН ДЭР НЭГЧИЛЭН СОЛИХ">ТӨМӨР БЕТОН ДЭР НЭГЧИЛЭН СОЛИХ</option>
+                        <option value="ПАСПОРТЫН ҮЗЛЭГ ХИЙХ">ПАСПОРТЫН ҮЗЛЭГ ХИЙХ</option>
+                        <option value="ЭЛС ЦЭВЭРЛЭХ">ЭЛС ЦЭВЭРЛЭХ</option>
+                        <option value="ЗАМ ТӨМӨР СОЛИХ">ЗАМ ТӨМӨР СОЛИХ</option>
+                        <option value="ДАРААЛСАН 3-С ИЛҮҮГҮЙ ДЭРИЙН ҮЗҮҮР ХАНЗАЛЖ ЦАРИГ ТОХИРУУЛАХ">ДАРААЛСАН 3-С ИЛҮҮГҮЙ ДЭРИЙН ҮЗҮҮР ХАНЗАЛЖ ЦАРИГ ТОХИРУУЛАХ</option>
+                        <option value="ЗАНЫГ 20 ММ ХҮРТЭЛ ӨРГӨЖ ЦАХИЛГААН ЧИГЖҮҮРЭЭР ЧИГЖИХ" selected>ЗАНЫГ 20 ММ ХҮРТЭЛ ӨРГӨЖ ЦАХИЛГААН ЧИГЖҮҮРЭЭР ЧИГЖИХ</option>
+                        <option value="ЖИЖИГ ХЭРЭГЛЭЛ АЧИЖ БУУЛГАХ" selected>ЖИЖИГ ХЭРЭГЛЭЛ АЧИЖ БУУЛГАХ</option>
+                        <option value="ЗАМ ӨРГӨЖ ЧИГЖИХ" selected>ЗАМ ӨРГӨЖ ЧИГЖИХ</option>
+                        <option value="ЖИЙРГЭЭР ОВОЙЛТ ТҮВШИН ЗАСАХ" selected>ЖИЙРГЭЭР ОВОЙЛТ ТҮВШИН ЗАСАХ</option>
+                        <option value="ЦАРИГ САЛГАЖ УУЛЗВАРЫН ЗАЙ ХӨӨЖ ТОХИРУУЛАХ" selected>ЦАРИГ САЛГАЖ УУЛЗВАРЫН ЗАЙ ХӨӨЖ ТОХИРУУЛАХ</option>
+                        <option value="УУЛЗВАРЫН ЗАЙ ТОХИРУУЛАХ" selected>УУЛЗВАРЫН ЗАЙ ТОХИРУУЛАХ</option>
+                        <option value="ЧИГЖЭЭС ШУУХ" selected>ЧИГЖЭЭС ШУУХ</option>
+                        <option value="ПОДРЕЛЬС ГАРГАХ" selected>ПОДРЕЛЬС ГАРГАХ</option>
+                        <option value="ЦАС ЦЭВЭРЛЭХ" selected>ЦАС ЦЭВЭРЛЭХ</option>
+                        <option value="ЗАМЫН НОГОО ЦЭВЭРЛЭХ" selected>ЗАМЫН НОГОО ЦЭВЭРЛЭХ</option>
+                        <option value="ХАДААС ТУУШ ДАВТАХ" selected>ХАДААС ТУУШ ДАВТАХ</option>
+                        <option value="УУЛЗВАРГҮЙ ЗАМД ХҮЧДЭЛ ТОХИРУУЛАХ" selected>УУЛЗВАРГҮЙ ЗАМД ХҮЧДЭЛ ТОХИРУУЛАХ</option>
+                        <option value="ДҮНЗ ЗӨӨЖ ХУРААХ" selected>ДҮНЗ ЗӨӨЖ ХУРААХ</option>
+                        <option value="ТООНОЛЖ СОЛИХ" selected>ТООНОЛЖ СОЛИХ</option>
+                        <option value="ЗАМ СУМ ЦЭВЭРЛЭХ" selected>ЗАМ СУМ ЦЭВЭРЛЭХ</option>
+                        <option value="ТАШСАН ДЭР ЗАСАХ" selected>ТАШСАН ДЭР ЗАСАХ</option>
+                        <option value="ДЭРИЙН ҮЗҮҮР БООХ" selected>ДЭРИЙН ҮЗҮҮР БООХ</option>
+                        <option value="СУМАН ШИЛЖҮҮЛЭГ СОЛИХ" selected>СУМАН ШИЛЖҮҮЛЭГ СОЛИХ</option>
+                        <option value="ЗАМ ТӨМӨР ТАЙРАХ" selected>ЗАМ ТӨМӨР ТАЙРАХ</option>
+                        <option value="ЗАМ ТӨМӨР НҮХЛЭХ" selected>ЗАМ ТӨМӨР НҮХЛЭХ</option>
+                        <option value="ҮЕРИЙН ЭРГҮҮЛ" selected>ҮЕРИЙН ЭРГҮҮЛ</option>
+                        <option value="СУМЫН МЕТАЛЛ ХЭСЭГ БУДАГ" selected>СУМЫН МЕТАЛЛ ХЭСЭГ БУДАГ</option>
+                        <option value="СУМЫН ОРДИНАТ ТОХИРУУЛАХ" selected>СУМЫН ОРДИНАТ ТОХИРУУЛАХ</option>
+                        <option value="ЗАМЫН ДОХИО ТЭМДЭГТ СОЛИХ ЗАСАХ" selected>ЗАМЫН ДОХИО ТЭМДЭГТ СОЛИХ ЗАСАХ</option>
+                    </select>
+                </span>
+                <span>АЖИЛ ХИЙНЭ.</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="two-video-row">
+                    <div class="video-box">
+                        <label style="display:block; margin-bottom:16px; font-weight:900; color:#fff; font-size:1.4em; color: #000; letter-spacing:1px; text-align: center;">Аюулгүй ажиллагааны зааварчилгаа</label>
+                        <select id="safety">
+                            <option value="https://youtu.be/Y49yAH12msM">ТК-6 Зам өргөж чигжих</option>
+                            <option value="https://youtu.be/0_CWKPXckag">ТК-7 Жийргээр овойлт, түвшин засах</option>
+                            <option value="https://youtu.be/q94FQ0DIgyA">ТК-8 Замд чиг татах</option>
+                            <option value="https://youtu.be/36N1x26E2Po">ТК-9 Цариг тохируулах</option>
+                            <option value="https://youtu.be/ea8F7dKg4iQ">ТК-10 Цариг салгаж уулзварын зай хөөх</option>
+                            <option value="https://youtu.be/ea8F7dKg4iQ">ТК-11 Уулзварын зай тохируулах</option>
+                            <option value="https://youtu.be/-UECEiGRWWs">ТК-13 Чигжээс шуух</option>
+                            <option value="https://youtu.be/p1nlGdR7XXQ">ТК-14 Подрельс гаргах</option>
+                            <option value="https://youtu.be/TWzUWp6veno">ТК-15 Цас цэвэрлэх</option>
+                            <option value="https://youtu.be/LijtR0ixomY">ТК-16 Замын ногоо цэвэрлэх</option>
+                            <option value="https://youtu.be/n474LGDz6Rs">ТК-49 Хадаас тууш давтах</option>
+                            <option value="https://youtu.be/uTVp7qAFNGs">ТК-22 Уулзваргүй замд чиг татах</option>
+                            <option value="https://youtu.be/2-v6ztfdvug">ТК-18 Сум цэвэрлэгээний ажил</option>
+                            <option value="https://youtu.be/i_m6D2SgTTk">ТК-20 Уулзваргүй замд гулдмайн хүчдэл тохируулах</option>
+                            <option value="https://youtu.be/feA2XjwCDaY">ТК-21 Уулзваргүй замд резин жийргээр овойлт түвшин засах</option>
+                            <option value="https://youtu.be/1qALRpE4Fb4">ТК-58 Суман шилжүүлгийн металл хэсэгт тэмдэглэгээ тавих</option>
+                            <option value="https://youtu.be/40JvluAjS0Y">ТК-64 Модон дэр зөөж хураах</option>
+                            <option value="https://youtu.be/Qx_5w7RZjeE">ТК-89 Модон дэр, дүнзний үзүүр боох</option>
+                            <option value="https://youtu.be/7McmSPI-oI4">ТК-59 Зам төмөр жишиж хураах</option>
+                            <option value="https://youtu.be/KifZZjjq7RI">ТК-65 Дүнз зөөж хураах</option>
+                        </select>
+                        <div id="videoContainer">
+                            <video id="safetyVideo" controls>
+                                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                                Таны браузер энэ видеог дэмжихгүй байна.
+                            </video>
+                            <iframe id="safetyYoutube" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" style="display: none;"></iframe>
+                        </div>
+                    </div>
+                    <div class="video-box">
+                        <label style="display:block; margin-bottom:16px; font-weight:900; color:#fff; font-size:1.4em; color:#000; letter-spacing:1px; text-align: center;">Ажлын газрын хорио хамгаалалт</label>
+                        <select id="restriction">
+                               <option value="https://youtu.be/ZF86yzcpAaU" data-youtube-id="ZF86yzcpAaU">Хоорондын замд ажлын газрыг зөөврийн Ш дохиогоор хашиж хамгаалах</option>
+                            <option value="signal_placement" data-youtube-id="xBpluLz0WTA">Маягт №7 ажлын газрыг хашиж хамгаалах</option>
+                            <option value="https://youtu.be/itIMhqeQCE0">200м-с их ажлын талбарыг хашиж хамгаалах</option>
+                            <option value="https://youtu.be/AXei6REAohg">Өртөөний замын ойролцоо галт тэргийг багасгасан хурдтайгаар өнгөрүүлэх ажлын газрыг хашиж хамгаалах</option>
+                            <option value="https://youtu.be/vFYK4Fj1i24">Өртөөний замын ойролцоо галт тэргийг зогсохыг шаардсан ажлын газрыг хашиж хамгаалах</option>
+                            <option value="https://youtu.be/xHLi0iqBO7I">Өртөөний замын ойролцоо хорио хамгаалалт байрлуулах боломжгүй ажлын газрыг хашиж хамгаалах</option>
+                            <option value="https://youtu.be/fKWeS1vrz4U">Гэнэт гарсан саадтай газрыг хашиж хамгаалах</option>
+                            <option value="accident_history" data-youtube-id="xBpluLz0WTA">Ажил гүйцэтгэх үед учирч байсан бодит үл тохиролууд</option>
+                        </select>
+                        <div id="restrictionVideoContainer">
+                                <iframe id="restrictionVideo" src="https://www.youtube.com/embed/ZF86yzcpAaU?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+                            <div class="video-actions">
+                                    <a id="restrictionVideoLink" href="https://youtu.be/ZF86yzcpAaU" target="_blank" rel="noopener noreferrer">YouTube дээр бүрэн дэлгэцээр нээх</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="worker-section">
+                <h2 style="font-size:1.4em; font-weight:900; color:#fff; color: #000; letter-spacing:1px; text-align: center;">Ажил хуваарилалт</h2>
+                <div class="worker-form">
+                    <input type="text" id="job" placeholder="Ажлын нэр">
+                    <div class="name-selector">
+                        <div class="name-selector-head">
+                            <input type="text" id="nameSearch" placeholder="Нэр шүүж эсвэл шинэ нэр бичих">
+                            <button type="button" id="addNameOption">Нэмэх</button>
+                        </div>
+                        <div class="name-selector-meta">
+                            <span>Товшиж сонгох</span>
+                            <span id="nameSelectionSummary" class="name-selector-summary">0 сонгогдсон</span>
+                        </div>
+                        <div id="nameOptions" class="name-options"></div>
+                    </div>
+                    <button id="add-worker">+ Ажилтан нэмэх</button>
+                    <div id="recentSelectionPanel" class="recent-selection-panel"></div>
+                </div>
+                <ul id="worker-list"></ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-section nemelt">
+                <h2 style="font-size:1.4em; font-weight:900; color:#fff; color: #000; letter-spacing:1px; text-align: center;">Нэмэлт зааварчилгаа</h2> <br>
+                <textarea id="additionalNotes" placeholder="Нэмэлт заавар хуудас оруулна уу...">Ямарч тохиолдолд ажилтнуудыг зам дээр ажил удирдагчгүй үлдээхгүй байх, ажлын шаардлагаар ажилтнуудыг орхин явах үед ажлыг зогсоон багаж хэрэгсэл болон замчдыг замаас гарсаны дараа ажил удирдагч явна.</textarea>
+            </div>
+
+            <div class="footer-section batlav">
+                <label style="color: #000; text-align: center; font-size: 1.4em; font-weight: 900;">Боловсруулсан:</label>
+                <select id="preparedBy" data-allow-view-mode-edit="true">
+                    <option value="ПДБ Н.Дамдинсүрэн">ПДБ Н.Дамдинсүрэн</option>
+                    <option value="ПДБ Д.Доржбаатар">ПДБ Д.Доржбаатар</option>
+                    <option value="ПДБ Д.Хүчитбаатар">ПДБ Д.Хүчитбаатар</option>
+                    <option value="ПДБ А.Шижирээ">ПДБ А.Шижирээ</option>
+                </select>
+                <label>Хянасан:</label>
+                <select id="reviewedBy" data-allow-view-mode-edit="true">
+                    <option value="ПД Г.Хатанбаатар">ПД Г.Хатанбаатар</option>
+                    <option value="ПДБ Н.Дамдинсүрэн">ПДБ Н.Дамдинсүрэн</option>
+                </select>
+                <button type="button" class="save-btn" id="saveDataBtn" data-allow-view-mode-edit="true">💾 Хадгалах</button>
+            </div>
+        </div>
+
+        <div id="savedRecordsContainer" class="saved-records-section" style="display: none; ">
+            <h2>📋 Хадгалсан бүртгэлүүд</h2>
+            <div id="savedRecordsList"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const safetySelect = document.getElementById("safety");
+            const safetyVideo = document.getElementById("safetyVideo");
+            const safetyYoutube = document.getElementById("safetyYoutube");
+            const restrictionSelect = document.getElementById("restriction");
+            const restrictionVideo = document.getElementById("restrictionVideo");
+            const restrictionVideoLink = document.getElementById("restrictionVideoLink");
+            const restrictionUrlInput = document.getElementById("restrictionUrlInput");
+            const restrictionUrlBtn = document.getElementById("restrictionUrlBtn");
+            const addWorkerBtn = document.getElementById("add-worker");
+            const workerList = document.getElementById("worker-list");
+            const workerSection = document.querySelector(".worker-section");
+            const restrictionBox = document.querySelectorAll(".video-box")[1];
+            const nemeltSection = document.querySelector(".footer-section.nemelt");
+            const batlavSection = document.querySelector(".footer-section.batlav");
+            const jobInput = document.getElementById("job");
+            const nameSearchInput = document.getElementById("nameSearch");
+            const addNameOptionBtn = document.getElementById("addNameOption");
+            const nameOptions = document.getElementById("nameOptions");
+            const nameSelectionSummary = document.getElementById("nameSelectionSummary");
+            const recentSelectionPanel = document.getElementById("recentSelectionPanel");
+            const workTypeSelect = document.getElementById("workType");
+            const workTypeSizer = document.getElementById("workTypeSizer");
+            const savedRecordsContainer = document.getElementById("savedRecordsContainer");
+            const savedRecordsList = document.getElementById("savedRecordsList");
+            const STORAGE_KEY = "ubtz_daily_instruction_records_v1";
+            const NAME_DIRECTORY_KEY = "ubtz_employee_names_v1";
+            const WORKER_DRAFT_KEY = "ubtz_worker_draft_v1";
+            const RECORDS_DB_NAME = "ubtz_instruction_records_db";
+            const RECORDS_STORE_NAME = "app_storage";
+            const RECORDS_PRIMARY_KEY = "saved_records";
+            const DEFAULT_EMPLOYEE_NAMES = [
+                "пр-5 А.Шижирээ",
+                "пр-4 Б.Батболд",
+                "пр-4 Б.Батгэрэл",
+                "пр-4 Ц.Ганболд",
+                "пр-4 Г.Гансүх",
+                "пр-4 Г.Ганчимэг",
+                "пр-4 Л.Ихбаяр",
+                "пр-4 С.Пүрэвнанзад",
+                "пр-4 А.Сүхбаатар",
+                "пр-3 Б.Анхбаатар",
+                "пр-3 Б.Бадрахгэрэл",
+                "пр-3 Б.Баттулга",
+                "пр-3 Ц.Ганхуяг",
+                "пр-3 Б.Донид",
+                "пр-3 Д.Отгончимэг",
+                "пр-3 А.Сувдаа",
+                "пр-3 Н.Хүлэгбаатар",
+                "пр-3 Г.Хүрэлхадаг",
+                "пр-3 Д.Цогтбаатар",
+                "пр-3 С.Чимэддорж",
+                "пр-2 А.Будхүү",
+                "С/Ц О.Гүрбадам",
+                "С/Ц Ч.Өлзийбаяр",
+                "Т/З А.Ариунхэрлэн", 
+                "Т/З Н.Шархүү", 
+                "жолооч О.Эрдэмбаяр", 
+            ];
+            let savedRecords = [];
+            let employeeNames = [];
+            let selectedNames = new Set();
+
+        function normalizeName(value) {
+            return value ? value.trim().replace(/\s+/g, " ") : "";
+        }
+
+        function safeDecode(value) {
+            if (typeof value !== "string") {
+                return "";
+            }
+            try {
+                return decodeURIComponent(value.replace(/\+/g, "%20"));
+            } catch (error) {
+                return value;
+            }
+        }
+
+        function extractNameFromLinkedInput(rawValue) {
+            const raw = normalizeName(rawValue);
+            if (!raw) {
+                return "";
+            }
+
+            const queryLikeMatch = raw.match(/(?:^|[?&#\s,;])(?:name|worker|employee|fullname)=([^&#\s]+)/i);
+            if (queryLikeMatch && queryLikeMatch[1]) {
+                return normalizeName(safeDecode(queryLikeMatch[1]));
+            }
+
+            if (/^(https?:\/\/|www\.)/i.test(raw)) {
+                try {
+                    const parsed = new URL(raw, window.location.origin);
+                    const keyList = ["name", "worker", "employee", "fullname"];
+                    for (let i = 0; i < keyList.length; i += 1) {
+                        const value = parsed.searchParams.get(keyList[i]);
+                        if (value) {
+                            return normalizeName(safeDecode(value));
+                        }
+                    }
+                    return "";
+                } catch (error) {
+                    return "";
+                }
+            }
+
+            return raw;
+        }
+
+        function sanitizeEmployeeName(rawValue) {
+            let candidate = extractNameFromLinkedInput(rawValue);
+            if (!candidate) {
+                return "";
+            }
+
+            const roleKeywords = /(албан\s*тушаал|position|job|operator|инженер|диспетчер|техникч|жолооч|замчин|мастер|гадасчин|краны|цахилгаанчин)/i;
+            const splitMatch = candidate.match(/^(.+?)\s[-|–—/]\s(.+)$/);
+            if (splitMatch && roleKeywords.test(splitMatch[2])) {
+                candidate = normalizeName(splitMatch[1]);
+            }
+
+            const bracketSuffixMatch = candidate.match(/^(.+?)\s\(([^)]+)\)$/);
+            if (bracketSuffixMatch && roleKeywords.test(bracketSuffixMatch[2])) {
+                candidate = normalizeName(bracketSuffixMatch[1]);
+            }
+
+            if (/^(https?:\/\/|www\.)/i.test(candidate)) {
+                return "";
+            }
+
+            candidate = candidate.replace(/[<>]/g, "").trim();
+            return normalizeName(candidate);
+        }
+
+        function normalizeWorkerJob(value) {
+            const text = normalizeName(value);
+            if (!text) {
+                return "";
+            }
+            if (/^(https?:\/\/|www\.)/i.test(text)) {
+                return "";
+            }
+            return text;
+        }
+
+        const LOCKED_EMPLOYEE_NAMES = Array.from(new Set(
+            DEFAULT_EMPLOYEE_NAMES.map(sanitizeEmployeeName).filter(Boolean)
+        )).sort((left, right) => left.localeCompare(right, "mn"));
+        const LOCKED_EMPLOYEE_NAME_SET = new Set(LOCKED_EMPLOYEE_NAMES);
+
+        function isAllowedEmployeeName(name) {
+            return LOCKED_EMPLOYEE_NAME_SET.has(sanitizeEmployeeName(name));
+        }
+
+        function flushWorkerStateToStorage() {
+            persistEmployeeNames();
+            saveWorkerDraft();
+        }
+
+        function persistEmployeeNames() {
+            try {
+                localStorage.setItem(NAME_DIRECTORY_KEY, JSON.stringify(employeeNames));
+            } catch (error) {
+                console.error("Employee names save error:", error);
+            }
+        }
+
+        function clearWorkerDraft() {
+            localStorage.removeItem(WORKER_DRAFT_KEY);
+        }
+
+        function saveWorkerDraft() {
+            if (!workerList) {
+                return;
+            }
+
+            const workers = Array.from(workerList.querySelectorAll("li[data-name]")).map((item) => ({
+                name: sanitizeEmployeeName(item.dataset.name),
+                job: normalizeWorkerJob(item.dataset.job),
+                rank: (item.dataset.rank || "").trim()
+            }));
+
+            const payload = {
+                selectedNames: Array.from(selectedNames),
+                workers,
+                recentSelectionHtml: recentSelectionPanel ? recentSelectionPanel.innerHTML : "",
+                recentSelectionVisible: recentSelectionPanel ? recentSelectionPanel.style.display === "block" : false
+            };
+
+            try {
+                localStorage.setItem(WORKER_DRAFT_KEY, JSON.stringify(payload));
+            } catch (error) {
+                console.error("Worker draft save error:", error);
+            }
+        }
+
+        function removeRecentSelectionName(name, job) {
+            if (!recentSelectionPanel) {
+                return;
+            }
+
+            const normalizedName = normalizeName(name);
+            const targetJob = (job || "").trim();
+            const entries = Array.from(recentSelectionPanel.querySelectorAll(".recent-selection-entry"));
+
+            entries.forEach((entry) => {
+                const titleEl = entry.querySelector(".recent-selection-title");
+                if (!titleEl) {
+                    return;
+                }
+
+                const titleText = titleEl.textContent || "";
+                if (targetJob && !titleText.includes(`: ${targetJob}`)) {
+                    return;
+                }
+
+                const items = Array.from(entry.querySelectorAll(".recent-selection-item"));
+                const matched = items.find((item) => normalizeName(item.textContent) === normalizedName);
+                if (matched) {
+                    matched.remove();
+                }
+
+                const remaining = entry.querySelectorAll(".recent-selection-item");
+                if (remaining.length === 0) {
+                    entry.remove();
+                }
+            });
+
+            const hasEntries = recentSelectionPanel.querySelectorAll(".recent-selection-entry").length > 0;
+            if (!hasEntries) {
+                recentSelectionPanel.innerHTML = "";
+                recentSelectionPanel.style.display = "none";
+            }
+        }
+
+        function appendWorkerListItem(name, job, rank) {
+            const workerMetaLabel = job && rank
+                ? ` - ${job} (${rank}-р зэрэг)`
+                : job
+                    ? ` - ${job}`
+                    : rank
+                        ? ` - ${rank}-р зэрэг`
+                        : "";
+
+            const listItem = document.createElement("li");
+            listItem.innerHTML = `<span><span class="worker-name">${name}</span>${workerMetaLabel}</span>`;
+            listItem.dataset.name = name;
+            listItem.dataset.job = job;
+            listItem.dataset.rank = rank;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "✖ Устгах";
+            deleteBtn.classList.add("delete-btn");
+            deleteBtn.addEventListener("click", function () {
+                if (listItem.parentNode === workerList) {
+                    workerList.removeChild(listItem);
+                }
+                removeRecentSelectionName(name, job);
+                renderNameOptions();
+                saveWorkerDraft();
+            });
+
+            listItem.appendChild(deleteBtn);
+            workerList.appendChild(listItem);
+            return listItem;
+        }
+
+        function loadWorkerDraft() {
+            try {
+                const raw = localStorage.getItem(WORKER_DRAFT_KEY);
+                if (!raw) {
+                    return;
+                }
+
+                const parsed = JSON.parse(raw);
+                const selectedFromDraft = Array.isArray(parsed?.selectedNames)
+                    ? parsed.selectedNames
+                        .map(sanitizeEmployeeName)
+                        .filter((name) => isAllowedEmployeeName(name))
+                    : [];
+                selectedNames = new Set(selectedFromDraft);
+
+                if (workerList) {
+                    workerList.innerHTML = "";
+                }
+
+                if (Array.isArray(parsed?.workers) && parsed.workers.length > 0) {
+                    parsed.workers.forEach((worker) => {
+                        const name = sanitizeEmployeeName(worker?.name);
+                        if (!name || !isAllowedEmployeeName(name)) {
+                            return;
+                        }
+                        const job = normalizeWorkerJob(worker?.job);
+                        const rank = (worker?.rank || "").trim();
+                        appendWorkerListItem(name, job, rank);
+                    });
+                }
+
+                if (recentSelectionPanel) {
+                    recentSelectionPanel.innerHTML = parsed?.recentSelectionHtml || "";
+                    recentSelectionPanel.style.display = parsed?.recentSelectionVisible && recentSelectionPanel.innerHTML
+                        ? "block"
+                        : "none";
+                }
+            } catch (error) {
+                console.error("Worker draft load error:", error);
+                clearWorkerDraft();
+            }
+        }
+
+        function loadEmployeeNames() {
+            employeeNames = [...LOCKED_EMPLOYEE_NAMES];
+            persistEmployeeNames();
+        }
+
+        function setEmployeeNames(nextNames) {
+            employeeNames = [...LOCKED_EMPLOYEE_NAMES];
+            persistEmployeeNames();
+            renderNameOptions();
+        }
+
+        function addEmployeeName(name) {
+            const normalized = sanitizeEmployeeName(name);
+            if (!normalized) {
+                alert("Хүчинтэй нэр оруулна уу.");
+                return false;
+            }
+
+            if (!isAllowedEmployeeName(normalized)) {
+                alert("Зөвхөн урьдчилан оруулсан жагсаалтын нэрсээс сонгоно.");
+                return false;
+            }
+
+            selectedNames.add(normalized);
+            renderNameOptions();
+            saveWorkerDraft();
+            return true;
+        }
+
+        function editEmployeeName(oldName) {
+            alert("Нэр засах боломжгүй. Зөвхөн баталгаажсан жагсаалтын нэрс ашиглана.");
+        }
+
+        function deleteEmployeeName(name) {
+            alert("Нэр устгах боломжгүй. Зөвхөн баталгаажсан жагсаалтын нэрс ашиглана.");
+        }
+
+        function getKnownNames() {
+            return [...employeeNames];
+        }
+
+        function updateNameSelectionSummary() {
+            if (!nameSelectionSummary) {
+                return;
+            }
+
+            nameSelectionSummary.textContent = `${selectedNames.size} сонгогдсон`;
+        }
+
+        function renderNameOptions() {
+            if (!nameOptions) {
+                return;
+            }
+
+            const query = normalizeName(nameSearchInput ? nameSearchInput.value : "").toLowerCase();
+            const knownNames = getKnownNames().filter((name) => {
+                if (!query) {
+                    return true;
+                }
+                return name.toLowerCase().includes(query);
+            });
+
+            nameOptions.innerHTML = "";
+
+            if (knownNames.length === 0) {
+                const emptyState = document.createElement("div");
+                emptyState.className = "name-options-empty";
+                emptyState.innerHTML = query
+                    ? `<strong>${nameSearchInput.value}</strong> нэр олдсонгүй`
+                    : "Хадгалсан нэр алга. Эхний нэрийг дээрх талбараар нэмнэ үү.";
+                nameOptions.appendChild(emptyState);
+                updateNameSelectionSummary();
+                return;
+            }
+
+            knownNames.forEach((name, index) => {
+                const optionId = `name-option-${index}`;
+                const label = document.createElement("label");
+                label.className = "name-option";
+                if (selectedNames.has(name)) {
+                    label.classList.add("is-selected");
+                }
+
+                label.setAttribute("for", optionId);
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = optionId;
+                checkbox.value = name;
+                checkbox.checked = selectedNames.has(name);
+
+                checkbox.addEventListener("change", function () {
+                    if (checkbox.checked) {
+                        selectedNames.add(name);
+                        label.classList.add("is-selected");
+                    } else {
+                        selectedNames.delete(name);
+                        label.classList.remove("is-selected");
+                    }
+                    updateNameSelectionSummary();
+                    saveWorkerDraft();
+                });
+
+                const body = document.createElement("span");
+                body.className = "name-option-body";
+
+                const text = document.createElement("span");
+                text.className = "name-option-text";
+                text.textContent = name;
+                body.appendChild(text);
+
+                label.appendChild(checkbox);
+                label.appendChild(body);
+                nameOptions.appendChild(label);
+            });
+
+            updateNameSelectionSummary();
+        }
+
+        function seedNameFromInput() {
+            const newName = sanitizeEmployeeName(nameSearchInput ? nameSearchInput.value : "");
+            if (!newName) {
+                return;
+            }
+
+            if (!isAllowedEmployeeName(newName)) {
+                alert("Шинэ нэр нэмэхгүй. Жагсаалт дахь нэрийг сонгоно уу.");
+                return;
+            }
+
+            addEmployeeName(newName);
+            if (nameSearchInput) {
+                nameSearchInput.value = "";
+            }
+            renderNameOptions();
+        }
+
+        function updateWorkTypeWidth() {
+            if (!workTypeSelect || !workTypeSizer) {
+                return;
+            }
+
+            const selectedOption = workTypeSelect.options[workTypeSelect.selectedIndex];
+            workTypeSizer.textContent = selectedOption ? selectedOption.text : "";
+        }
+
+        function syncWorkerSectionHeight() {
+            if (!workerSection) {
+                return;
+            }
+
+            if (window.matchMedia("(max-width: 900px)").matches) {
+                workerSection.style.height = "auto";
+                workerSection.style.minHeight = "0";
+                return;
+            }
+
+            workerSection.style.height = "100%";
+            workerSection.style.minHeight = "100%";
+        }
+
+        function renderRecentSelection(names, job, rank) {
+            if (!recentSelectionPanel) {
+                return;
+            }
+
+            if (!Array.isArray(names) || names.length === 0) {
+                return;
+            }
+
+            const safeNames = names.map(sanitizeEmployeeName).filter(Boolean);
+            if (safeNames.length === 0) {
+                return;
+            }
+
+            const jobText = job ? job : "Ажлын нэр оруулаагүй";
+            const rankText = rank ? ` (${rank}-р зэрэг)` : "";
+            const title = `<div class="recent-selection-title">Сүүлд сонгож нэмсэн хүмүүс: ${jobText}${rankText}</div>`;
+            const list = `<div class="recent-selection-list">${safeNames.map((name) => `<div class="recent-selection-item">${name}</div>`).join("")}</div>`;
+            const entry = `<div class="recent-selection-entry">${title}${list}</div>`;
+
+            recentSelectionPanel.insertAdjacentHTML("beforeend", entry);
+            recentSelectionPanel.style.display = "block";
+            saveWorkerDraft();
+        }
+
+        function openRecordsDb() {
+            return new Promise((resolve, reject) => {
+                if (typeof indexedDB === "undefined") {
+                    reject(new Error("IndexedDB unsupported"));
+                    return;
+                }
+
+                const request = indexedDB.open(RECORDS_DB_NAME, 1);
+
+                request.onupgradeneeded = function (event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(RECORDS_STORE_NAME)) {
+                        db.createObjectStore(RECORDS_STORE_NAME, { keyPath: "key" });
+                    }
+                };
+
+                request.onsuccess = function () {
+                    resolve(request.result);
+                };
+
+                request.onerror = function () {
+                    reject(request.error || new Error("IndexedDB open failed"));
+                };
+            });
+        }
+
+        async function setRecordsToIndexedDb(records) {
+            const db = await openRecordsDb();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(RECORDS_STORE_NAME, "readwrite");
+                const store = tx.objectStore(RECORDS_STORE_NAME);
+                store.put({ key: RECORDS_PRIMARY_KEY, value: records });
+
+                tx.oncomplete = function () {
+                    db.close();
+                    resolve();
+                };
+
+                tx.onerror = function () {
+                    db.close();
+                    reject(tx.error || new Error("IndexedDB write failed"));
+                };
+            });
+        }
+
+        async function getRecordsFromIndexedDb() {
+            const db = await openRecordsDb();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(RECORDS_STORE_NAME, "readonly");
+                const store = tx.objectStore(RECORDS_STORE_NAME);
+                const req = store.get(RECORDS_PRIMARY_KEY);
+
+                req.onsuccess = function () {
+                    const value = req.result && Array.isArray(req.result.value) ? req.result.value : null;
+                    db.close();
+                    resolve(value);
+                };
+
+                req.onerror = function () {
+                    db.close();
+                    reject(req.error || new Error("IndexedDB read failed"));
+                };
+            });
+        }
+
+        async function persistSavedRecords() {
+            try {
+                await setRecordsToIndexedDb(savedRecords);
+                return;
+            } catch (error) {
+                console.warn("IndexedDB persist failed, fallback to localStorage:", error);
+            }
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
+            } catch (error) {
+                console.error("Saved records persist error:", error);
+                throw error;
+            }
+        }
+
+        async function loadSavedRecords() {
+            try {
+                const indexedDbRecords = await getRecordsFromIndexedDb();
+                if (Array.isArray(indexedDbRecords)) {
+                    savedRecords = indexedDbRecords;
+                    return;
+                }
+            } catch (error) {
+                console.warn("IndexedDB load failed, trying localStorage:", error);
+            }
+
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    savedRecords = parsed;
+                    try {
+                        await setRecordsToIndexedDb(savedRecords);
+                        localStorage.removeItem(STORAGE_KEY);
+                    } catch (migrationError) {
+                        console.warn("Legacy migration to IndexedDB failed:", migrationError);
+                    }
+                }
+            } catch (error) {
+                console.error("Saved records load error:", error);
+                savedRecords = [];
+            }
+        }
+
+        function getRecordDayKey(record) {
+            const source = record.workDate || record.timestamp;
+            const parts = getUlaanbaatarDateTimeParts(source);
+            if (!parts) {
+                return "Огноо тодорхойгүй";
+            }
+            const yyyy = parts.year;
+            const mm = parts.month;
+            const dd = parts.day;
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function getUlaanbaatarDateTimeParts(source) {
+            if (!source) {
+                return null;
+            }
+
+            const localDateTimeMatch = String(source).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+            if (localDateTimeMatch) {
+                return {
+                    year: localDateTimeMatch[1],
+                    month: localDateTimeMatch[2],
+                    day: localDateTimeMatch[3],
+                    hour: localDateTimeMatch[4],
+                    minute: localDateTimeMatch[5],
+                    second: localDateTimeMatch[6] || "00"
+                };
+            }
+
+            const dateObj = new Date(source);
+            if (Number.isNaN(dateObj.getTime())) {
+                return null;
+            }
+
+            const formatter = new Intl.DateTimeFormat("en-CA", {
+                timeZone: "Asia/Ulaanbaatar",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false
+            });
+
+            const partMap = {};
+            formatter.formatToParts(dateObj).forEach((part) => {
+                if (part.type !== "literal") {
+                    partMap[part.type] = part.value;
+                }
+            });
+
+            if (!partMap.year || !partMap.month || !partMap.day || !partMap.hour || !partMap.minute || !partMap.second) {
+                return null;
+            }
+
+            return {
+                year: partMap.year,
+                month: partMap.month,
+                day: partMap.day,
+                hour: partMap.hour,
+                minute: partMap.minute,
+                second: partMap.second
+            };
+        }
+
+        function formatUlaanbaatarDateTime(source) {
+            const parts = getUlaanbaatarDateTimeParts(source);
+            if (!parts) {
+                return "Огноо тодорхойгүй";
+            }
+            return `${parts.year}.${parts.month}.${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+        }
+
+        function getCurrentUlaanbaatarDateTimeLocalInputValue() {
+            const nowParts = getUlaanbaatarDateTimeParts(new Date().toISOString());
+            if (!nowParts) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, "0");
+                const dd = String(now.getDate()).padStart(2, "0");
+                const hh = String(now.getHours()).padStart(2, "0");
+                const min = String(now.getMinutes()).padStart(2, "0");
+                return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+            }
+            return `${nowParts.year}-${nowParts.month}-${nowParts.day}T${nowParts.hour}:${nowParts.minute}`;
+        }
+
+        function toDateLabel(dayKey) {
+            if (dayKey === "Огноо тодорхойгүй") {
+                return dayKey;
+            }
+            return new Date(`${dayKey}T00:00:00`).toLocaleDateString("mn-MN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+        }
+
+        const dateTimeString = getCurrentUlaanbaatarDateTimeLocalInputValue();
+        document.getElementById('workDate').value = dateTimeString;
+        updateWorkTypeWidth();
+        syncWorkerSectionHeight();
+
+        function updateSafetyVideo() {
+            const selectedOption = safetySelect && safetySelect.selectedOptions ? safetySelect.selectedOptions[0] : null;
+            let selectedValue = (selectedOption && selectedOption.dataset && selectedOption.dataset.youtubeId)
+                ? selectedOption.dataset.youtubeId
+                : safetySelect.value;
+            let videoSource = "";
+            const youtubeVideoId = extractYouTubeId(selectedValue);
+
+            if (selectedValue === "esp_safety") {
+                videoSource = "./Osol garsan tohioldol.mp4";
+            } else if (selectedValue === "pch2") {
+                videoSource = "./pch2.mp4";
+            } else if (selectedValue === "pch6") {
+                videoSource = "./pch6.mp4";
+            } else if (selectedValue === "pull_line_safety") {
+                videoSource = "./ZAM 1 OSOL DUH SHTORK.mp4";
+            } else if (selectedValue === "replace_sleeper") {
+                videoSource = "./ZAM 6 OSOL DUH SHTORK (1).mp4";
+            }
+
+            if (youtubeVideoId) {
+                safetyVideo.pause();
+                safetyVideo.removeAttribute("src");
+                while (safetyVideo.firstChild) {
+                    safetyVideo.removeChild(safetyVideo.firstChild);
+                }
+                safetyVideo.style.display = "none";
+                safetyYoutube.style.display = "block";
+                safetyYoutube.src = `https://www.youtube.com/embed/${youtubeVideoId}?rel=0`;
+                return;
+            }
+
+            safetyYoutube.src = "";
+            safetyYoutube.style.display = "none";
+            safetyVideo.style.display = "block";
+
+            if (videoSource) {
+                // Remove all <source> children
+                while (safetyVideo.firstChild) {
+                    safetyVideo.removeChild(safetyVideo.firstChild);
+                }
+                // Try <source> method first
+                const srcEl = document.createElement('source');
+                srcEl.src = encodeURI(videoSource);
+                srcEl.type = 'video/mp4';
+                safetyVideo.appendChild(srcEl);
+                // Try to load and play
+                let triedFallback = false;
+                function tryFallback() {
+                    if (!triedFallback) {
+                        triedFallback = true;
+                        safetyVideo.removeChild(srcEl);
+                        safetyVideo.src = encodeURI(videoSource);
+                        safetyVideo.load();
+                        safetyVideo.play().catch(() => {});
+                    } else {
+                        alert('Видео ачаалахад алдаа гарлаа. Файлын зам зөв эсэхийг шалгана уу.');
+                        console.error('Safety video failed to load', videoSource);
+                    }
+                }
+                safetyVideo.onerror = tryFallback;
+                try {
+                    safetyVideo.load();
+                    safetyVideo.play().catch(() => {});
+                } catch (err) {
+                    tryFallback();
+                }
+            }
+        }
+
+        workTypeSelect.addEventListener("change", updateWorkTypeWidth);
+        window.addEventListener("resize", updateWorkTypeWidth);
+        window.addEventListener("resize", syncWorkerSectionHeight);
+        window.addEventListener("pagehide", flushWorkerStateToStorage);
+        window.addEventListener("beforeunload", flushWorkerStateToStorage);
+
+        if (typeof ResizeObserver !== "undefined" && restrictionBox) {
+            new ResizeObserver(syncWorkerSectionHeight).observe(restrictionBox);
+        }
+
+        safetySelect.addEventListener("change", updateSafetyVideo);
+
+        if (safetySelect && safetySelect.options) {
+            Array.from(safetySelect.options).forEach((option) => {
+                const videoId = extractYouTubeId(option.value || "");
+                if (videoId) {
+                    option.dataset.youtubeId = videoId;
+                }
+            });
+        }
+
+        function extractYouTubeId(value) {
+            if (!value) {
+                return "";
+            }
+            const trimmed = value.trim();
+            const idPattern = /^[A-Za-z0-9_-]{11}$/;
+            if (idPattern.test(trimmed)) {
+                return trimmed;
+            }
+            const knownPatterns = [
+                /youtu\.be\/([A-Za-z0-9_-]{11})/,
+                /[?&]v=([A-Za-z0-9_-]{11})/,
+                /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
+                /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/,
+                /youtube\.com\/v\/([A-Za-z0-9_-]{11})/
+            ];
+            for (const pattern of knownPatterns) {
+                const match = trimmed.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return "";
+        }
+
+        function updateRestrictionVideo(option, shouldAutoplay = false) {
+            if (!option) {
+                return;
+            }
+            const videoId = extractYouTubeId(option.dataset.youtubeId || option.value);
+            if (!videoId) {
+                return;
+            }
+            const autoplayParam = shouldAutoplay ? "&autoplay=1" : "";
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0${autoplayParam}`;
+            restrictionVideo.src = "about:blank";
+            restrictionVideo.src = embedUrl;
+            restrictionVideoLink.href = `https://youtu.be/${videoId}`;
+        }
+
+        restrictionSelect.addEventListener("change", function () {
+            updateRestrictionVideo(restrictionSelect.selectedOptions[0], true);
+        });
+
+        updateSafetyVideo();
+        updateRestrictionVideo(restrictionSelect.selectedOptions[0]);
+
+        if (restrictionUrlBtn && restrictionUrlInput) {
+            restrictionUrlBtn.addEventListener("click", function () {
+                const videoId = extractYouTubeId(restrictionUrlInput.value);
+                if (!videoId) {
+                    alert('YouTube бичлэгийн холбоосын форматыг шалгана уу.');
+                    return;
+                }
+                const customOption = document.createElement("option");
+                customOption.value = `custom_${Date.now()}`;
+                customOption.dataset.youtubeId = videoId;
+                customOption.textContent = `Шинэ бичлэг (${videoId})`;
+                restrictionSelect.appendChild(customOption);
+                customOption.selected = true;
+                updateRestrictionVideo(customOption);
+                restrictionUrlInput.value = "";
+            });
+        }
+
+        function handleAddWorker() {
+            const job = jobInput.value.trim();
+            const rank = "";
+            const selectedWorkerNames = Array.from(selectedNames);
+
+            if (selectedWorkerNames.length > 0 && job) {
+                const addedNames = [];
+
+                selectedWorkerNames.forEach((name) => {
+                    appendWorkerListItem(name, job, rank);
+                    addedNames.push(name);
+                });
+
+                if (addedNames.length === 0) {
+                    alert("Сонгосон нэр олдсонгүй!");
+                    return;
+                }
+
+                renderRecentSelection(addedNames, job, rank);
+
+                jobInput.value = "";
+                if (nameSearchInput) {
+                    nameSearchInput.value = "";
+                }
+                selectedNames.clear();
+                updateNameSelectionSummary();
+                renderNameOptions();
+                nameSearchInput.focus();
+                saveWorkerDraft();
+            } else {
+                alert("Чекээр дор хаяж нэг нэр сонгож, ажлын нэр оруулна уу!");
+            }
+        }
+
+        addWorkerBtn.addEventListener("click", handleAddWorker);
+
+        if (addNameOptionBtn) {
+            addNameOptionBtn.addEventListener("click", seedNameFromInput);
+        }
+
+        if (nameSearchInput) {
+            nameSearchInput.addEventListener("input", renderNameOptions);
+            nameSearchInput.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    seedNameFromInput();
+                }
+            });
+        }
+
+        [jobInput].forEach((input) => {
+            input.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddWorker();
+                }
+            });
+        });
+
+        const saveDataBtn = document.getElementById('saveDataBtn');
+        if (saveDataBtn) {
+            saveDataBtn.disabled = false;
+            saveDataBtn.addEventListener('click', async function() {
+                try {
+                    const formData = {
+                        workDate: document.getElementById('workDate').value,
+                        location1: document.getElementById('location1').value,
+                        location2: document.getElementById('location2').value,
+                        distance1: document.getElementById('distance1').value,
+                        meter1: document.getElementById('meter1').value,
+                        distance2: document.getElementById('distance2').value,
+                        meter2: document.getElementById('meter2').value,
+                        workType: document.getElementById('workType').value,
+                        safety: document.getElementById('safety').value,
+                        restriction: document.getElementById('restriction').value,
+                        additionalNotes: document.getElementById('additionalNotes').value,
+                        preparedBy: document.getElementById('preparedBy').value,
+                        reviewedBy: document.getElementById('reviewedBy').value,
+                        workers: [],
+                        timestamp: new Date().toISOString()
+                    };
+
+                    const workers = workerList.getElementsByTagName('li');
+                    for (let worker of workers) {
+                        formData.workers.push({
+                            name: worker.dataset.name,
+                            job: worker.dataset.job,
+                            rank: worker.dataset.rank
+                        });
+                    }
+
+                    savedRecords.push(formData);
+                    await persistSavedRecords();
+                    displaySavedRecords();
+                    resetForm();
+                    alert('✓ Өгөгдөл амжилттай хадгалагдлаа!');
+                } catch (error) {
+                    console.error('Save action error:', error);
+                    alert('Хадгалах үед алдаа гарлаа. Браузерийн storage-д хандах эрхийг шалгаад дахин оролдоно уу.');
+                }
+            });
+        }
+
+        function displaySavedRecords() {
+            if (savedRecords.length === 0) {
+                savedRecordsContainer.style.display = 'none';
+                return;
+            }
+
+            savedRecordsContainer.style.display = 'block';
+            savedRecordsList.innerHTML = '';
+
+            const groupedRecords = {};
+            const sortedRecords = [...savedRecords].sort((a, b) => {
+                const timeA = new Date(a.workDate || a.timestamp || 0).getTime();
+                const timeB = new Date(b.workDate || b.timestamp || 0).getTime();
+                return timeB - timeA;
+            });
+
+            sortedRecords.forEach((record) => {
+                const dayKey = getRecordDayKey(record);
+                if (!groupedRecords[dayKey]) {
+                    groupedRecords[dayKey] = [];
+                }
+                groupedRecords[dayKey].push(record);
+            });
+
+            const dayKeys = Object.keys(groupedRecords).sort((a, b) => {
+                if (a === "Огноо тодорхойгүй") {
+                    return 1;
+                }
+                if (b === "Огноо тодорхойгүй") {
+                    return -1;
+                }
+                return b.localeCompare(a);
+            });
+
+            dayKeys.forEach((dayKey) => {
+                const dayGroup = document.createElement('div');
+                dayGroup.className = 'records-day-group';
+
+                const dayTitle = document.createElement('h3');
+                dayTitle.className = 'records-day-title';
+                dayTitle.textContent = `${toDateLabel(dayKey)} (${groupedRecords[dayKey].length})`;
+                dayGroup.appendChild(dayTitle);
+
+                groupedRecords[dayKey].forEach((record) => {
+                const card = document.createElement('div');
+                card.className = 'record-card';
+
+                const formatDate = formatUlaanbaatarDateTime(record.workDate || record.timestamp);
+                
+                card.innerHTML = `
+                    <div class="record-header" style="justify-content: flex-start;">
+                        <div class="record-date" style="font-weight:900;font-size:1.1em;letter-spacing:1px; color:#111;">${formatDate}</div>
+                    </div>
+                    <div class="record-body">
+                        <div class="record-field">
+                            <strong>Байршил</strong>
+                            <span>${record.location1} - ${record.location2}</span>
+                        </div>
+                        <div class="record-field">
+                            <strong>Зай</strong>
+                            <span>${record.distance1} км ${record.meter1} м - ${record.distance2} км ${record.meter2} м</span>
+                        </div>
+                        <div class="record-field">
+                            <strong>Ажлын төрөл</strong>
+                            <span>${record.workType}</span>
+                        </div>
+                        <div class="record-field">
+                            <strong>Боловсруулсан</strong>
+                            <span>${record.preparedBy}</span>
+                        </div>
+                        <div class="record-field">
+                            <strong>Хянасан</strong>
+                            <span>${record.reviewedBy}</span>
+                        </div>
+                        ${record.workers.length > 0 ? `
+                        <div class="workers-list">
+                            <h4>Ажилтнууд:</h4>
+                            <ul>
+                                ${record.workers.map(w => {
+                                    const workerName = w?.name || "Нэргүй";
+                                    const workerJob = w?.job || "";
+                                    const workerRank = w?.rank || "";
+                                    const workerMeta = workerJob && workerRank
+                                        ? ` - ${workerJob} (${workerRank}-р зэрэг)`
+                                        : workerJob
+                                            ? ` - ${workerJob}`
+                                            : workerRank
+                                                ? ` - ${workerRank}-р зэрэг`
+                                                : "";
+                                    return `<li><strong>${workerName}</strong>${workerMeta}</li>`;
+                                }).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                        <div class="record-field" style="grid-column: 1 / -1;">
+                            <strong>Нэмэлт мэдээлэл</strong>
+                            <span>${record.additionalNotes}</span>
+                        </div>
+                    </div>
+                `;
+
+                dayGroup.appendChild(card);
+                });
+
+                savedRecordsList.appendChild(dayGroup);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('workDate').value = getCurrentUlaanbaatarDateTimeLocalInputValue();
+            document.getElementById('distance1').value = '';
+            document.getElementById('meter1').value = '';
+            document.getElementById('distance2').value = '';
+            document.getElementById('meter2').value = '';
+            
+            workerList.innerHTML = '';
+            selectedNames.clear();
+            if (recentSelectionPanel) {
+                recentSelectionPanel.innerHTML = "";
+                recentSelectionPanel.style.display = "none";
+            }
+            if (nameSearchInput) {
+                nameSearchInput.value = '';
+            }
+            renderNameOptions();
+            clearWorkerDraft();
+        }
+
+        const savePdfBtn = document.getElementById('savePdfBtn');
+        if (savePdfBtn) {
+            savePdfBtn.addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text('AJLYN GAZRYN BATALAGAAJUULALT', 20, 20);
+            
+            doc.setFontSize(12);
+            const workDate = document.getElementById('workDate').value || 'Ogonoo oruulaagui';
+            const location1 = document.getElementById('location1').value || 'SAIKHAN';
+            const location2 = document.getElementById('location2').value || 'SAIKHAN';
+            const workType = document.getElementById('workType').value || '';
+            
+            doc.text(`Ogonoo: ${workDate}`, 20, 35);
+            doc.text(`Bayrshil: ${location1} - ${location2}`, 20, 45);
+            doc.text(`Ajlyn torol: ${workType}`, 20, 55);
+            
+            doc.setFontSize(14);
+            doc.text('Ajiltnuud:', 20, 70);
+            doc.setFontSize(11);
+            const workers = workerList.getElementsByTagName('li');
+            let yPos = 80;
+            for (let i = 0; i < workers.length; i++) {
+                const workerText = workers[i].querySelector('span').textContent;
+                doc.text(`${i + 1}. ${workerText}`, 25, yPos);
+                yPos += 8;
+            }
+
+            if (yPos < 200) {
+                doc.setFontSize(12);
+                doc.text('Nemelt medeelel:', 20, yPos + 10);
+                doc.setFontSize(10);
+                const notes = document.getElementById('additionalNotes').value;
+                const splitNotes = doc.splitTextToSize(notes, 170);
+                doc.text(splitNotes, 20, yPos + 20);
+            }
+
+            doc.setFontSize(11);
+            doc.text(`Bolovsoruulsan: ${document.getElementById('preparedBy').value}`, 20, 270);
+            doc.text(`Hyanasan: ${document.getElementById('reviewedBy').value}`, 20, 280);
+
+            const fileName = `ajlyn_gazryn_burtgel_${new Date().getTime()}.pdf`;
+            doc.save(fileName);
+            alert('✓ PDF файл амжилттай татагдлаа!');
+        });
+        }
+
+        await loadSavedRecords();
+        loadEmployeeNames();
+        loadWorkerDraft();
+        displaySavedRecords();
+        renderNameOptions();
+    });
+</script>
