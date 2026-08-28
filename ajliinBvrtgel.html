@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ажлын бүртгэл</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --steel-900:#1C2B39;
+    --steel-700:#2C4356;
+    --steel-500:#3D5A6C;
+    --steel-300:#7C97A6;
+    --paper:#F5F3EE;
+    --paper-dim:#EAE6DC;
+    --ink:#22282E;
+    --ink-dim:#5C6670;
+    --line:#D8D3C7;
+    --signal-green:#3F7D52;
+    --signal-green-bg:#E4EFE6;
+    --signal-amber:#B9791E;
+    --signal-amber-bg:#F6EAD4;
+    --signal-red:#B23A32;
+    --signal-red-bg:#F3E1DE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .wrap{width:100%;max-width:none;margin:0 auto;padding:0 20px 64px;}
+
+  /* ---------- header: signal plaque ---------- */
+  header.masthead{
+    background:var(--steel-900);
+    color:var(--paper);
+    padding:34px 20px 28px;
+    margin-bottom:28px;
+    position:relative;
+    border-bottom:4px solid var(--signal-amber);
+  }
+  header.masthead .inner{width:100%;max-width:none;margin:0 auto;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;justify-content:space-between;}
+  .masthead h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    font-size:clamp(1.4rem,2.6vw,2rem);
+    margin:0;
+  }
+  .masthead .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--signal-amber);
+    margin:0 0 6px;
+  }
+  .masthead p.sub{
+    margin:8px 0 0;
+    color:var(--steel-300);
+    font-size:.9rem;
+    max-width:520px;
+  }
+  .signal-dots{display:flex;gap:8px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--steel-300);}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .dot.g{background:var(--signal-green);} .dot.a{background:var(--signal-amber);} .dot.r{background:var(--signal-red);}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-bottom:28px;
+    overflow:hidden;
+  }
+  .card-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 22px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff, #FAF9F5);
+  }
+  .card-head h2{
+    font-family:'Oswald',sans-serif;font-weight:600;font-size:1.05rem;
+    text-transform:uppercase;letter-spacing:.02em;color:var(--steel-900);margin:0;
+  }
+  .card-body{padding:22px;}
+
+  .btn-ghost{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.04em;
+    background:var(--signal-red-bg);color:var(--signal-red);border:1px solid transparent;
+    padding:7px 14px;border-radius:4px;cursor:pointer;transition:.15s;
+  }
+  .btn-ghost:hover{background:var(--signal-red);color:#fff;}
+
+  /* ---------- form ---------- */
+  #reportForm{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:18px 16px;
+    padding-top:4px;
+  }
+  @media(max-width:820px){#reportForm{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:480px){#reportForm{grid-template-columns:1fr;}}
+  .field label{
+    display:block;font-size:.72rem;font-family:'IBM Plex Mono',monospace;
+    text-transform:uppercase;letter-spacing:.05em;color:var(--ink-dim);margin-bottom:6px;
+  }
+  .field input,.field select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:4px;
+    background:var(--paper);font-family:'IBM Plex Sans',sans-serif;font-size:.92rem;color:var(--ink);
+  }
+  .field input:focus,.field select:focus{
+    outline:none;border-color:var(--steel-500);box-shadow:0 0 0 3px rgba(61,90,108,.15);
+  }
+  .form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;margin-top:2px;}
+  .btn-primary{
+    font-family:'IBM Plex Mono',monospace;font-size:.8rem;letter-spacing:.04em;
+    background:var(--steel-900);color:#fff;border:none;padding:11px 26px;border-radius:4px;
+    cursor:pointer;transition:.15s;
+  }
+  .btn-primary:hover{background:var(--steel-700);}
+
+  /* ---------- table: rail-tie header + zebra rows ---------- */
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;}
+  table{border-collapse:collapse;width:100%;min-width:920px;font-size:.86rem;}
+  thead th{
+    background:var(--steel-900);color:var(--paper);
+    font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:.68rem;
+    text-transform:uppercase;letter-spacing:.05em;
+    padding:12px 10px;text-align:left;position:sticky;top:0;
+    border-right:1px solid rgba(255,255,255,.08);
+  }
+  thead th:first-child{border-left:none;}
+  tbody td{
+    padding:11px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--paper-dim);
+    white-space:nowrap;font-family:'IBM Plex Sans',sans-serif;
+  }
+  tbody td.mono{font-family:'IBM Plex Mono',monospace;}
+  tbody tr:nth-child(even){background:var(--paper);}
+  tbody tr:hover{background:var(--signal-amber-bg);}
+  tbody tr td:first-child{border-left:3px solid transparent;}
+  tbody tr:hover td:first-child{border-left:3px solid var(--signal-amber);}
+
+  .pill{
+    display:inline-block;padding:3px 9px;border-radius:999px;font-size:.74rem;font-weight:500;
+    font-family:'IBM Plex Mono',monospace;white-space:nowrap;
+  }
+  .pill.green{background:var(--signal-green-bg);color:var(--signal-green);}
+  .pill.amber{background:var(--signal-amber-bg);color:var(--signal-amber);}
+  .pill.red{background:var(--signal-red-bg);color:var(--signal-red);}
+  .pill.steel{background:#EAF0F3;color:var(--steel-700);}
+
+  .empty-row td{padding:34px;text-align:center;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;font-size:.8rem;}
+
+  /* ---------- charts grid ---------- */
+  .chart-lead{padding:22px;border-bottom:1px solid var(--line);}
+  .chart-lead .h{height:280px;position:relative;}
+  .chart-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--line);}
+  @media(max-width:900px){
+    .chart-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .chart-cell,.chart-cell.wide{grid-column:span 1;}
+  }
+  .chart-cell{background:#fff;padding:14px 12px 16px;min-width:0;overflow:hidden;grid-column:span 2;}
+  .chart-cell.wide{grid-column:span 3;}
+  .chart-cell .h canvas{display:block;width:100% !important;height:100% !important;}
+  .chart-cell .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink-dim);margin:0 0 4px;
+  }
+  .chart-cell .stat{
+    font-family:'Oswald',sans-serif;font-size:1.5rem;color:var(--steel-900);margin:0 0 10px;
+  }
+  .chart-cell .h{height:150px;position:relative;min-width:0;}
+  .note{padding:14px 22px 22px;font-size:.78rem;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;border-top:1px dashed var(--line);}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="inner">
+    <div>
+      <p class="eyebrow">УБТЗ ХНН 77 жил · Замын 2-р анги</p>
+      <h1>Өдөр тутмын ажлын бүртгэл</h1>
+      <p class="sub">Тухайн өдөр хаана ямар ажил хийсэн талаар мэдээллээ оруулах</p>
+    </div>
+    <div class="signal-dots">
+      <span class="dot g"></span> Хэвийн
+      <span class="dot a"></span> Анхаарах
+      <span class="dot r"></span> Зөрчилтэй
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="card">
+    <div class="card-head">
+      <h2 style="margin-bottom: 16px; text-align: center;">Мэдээлэл оруулах</h2>
+    </div>
+    <div class="card-body">
+      <form id="reportForm">
+        <div class="field"><label>Он сар өдөр</label>
+          <input type="date" id="dateInput" required></div>
+        <div class="field"><label>Тухайн өдөр хийсэн ажил</label>
+          <input type="text" id="workInput" placeholder="Жишээ: ЭШП хийх" required></div>
+        <div class="field"><label>Сарын төлөвлөгөөний дагуу эсэх</label>
+          <select id="planSelect"><option value="тийм">Тийм</option><option value="үгүй">Үгүй</option></select></div>
+        <div class="field"><label>Ажилласан хүний тоо</label>
+          <input type="number" id="workersCount" placeholder="Тоон утга" required></div>
+        <div class="field"><label>Ажил удирдагч</label>
+          <input type="text" id="leaderInput" placeholder="Нэр бичих" required></div>
+        <div class="field"><label>Замчин-Дохиочин</label>
+          <input type="text" id="signalerInput" placeholder="Нэр бичих" required></div>
+        <div class="field"><label>Хөдөлгөөний мэдээлэл авсан эсэх</label>
+          <select id="movementSelect"><option value="тийм">Тийм</option><option value="үгүй">Үгүй</option></select></div>
+        <div class="field"><label>Ажлын байр хамгаалалт</label>
+          <select id="safetySelect">
+            <option value="СЦБ-н бичлэгээр">СЦБ-н бичлэгээр</option>
+            <option value="Дохио тэмдэгтээр">Дохио тэмдэгтээр</option>
+            <option value="Анхаарамж маягтаар">Анхаарамж маягтаар</option>
+            <option value="Дохиочин">Дохиочин</option>
+            <option value="Шаардлагагүй">Шаардлагагүй</option>
+          </select></div>
+        <div class="field"><label>Холбоо харилцаа хэвийн эсэх</label>
+          <select id="commSelect">
+            <option value="тийм">Тийм</option>
+            <option value="үгүй">Үгүй</option>
+            <option value="гэмтэлтэй">Гэмтэлтэй</option>
+          </select></div>
+        <div class="field"><label>Ажлын талбар</label>
+          <select id="weatherSelect">
+            <option value="тахир тойруу">Тахир тойруу</option>
+            <option value="шулуун замд">Шулуун замд</option>
+            <option value="Өгсүүр хэсэгт">Өгсүүр хэсэгт</option>
+            <option value="Уруудуур хэсэгт">Уруудуур хэсэгт</option>
+            <option value="Сэтэрхий хэсэгт">Сэтэрхий хэсэгт</option>
+            <option value="овоолготой хэсэгт">Овоолготой хэсэгт</option>
+            <option value="гүүр хоолойн хэсэгт">Гүүр, хоолойн хэсэгт</option>
+          </select></div>
+        <div class="field"><label>Цаг агаарын байдал</label>
+          <select id="weatherConditionSelect">
+            <option value="Салхитай">Салхитай</option>
+            <option value="Бороотой">Бороотой</option>
+            <option value="Цастай">Цастай</option>
+            <option value="Манантай">Манантай</option>
+          </select></div>
+        <div class="form-actions"><button type="submit" class="btn-primary">Мэдээлэл нэмэх</button></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Бүртгэлийн хүснэгт</h2></div>
+    <div class="card-body" style="padding-top:0;">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Он сар өдөр</th><th>Хийсэн ажил</th><th>Төлөвлөгөөний дагуу</th><th>Хүн </th>
+              <th>Ажил удирдагч</th><th>Замчин-Дохиочин</th><th>Г/т график</th>
+              <th>Ажлын байрны хорио хамгаалалт</th><th>Тетра холбоо</th><th>Ажлын байршил</th><th>Цаг агаар</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Тухайн өдөр ажилласан ажилтаны тоо</h2></div>
+    <div class="chart-lead"><div class="h"><canvas id="trendChart"></canvas></div></div>
+    <div class="chart-grid">
+      <div class="chart-cell">
+        <p class="eyebrow">Сарын төлөвлөгөөний гүйцэтгэл</p>
+        <p class="stat" id="planStat">—</p>
+        <div class="h"><canvas id="planChart"></canvas></div>
+      </div>
+      <div class="chart-cell">
+        <p class="eyebrow">Ажлын байрны хорио хамгаалалт</p>
+        <p class="stat" id="safetyStat">—</p>
+        <div class="h"><canvas id="safetyChart"></canvas></div>
+      </div>
+      <div class="chart-cell">
+        <p class="eyebrow">Холбоо харилцааны мэдээлэл</p>
+        <p class="stat" id="commStat">—</p>
+        <div class="h"><canvas id="commChart"></canvas></div>
+      </div>
+      <div class="chart-cell">
+        <p class="eyebrow">Ажлын байршилын онцлог</p>
+        <p class="stat" id="weatherStat">—</p>
+        <div class="h"><canvas id="weatherChart"></canvas></div>
+      </div>
+      <div class="chart-cell wide">
+        <p class="eyebrow">Цаг агаарын байдал</p>
+        <p class="stat" id="weatherConditionStat">—</p>
+        <div class="h"><canvas id="weatherConditionChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const reportForm = document.getElementById('reportForm');
+const tableBody = document.getElementById('tableBody');
+
+// In-memory өгөгдлийн сан (уг мэдээллийг эндээс download/export хийж, өөрийн серверт localStorage-той хувилбараар ажиллуулж болно)
+let reportData = [
+  { date:'2026-08-28', work:'ушп', plan:'тийм', workers:5, leader:'Бат', signaler:'Болд', movement:'тийм', safety:'СЦБ', comm:'тийм', weather:'тахир тойруу', weatherCondition:'Салхитай' },
+  { date:'2026-08-27', work:'зам засвар', plan:'тийм', workers:8, leader:'Бат', signaler:'Мөнх', movement:'тийм', safety:'Дохио тэмдэгт', comm:'тийм', weather:'шулуун замд', weatherCondition:'Бороотой' },
+  { date:'2026-08-26', work:'бүрхүүл солих', plan:'үгүй', workers:4, leader:'Оюун', signaler:'Болд', movement:'үгүй', safety:'Анхаарамж маягт', comm:'гэмтэлтэй', weather:'бороо', weatherCondition:'Цастай' },
+  { date:'2026-08-25', work:'хяналтын үзлэг', plan:'тийм', workers:6, leader:'Оюун', signaler:'Мөнх', movement:'тийм', safety:'СЦБ', comm:'тийм', weather:'манан', weatherCondition:'Манантай' }
+];
+
+let trendChart, planChart, safetyChart, commChart, weatherChart, weatherConditionChart;
+
+const PALETTE = {
+  green:'#3F7D52', greenBg:'#E4EFE6',
+  amber:'#B9791E', amberBg:'#F6EAD4',
+  red:'#B23A32', redBg:'#F3E1DE',
+  steel:'#3D5A6C', steelBg:'#EAF0F3',
+  slate:'#7C97A6'
+};
+
+function pill(value, kind){
+  const map = {
+    plan:      { 'тийм':'green', 'үгүй':'red' },
+    movement:  { 'тийм':'green', 'үгүй':'red' },
+    comm:      { 'тийм':'green', 'үгүй':'red', 'гэмтэлтэй':'red' },
+    safety:    { 'СЦБ':'green', 'Дохио тэмдэгт':'amber', 'Анхаарамж маягт':'red' },
+    weather:   { 'шулуун замд':'green', 'тахир тойруу':'amber', 'Өгсүүр хэсэгт':'steel', 'Уруудуур хэсэгт':'steel', 'Сэтэрхий хэсэгт':'steel', 'овоолготой хэсэгт':'steel', 'гүүр хоолойн хэсэгт':'steel', 'манан':'amber', 'бороо':'red', 'цас':'red', 'хүчтэй салхи':'red' }
+  };
+  const cls = (map[kind] && map[kind][value]) || 'steel';
+  return `<span class="pill ${cls}">${value}</span>`;
+}
+
+function renderTable(){
+  tableBody.innerHTML = '';
+  if(reportData.length === 0){
+    tableBody.innerHTML = `<tr class="empty-row"><td colspan="11">Мэдээлэл алга — дээрх маягтаар эхний бичлэгээ нэмнэ үү</td></tr>`;
+  } else {
+    reportData.forEach(item=>{
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="mono">${item.date}</td>
+        <td>${item.work}</td>
+        <td>${pill(item.plan,'plan')}</td>
+        <td class="mono" style="font-weight:600;">${item.workers}</td>
+        <td>${item.leader}</td>
+        <td>${item.signaler}</td>
+        <td>${pill(item.movement,'movement')}</td>
+        <td>${pill(item.safety,'safety')}</td>
+        <td>${pill(item.comm,'comm')}</td>
+        <td>${pill(item.weather,'weather')}</td>
+        <td>${item.weatherCondition || '—'}</td>`;
+      tableBody.appendChild(row);
+    });
+  }
+  updateCharts();
+}
+
+function countBy(key){
+  const out = {};
+  reportData.forEach(i => { out[i[key]] = (out[i[key]]||0) + 1; });
+  return out;
+}
+
+function baseDoughnutOpts(){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:9, font:{ family:'IBM Plex Mono', size:10 }, padding:8 } } },
+    cutout:'62%'
+  };
+}
+
+function updateCharts(){
+  // --- trend (workers over time) ---
+  const ctxT = document.getElementById('trendChart').getContext('2d');
+  const labels = reportData.map(i => i.date);
+  const values = reportData.map(i => i.workers);
+  if(trendChart) trendChart.destroy();
+  trendChart = new Chart(ctxT, {
+    type:'bar',
+    data:{ labels, datasets:[{
+      label:'Ажилласан хүний тоо', data:values,
+      backgroundColor:PALETTE.steel, borderRadius:4, maxBarThickness:38
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        y:{ beginAtZero:true, grid:{ color:'#EAE6DC' }, ticks:{ font:{ family:'IBM Plex Mono', size:11 } } },
+        x:{ grid:{ display:false }, ticks:{ font:{ family:'IBM Plex Mono', size:10 } } }
+      }
+    }
+  });
+
+  // --- plan compliance doughnut ---
+  const planCounts = countBy('plan');
+  const planYes = planCounts['тийм']||0, planNo = planCounts['үгүй']||0;
+  const planPct = reportData.length ? Math.round((planYes/reportData.length)*100) : 0;
+  document.getElementById('planStat').textContent = planPct + '%';
+  if(planChart) planChart.destroy();
+  planChart = new Chart(document.getElementById('planChart'), {
+    type:'doughnut',
+    data:{ labels:['Тийм','Үгүй'], datasets:[{ data:[planYes, planNo], backgroundColor:[PALETTE.green, PALETTE.red], borderWidth:0 }]},
+    options: baseDoughnutOpts()
+  });
+
+  // --- safety type doughnut ---
+  const safetyCounts = countBy('safety');
+  const safetyLabels = Object.keys(safetyCounts);
+  document.getElementById('safetyStat').textContent = safetyLabels.length + ' төрөл';
+  if(safetyChart) safetyChart.destroy();
+  safetyChart = new Chart(document.getElementById('safetyChart'), {
+    type:'doughnut',
+    data:{ labels: safetyLabels, datasets:[{
+      data: safetyLabels.map(l=>safetyCounts[l]),
+      backgroundColor:[PALETTE.green, PALETTE.amber, PALETTE.red, PALETTE.steel], borderWidth:0
+    }]},
+    options: baseDoughnutOpts()
+  });
+
+  // --- comm status doughnut ---
+  const commCounts = countBy('comm');
+  const commLabels = Object.keys(commCounts);
+  const commIssues = commCounts['гэмтэлтэй']||0;
+  document.getElementById('commStat').textContent = commIssues + ' зөрчил';
+  if(commChart) commChart.destroy();
+  commChart = new Chart(document.getElementById('commChart'), {
+    type:'doughnut',
+    data:{ labels: commLabels, datasets:[{
+      data: commLabels.map(l=>commCounts[l]),
+      backgroundColor: commLabels.map(l => l==='тийм' ? PALETTE.green : l==='гэмтэлтэй' ? PALETTE.red : PALETTE.amber),
+      borderWidth:0
+    }]},
+    options: baseDoughnutOpts()
+  });
+
+  // --- weather / visibility horizontal bar ---
+  const weatherCounts = countBy('weather');
+  const weatherOptions = Array.from(document.getElementById('weatherSelect').options);
+  const weatherLabels = weatherOptions.map(option => option.textContent);
+  const weatherValues = weatherOptions.map(option => option.value);
+  const activeWeatherCount = weatherValues.filter(value => weatherCounts[value]).length;
+  document.getElementById('weatherStat').textContent = activeWeatherCount + ' нөхцөл';
+  if(weatherChart) weatherChart.destroy();
+  weatherChart = new Chart(document.getElementById('weatherChart'), {
+    type:'bar',
+    data:{ labels: weatherLabels, datasets:[{
+      data: weatherValues.map(value=>weatherCounts[value] || 0),
+      backgroundColor: PALETTE.slate, borderRadius:3
+    }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ beginAtZero:true, ticks:{ stepSize:1, font:{ family:'IBM Plex Mono', size:8 } }, grid:{ color:'#EAE6DC' } },
+        y:{ ticks:{ autoSkip:false, padding:0, font:{ family:'IBM Plex Mono', size:8 } }, grid:{ display:false } }
+      }
+    }
+  });
+
+  // --- weather condition horizontal bar ---
+  const weatherConditionCounts = countBy('weatherCondition');
+  const weatherConditionLabels = Object.keys(weatherConditionCounts);
+  document.getElementById('weatherConditionStat').textContent = weatherConditionLabels.length + ' нөхцөл';
+  if(weatherConditionChart) weatherConditionChart.destroy();
+  weatherConditionChart = new Chart(document.getElementById('weatherConditionChart'), {
+    type:'bar',
+    data:{ labels: weatherConditionLabels, datasets:[{
+      data: weatherConditionLabels.map(l=>weatherConditionCounts[l]),
+      backgroundColor: PALETTE.amber, borderRadius:3
+    }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ beginAtZero:true, ticks:{ stepSize:1, font:{ family:'IBM Plex Mono', size:8 } }, grid:{ color:'#EAE6DC' } },
+        y:{ ticks:{ autoSkip:false, padding:0, font:{ family:'IBM Plex Mono', size:9 } }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+reportForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  reportData.push({
+    date: document.getElementById('dateInput').value,
+    work: document.getElementById('workInput').value,
+    plan: document.getElementById('planSelect').value,
+    workers: parseInt(document.getElementById('workersCount').value) || 0,
+    leader: document.getElementById('leaderInput').value,
+    signaler: document.getElementById('signalerInput').value,
+    movement: document.getElementById('movementSelect').value,
+    safety: document.getElementById('safetySelect').value,
+    comm: document.getElementById('commSelect').value,
+    weather: document.getElementById('weatherSelect').value,
+    weatherCondition: document.getElementById('weatherConditionSelect').value
+  });
+  renderTable();
+  reportForm.reset();
+});
+
+renderTable();
+</script>
+</body>
+</html>

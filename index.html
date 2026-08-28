@@ -587,6 +587,24 @@
     .main.tushaal-expanded #content-frame {
       min-height: calc(100dvh - var(--topbar-height) - 54px);
     }
+    .main.fullscreen-page {
+      padding: 0;
+      overflow: hidden;
+    }
+    .main.fullscreen-page .dashboard {
+      height: calc(100dvh - var(--topbar-height));
+    }
+    .main.fullscreen-page .content-frame-wrap {
+      height: calc(100dvh - var(--topbar-height));
+      min-height: calc(100dvh - var(--topbar-height));
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      box-shadow: none;
+    }
+    .main.fullscreen-page #content-frame {
+      min-height: calc(100dvh - var(--topbar-height) - 54px);
+    }
     .frame-titlebar {
       display: flex;
       align-items: center;
@@ -726,6 +744,9 @@
         padding: 12px;
       }
       .main.tushaal-expanded {
+        padding: 0;
+      }
+      .main.fullscreen-page {
         padding: 0;
       }
       .content-frame-wrap {
@@ -962,6 +983,18 @@
       </div>
 
       <div class="sidebar-divider"></div>
+
+<div class="sidebar-item">
+        <a href="#" class="sidebar-link danger-link" id="toggle-alert" data-page-key="Ажлын бүртгэл">
+          <i class="fa fa-sitemap"></i> Ажлын бүртгэл
+        </a>
+      </div>
+
+      <div class="sidebar-item">
+        <a href="#" class="sidebar-link danger-link" id="toggle-alert" data-page-key="Хурлын тэмдэглэл">
+          <i class="fa fa-sitemap"></i> Хурлын тэмдэглэл
+        </a>
+      </div>
 
       <div class="sidebar-item">
         <a href="#" class="sidebar-link danger-link" id="toggle-alert" data-page-key="Менежментийн нэгдсэн тогтолцоо">
@@ -1228,6 +1261,8 @@
   }
 
   const staticPageFallbacks = {
+    'Ажлын бүртгэл': 'ajliinBvrtgel.html',
+    'Хурлын тэмдэглэл': 'hural.html',
       'Ирц бүртгэл': 'irts.html',
     'Өдөр тутмын зааварчилгаа': 'zoovorchilgoo.html',
     'Зааварчилгаа / Зам засвар': 'zoovorchilgoo.html',
@@ -1647,9 +1682,11 @@
     const main = document.querySelector('.main');
     const titleText = clickedElement.textContent.trim().replace(/\s+/g, ' ');
     const isTushaalPage = pageKey === 'Тушаал, стандарт' || pageKey === 'уулзварын зайн судалгаа';
+    const isFullscreenPage = pageKey === 'Ажлын бүртгэл' || pageKey === 'Хурлын тэмдэглэл';
 
     if (main) {
       main.classList.toggle('tushaal-expanded', isTushaalPage);
+      main.classList.toggle('fullscreen-page', isFullscreenPage);
     }
 
     frame.src = resolvePageSrc(pageKey, titleText);

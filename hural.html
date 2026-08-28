@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Хурлын Тэмдэглэл</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        body > div { width: 100%; max-width: none; }
+        textarea { resize: vertical; min-height: 80px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen p-0">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Толгой хэсэг -->
+        <header class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">📋 Хурлын Тэмдэглэл</h1>
+                <p class="text-sm text-gray-500 mt-1">ХАБЭА, ГТХАБ, шагналт цалингийн хурал, болон бусад тэмдэглэл оруулах</p>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <span id="saveStatus" class="text-xs font-medium px-3 py-1 bg-green-50 text-green-600 rounded-full border border-green-200">Хадгалагдсан</span>
+                <button onclick="addRow()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2 w-full md:w-auto justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Мөр нэмэх
+                </button>
+            </div>
+        </header>
+
+        <!-- Хүснэгтийн хэсэг -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse border border-gray-300" id="meetingTable">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
+                            <th class="p-4 font-semibold w-32 border border-gray-300">Он сар өдөр</th>
+                            <th class="p-4 font-semibold w-48 border border-gray-300">Албан тушаал, ажилтны нэр</th>
+                            <th class="p-4 font-semibold w-72 border border-gray-300">Ярилцсан асуудлууд</th>
+                            <th class="p-4 font-semibold w-72 border border-gray-300">Яаралтай шийдвэрлэх</th>
+                            <th class="p-4 font-semibold w-80 border border-gray-300">Дүгнэлт <br> Шийдвэрлэсэн байдал</th>
+                            <th class="p-4 font-semibold w-48 border border-gray-300">Нэмэлт тайлбар</th>
+                            <th class="p-4 font-semibold text-center w-20 border border-gray-300">Үйлдэл</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm align-top" id="tableBody">
+                        <!-- Javascript-ээр мөрүүд орж ирнэ -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- График болон Аналитик хэсэг -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-indigo-50 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Нийт тэмдэглэл</h3>
+                    <span class="text-3xl font-extrabold text-gray-900" id="totalCount">0</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l6.518 11.598c.75 1.334-.213 2.98-1.742 2.98H3.48c-1.53 0-2.492-1.646-1.743-2.98L8.257 3.1zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.5a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-500">Яаралтай асуудлын тоо</h3>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-xs font-medium text-gray-500">Нийт бүртгэгдсэн яаралтай заалтууд</span>
+                        <span class="text-lg font-bold text-red-600" id="urgentCount">0</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div id="urgentBar" class="bg-red-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <h3 class="text-sm font-medium text-gray-500 mb-4">Шийдвэрлэлтийн харьцаа</h3>
+                <div class="flex items-center gap-4">
+                    <div class="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="6" class="text-gray-100 fill-none"></circle>
+                            <circle id="progressCircle" cx="32" cy="32" r="28" stroke="currentColor" stroke-width="6" class="text-emerald-500 fill-none transition-all duration-500" stroke-dasharray="175.9" stroke-dashoffset="175.9"></circle>
+                        </svg>
+                        <span id="percentText" class="absolute text-xs font-bold text-gray-700">0%</span>
+                    </div>
+                    <div class="text-xs text-gray-500 leading-snug">
+                        Яаралтай заалтуудын шийдвэрлэгдсэн байдалд үндэслэв.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript хэсэг -->
+    <script>
+        let tableData = [];
+        const EDIT_WINDOW_MS = 60 * 60 * 1000;
+        let lockState = '';
+
+        function isRowLocked(row) {
+            return Date.now() - (row.createdAt || Date.now()) >= EDIT_WINDOW_MS;
+        }
+
+        function createRow() {
+            return {
+                date: new Date().toISOString().split('T')[0],
+                person: '',
+                issues: '1. ',
+                urgent: '1. ',
+                resolution: '1. ',
+                note: '',
+                createdAt: Date.now()
+            };
+        }
+
+        // Өгөгдлийг localStorage-оос ачаалах
+        function loadData() {
+            const saved = localStorage.getItem('meeting_notes_smart_data');
+            if (saved) {
+                tableData = JSON.parse(saved);
+                let hasLegacyRows = false;
+                tableData.forEach(row => {
+                    // Өмнөх хувилбарын мөрүүдэд түгжээний эхлэх цаг байгаагүй.
+                    if (!row.createdAt) {
+                        row.createdAt = Date.now();
+                        hasLegacyRows = true;
+                    }
+                });
+                if (hasLegacyRows) localStorage.setItem('meeting_notes_smart_data', JSON.stringify(tableData));
+            } else {
+                tableData = [createRow()];
+            }
+            renderTable();
+        }
+
+        // Өгөгдлийг хадгалах (Autosave)
+        function saveData() {
+            localStorage.setItem('meeting_notes_smart_data', JSON.stringify(tableData));
+            showSaveIndicator();
+            updateAnalytics();
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveStatus');
+            indicator.textContent = 'Хадгалагдлаа...';
+            indicator.classList.remove('bg-green-50', 'text-green-600', 'border-green-200');
+            indicator.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200');
+            setTimeout(() => {
+                indicator.textContent = 'Хадгалагдсан';
+                indicator.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200');
+                indicator.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+            }, 800);
+        }
+
+        // Мөр нэмэх
+        function addRow() {
+            tableData.push(createRow());
+            renderTable();
+            saveData();
+        }
+
+        // Мөр устгах
+        function deleteRow(index) {
+            tableData.splice(index, 1);
+            renderTable();
+            saveData();
+        }
+
+        // Утга өөрчлөгдөхөд массив руу шингээх
+        function updateData(index, field, value) {
+            if (isRowLocked(tableData[index]) && !['resolution', 'note'].includes(field)) {
+                renderTable();
+                return;
+            }
+
+            tableData[index][field] = value;
+            
+            // Хэрэв яаралтай шийдвэрлэх хэсэг өөрчлөгдвөл мөрийн тоогоор дүгнэлт хэсгийг автоматаар уялдуулах
+            if (field === 'urgent') {
+                syncResolutionLines(index, value);
+            }
+
+            saveData();
+        }
+
+        function refreshLockState() {
+            const currentState = tableData.map(row => isRowLocked(row)).join(',');
+            if (currentState !== lockState) renderTable();
+        }
+
+        // Яаралтай шийдвэрлэх мөрийн тоо шинэчлэгдэхэд шийдвэрлэх хэсгийг автоматаар тохируулах
+        function syncResolutionLines(index, urgentText) {
+            const lines = urgentText.split('\n').filter(line => line.trim() !== '');
+            const count = Math.max(1, lines.length);
+            
+            let currentResLines = tableData[index].resolution.split('\n');
+            let newResLines = [];
+
+            for (let i = 0; i < count; i++) {
+                if (currentResLines[i] && currentResLines[i].trim() !== '') {
+                    newResLines.push(currentResLines[i]);
+                } else {
+                    newResLines.push(`${i + 1}. `);
+                }
+            }
+            tableData[index].resolution = newResLines.join('\n');
+            
+            // Дэлгэц дээрх textarea-ийн утгыг шууд шинэчлэх
+            const resTextarea = document.getElementById(`res-${index}`);
+            if (resTextarea) {
+                resTextarea.value = tableData[index].resolution;
+            }
+        }
+
+        // Textarea дээр Enter дархад автоматаар 1., 2., 3. гэж дугаарлах ухаалаг функц
+        function handleKeydown(event, index, field) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const textarea = event.target;
+                const cursorPos = textarea.selectionStart;
+                const value = textarea.value;
+
+                // Одоогийн мөрийн дугаарыг тодорхойлох
+                const lines = value.substring(0, cursorPos).split('\n');
+                const nextNum = lines.length + 1;
+
+                const newValue = value.substring(0, cursorPos) + `\n${nextNum}. ` + value.substring(cursorPos);
+                textarea.value = newValue;
+                
+                // Cursor-ийг зөв байрлалд аваачих
+                textarea.selectionStart = textarea.selectionEnd = cursorPos + nextNum.toString().length + 3;
+
+                updateData(index, field, textarea.value);
+            }
+        }
+
+        // Хүснэгтийг дэлгэц рүү гаргах
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            tableData.forEach((row, index) => {
+                const locked = isRowLocked(row);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50/50 transition-colors';
+                
+                tr.innerHTML = `
+                    <td class="p-3 border border-gray-300">
+                        <input type="date" value="${row.date}" ${locked ? 'readonly' : ''} onchange="updateData(${index}, 'date', this.value)" 
+                            class="w-full bg-transparent border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </td>
+                    <td class="p-3 border border-gray-300">
+                        <input type="text" value="${row.person}" placeholder="Албан тушаал, нэр..." ${locked ? 'readonly' : ''} oninput="updateData(${index}, 'person', this.value)" 
+                            class="w-full bg-transparent border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </td>
+                    <td class="p-3 border border-gray-300">
+                        <textarea rows="3" ${locked ? 'readonly' : ''} onkeydown="handleKeydown(event, ${index}, 'issues')" oninput="updateData(${index}, 'issues', this.value)" 
+                            class="w-full bg-transparent border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">${row.issues}</textarea>
+                    </td>
+                    <td class="p-3 border border-gray-300">
+                        <textarea rows="3" ${locked ? 'readonly' : ''} onkeydown="handleKeydown(event, ${index}, 'urgent')" oninput="updateData(${index}, 'urgent', this.value)" 
+                            class="w-full bg-transparent border border-gray-200 rounded-lg p-2 text-xs font-bold text-red-600 focus:ring-2 focus:ring-indigo-500 focus:outline-none">${row.urgent}</textarea>
+                    </td>
+                    <td class="p-3 border border-gray-300">
+                        <textarea id="res-${index}" rows="3" onkeydown="handleKeydown(event, ${index}, 'resolution')" oninput="updateData(${index}, 'resolution', this.value)" 
+                            class="w-full bg-transparent border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">${row.resolution}</textarea>
+                    </td>
+                    <td class="p-3 border border-gray-300">
+                        <input type="text" value="${row.note}" placeholder="Нэмэлт тайлбар..." oninput="updateData(${index}, 'note', this.value)" 
+                            class="w-full bg-transparent border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </td>
+                    <td class="p-3 text-center border border-gray-300">
+                        <button onclick="deleteRow(${index})" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Устгах">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lockState = tableData.map(row => isRowLocked(row)).join(',');
+            updateAnalytics();
+        }
+
+        // Аналитик болон график шинэчлэх
+        function updateAnalytics() {
+            const total = tableData.length;
+            document.getElementById('totalCount').textContent = total;
+
+            // Яаралтай шийдвэрлэх хэсэгт бичигдсэн нийт мөр/заалтын тоог олох
+            let totalUrgentLines = 0;
+            let totalResolvedLines = 0;
+
+            tableData.forEach(row => {
+                const urgentLines = row.urgent.split('\n').filter(l => l.trim().length > 3);
+                const resLines = row.resolution.split('\n').filter(l => l.trim().length > 3);
+                
+                totalUrgentLines += urgentLines.length;
+                // Шийдвэрлэсэн байдал хэсэгт утга орсон эсэхийг шалгах
+                totalResolvedLines += resLines.filter(r => !r.includes('1.  ') && r.trim() !== '').length;
+            });
+
+            document.getElementById('urgentCount').textContent = totalUrgentLines;
+            const urgentBarPercent = totalUrgentLines > 0 ? Math.min(100, (totalUrgentLines / (total * 3)) * 100) : 0;
+            document.getElementById('urgentBar').style.width = `${urgentBarPercent}%`;
+
+            const percent = totalUrgentLines > 0 ? Math.min(100, Math.round((totalResolvedLines / totalUrgentLines) * 100)) : 0;
+            document.getElementById('percentText').textContent = `${percent}%`;
+            
+            // Circular Progress calculation (circumference = 175.9)
+            const strokeOffset = 175.9 - (175.9 * percent) / 100;
+            document.getElementById('progressCircle').style.strokeDashoffset = strokeOffset;
+        }
+
+        // Эхлүүлэх
+        loadData();
+        setInterval(refreshLockState, 1000);
+    </script>
+</body>
+</html>
