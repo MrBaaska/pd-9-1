@@ -369,8 +369,10 @@
     </div>
 
     <script>
-        // Өгөгдлийг хадгалах массив (LocalStorage-с уншина)
-        let dataList = JSON.parse(localStorage.getItem('railwayStructures')) || [];
+        const MAX_RECORDS = 100;
+        const dataStorageKey = 'railwayStructures';
+        const dataDatabaseName = 'railwayStructuresDatabase';
+        let dataList = [];
         const draftKey = 'railwayStructures_draft';
         const placeholderImage = 'https://images.unsplash.com/photo-1515165562839-978bbcf182c0?auto=format&fit=crop&w=500&q=80';
 
@@ -386,10 +388,11 @@
         const previewText = document.getElementById('previewText');
 
         // Хуудас ачаалахад өгөгдлийг харуулах
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             setupImageUpload();
             restoreDraft();
             setupFormAutosave();
+            dataList = await loadData();
             renderCards(dataList);
         });
 
@@ -409,6 +412,10 @@
             const item = { km, name, type, size, description, imageData };
 
             if(editIndex === "") {
+                if (dataList.length >= MAX_RECORDS) {
+                    alert(`Хамгийн ихдээ ${MAX_RECORDS} бүртгэл хадгалах боломжтой.`);
+                    return;
+                }
                 // Шинээр нэмэх
                 dataList.push(item);
             } else {
@@ -547,9 +554,68 @@
             return item.imageData || item.imageUrl || placeholderImage;
         }
 
-        // LocalStorage руу хадгалаад дэлгэцийг шинэчлэх
+        function openDataDatabase() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) {
+                    reject(new Error('IndexedDB дэмжигдэхгүй байна'));
+                    return;
+                }
+                const request = indexedDB.open(dataDatabaseName, 1);
+                request.onupgradeneeded = () => {
+                    request.result.createObjectStore('records', { keyPath: 'id' });
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadData() {
+            try {
+                const database = await openDataDatabase();
+                const records = await new Promise((resolve, reject) => {
+                    const request = database.transaction('records', 'readonly')
+                        .objectStore('records').get('all');
+                    request.onsuccess = () => resolve(request.result?.items || []);
+                    request.onerror = () => reject(request.error);
+                });
+                database.close();
+                if (Array.isArray(records) && records.length > 0) {
+                    return records.slice(0, MAX_RECORDS);
+                }
+            } catch (error) {
+                // Хуучин localStorage өгөгдлийг доорх fallback-аар сэргээнэ.
+            }
+            try {
+                const saved = JSON.parse(localStorage.getItem(dataStorageKey) || '[]');
+                return Array.isArray(saved) ? saved.slice(0, MAX_RECORDS) : [];
+            } catch (fallbackError) {
+                return [];
+            }
+        }
+
+        async function saveData() {
+            const records = dataList.slice(0, MAX_RECORDS);
+            try {
+                const database = await openDataDatabase();
+                await new Promise((resolve, reject) => {
+                    const transaction = database.transaction('records', 'readwrite');
+                    transaction.objectStore('records').put({ id: 'all', items: records });
+                    transaction.oncomplete = resolve;
+                    transaction.onerror = () => reject(transaction.error);
+                });
+                database.close();
+            } catch (error) {
+                try {
+                    localStorage.setItem(dataStorageKey, JSON.stringify(records));
+                } catch (fallbackError) {
+                    console.warn('Бүртгэл autosave хийх боломжгүй:', fallbackError);
+                }
+            }
+        }
+
+        // Autosave хийж хадгалаад дэлгэцийг шинэчлэх
         function saveAndRender() {
-            localStorage.setItem('railwayStructures', JSON.stringify(dataList));
+            saveData();
             renderCards(dataList);
         }
 

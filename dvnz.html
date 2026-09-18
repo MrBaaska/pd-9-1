@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дэр модны бүртгэл — Суман шилжүүлэг</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0ede8;
+      --surface: #faf9f7;
+      --surface2: #f0ede8;
+      --border: #dbd7cf;
+      --border2: #c8c3b8;
+      --text: #1a1917;
+      --text2: #6b6760;
+      --text3: #9b978f;
+      --accent: #c0392b;
+      --accent2: #e74c3c;
+      --rail: #2c3e50;
+      --rail2: #3d5166;
+      --amber: #e67e22;
+      --amber-bg: #fef3e2;
+      --amber-border: #f0a500;
+      --green: #27ae60;
+      --green-bg: #e8f8f0;
+      --green-border: #2ecc71;
+      --danger: #e74c3c;
+      --danger-bg: #fdecea;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+
+    .page-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-left {}
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--rail);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      color: var(--text);
+    }
+
+    .header-sub {
+      font-size: 13px;
+      color: var(--text2);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Control Panel */
+    .control-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text3);
+    }
+
+    select, input[type="text"], input[type="number"] {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 10px;
+      width: 100%;
+      transition: border-color 0.15s, background 0.15s;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--rail);
+      background: var(--surface);
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .btn {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: var(--surface2); border-color: var(--border2); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-rail { background: var(--rail); color: #fff; border-color: var(--rail); }
+    .btn-rail:hover { background: var(--rail2); border-color: var(--rail2); }
+
+    .btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+    .btn-green:hover { background: #2ecc71; border-color: #2ecc71; }
+
+    .btn-danger { background: transparent; color: var(--danger); border-color: #f5c5c2; }
+    .btn-danger:hover { background: var(--danger-bg); border-color: var(--danger); }
+
+    .btn-sm { padding: 5px 9px; font-size: 12px; border-radius: 6px; }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .total-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      color: var(--text2);
+    }
+
+    .total-badge strong { color: var(--accent); }
+
+    /* Table */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead { background: var(--rail); }
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.75);
+      white-space: nowrap;
+    }
+
+    th:first-child { color: #fff; }
+
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover td { background: var(--surface2); }
+
+    .size-cell {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .count-cell {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+    }
+
+    .status-btn {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .status-ok {
+      background: var(--green-bg);
+      color: #1a7f44;
+      border-color: var(--green-border);
+    }
+
+    .status-replace {
+      background: var(--amber-bg);
+      color: #9a5a00;
+      border-color: var(--amber-border);
+    }
+
+    .inline-input {
+      width: 62px;
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 5px 6px;
+      font-size: 12px;
+    }
+
+    .repair-date-input {
+      width: 88px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 5px 7px;
+    }
+
+    .repair-pcs-input {
+      width: 56px;
+      text-align: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+    }
+
+    .action-cell { display: flex; gap: 5px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text3);
+    }
+
+    .empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; display: block; opacity: 0.35; }
+    .empty-state p { font-size: 14px; }
+
+    /* Summary */
+    .summary-section {
+      margin-top: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--amber-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .summary-header {
+      background: #fef9ef;
+      border-bottom: 1px solid var(--amber-border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #9a5a00;
+    }
+
+    .summary-header svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .summary-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .summary-card {
+      padding: 14px 18px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      min-width: 140px;
+    }
+
+    .summary-card .s-size {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 4px;
+    }
+
+    .summary-card .s-count {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--amber);
+      line-height: 1;
+    }
+
+    .summary-card .s-len {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 3px;
+    }
+
+    .summary-totals {
+      display: flex;
+      gap: 24px;
+      padding: 12px 18px;
+      background: #fef9ef;
+      border-top: 1px solid var(--amber-border);
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .summary-totals .t-label { color: var(--text2); margin-right: 4px; }
+    .summary-totals strong {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,25,23,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      width: 320px;
+      max-width: 94vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    .modal-box h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-box h3 svg { width: 18px; height: 18px; }
+
+    .modal-field { margin-bottom: 12px; }
+    .modal-field label { display: block; margin-bottom: 5px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 1.25rem;
+    }
+
+    /* Save bar */
+    .save-bar {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); display: inline-block; }
+
+    /* Transitions */
+    tbody tr { transition: background 0.1s; }
+    .status-btn { transition: all 0.15s; }
+
+    @media (max-width: 700px) {
+      .control-panel { grid-template-columns: 1fr; }
+      th, td { padding: 7px 8px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-row">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 17l2-8h14l2 8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 17h18M7 17v2M17 17v2" stroke-linecap="round"/>
+            <path d="M5 9h14" stroke-linecap="round"/>
+            <circle cx="8" cy="13" r="1" fill="#fff" stroke="none"/>
+            <circle cx="16" cy="13" r="1" fill="#fff" stroke="none"/>
+          </svg>
+        </div>
+        <h1>Дэр модны бүртгэл</h1>
+      </div>
+      <div class="header-sub">Суман шилжүүлэг · УБТЗ стандарт</div>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="control-panel">
+    <div class="field-group">
+      <label>Марк сонгох</label>
+      <select id="markSelect" onchange="loadPreset()">
+        <option value="">— Сонгоно уу —</option>
+        <option value="1/11-P65">1/11, P65</option>
+        <option value="1/9-P65">1/9, P65</option>
+        <option value="1/11-P50">1/11, P50</option>
+        <option value="1/9-P50">1/9, P50</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Тэмдэглэл</label>
+      <input type="text" id="noteInput" placeholder="Жишээ: 12-р зам, 4-р сум">
+    </div>
+    <div class="field-group">
+      <label>&nbsp;</label>
+      <button class="btn btn-rail" onclick="openAddModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Шинэ мөр нэмэх
+      </button>
+    </div>
+  </div>
+
+  <!-- Action row -->
+  <div class="action-row">
+    <div class="total-badge" id="totalBadge">Нийт: <strong>0</strong> ширхэг</div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Хэмжээ (м)</th>
+          <th>Нийт тоо</th>
+          <th>Төлөв</th>
+          <th>Засварлах тоо</th>
+          <th>Засвар огноо</th>
+          <th>Засвар ш/х</th>
+          <th>Үйлдэл</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr id="emptyRow">
+          <td colspan="7">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <path d="M3 9h18M9 21V9"/>
+              </svg>
+              <p>Марк сонгон дэр модны жагсаалт үүсгэнэ үү</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-section" id="summarySection" style="display:none">
+    <div class="summary-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      Солих шаардлагатай дүнзний задаргаа
+    </div>
+    <div class="summary-grid" id="summaryGrid"></div>
+    <div class="summary-totals">
+      <div><span class="t-label">Нийт ширхэг:</span><strong id="sumTotalPcs">—</strong></div>
+      <div><span class="t-label">Нийт урт:</span><strong id="sumTotalLen">—</strong></div>
+    </div>
+  </div>
+
+  <!-- Save bar -->
+  <div class="save-bar">
+    <button class="btn btn-green" onclick="saveData()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+      </svg>
+      Бүртгэл хадгалах
+    </button>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Шинэ мөр нэмэх
+    </h3>
+    <div class="modal-field">
+      <label>Хэмжээ (м)</label>
+      <input type="number" id="newSize" step="0.25" min="0.5" placeholder="Жишээ: 3.75">
+    </div>
+    <div class="modal-field">
+      <label>Тоо (ширхэг)</label>
+      <input type="number" id="newCount" min="1" placeholder="Жишээ: 10">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addModal')">Болих</button>
+      <button class="btn btn-rail" onclick="addRow()">Нэмэх</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      Мөр засах
+    </h3>
+    <div class="modal-field">
+      <label>Хэмжээ (м)</label>
+      <input type="number" id="editSize" step="0.25" min="0.5">
+    </div>
+    <div class="modal-field">
+      <label>Тоо (ширхэг)</label>
+      <input type="number" id="editCount" min="1">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('editModal')">Болих</button>
+      <button class="btn btn-rail" onclick="confirmEdit()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const presets = {
+  "1/11-P65": [
+    {size:2.75,count:18},{size:3.00,count:16},{size:3.25,count:10},
+    {size:3.50,count:8},{size:3.75,count:7},{size:4.00,count:5},
+    {size:4.25,count:6},{size:4.50,count:5},{size:4.75,count:6},
+    {size:5.00,count:5},{size:5.25,count:6},{size:5.50,count:4}
+  ],
+  "1/9-P65": [
+    {size:2.75,count:15},{size:3.00,count:12},{size:3.50,count:10},
+    {size:4.50,count:8},{size:5.50,count:3}
+  ],
+  "1/11-P50": [
+    {size:2.75,count:16},{size:3.00,count:14},{size:3.25,count:9},
+    {size:3.50,count:7},{size:4.00,count:5},{size:4.50,count:5},{size:5.00,count:4}
+  ],
+  "1/9-P50": [
+    {size:2.75,count:13},{size:3.00,count:11},{size:3.50,count:9},
+    {size:4.50,count:7},{size:5.50,count:3}
+  ]
+};
+
+let rows = [];
+let editIdx = null;
+
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+function loadPreset() {
+  const mark = document.getElementById('markSelect').value;
+  if (!mark) return;
+  const data = presets[mark] || [];
+  rows = data.map(r => ({
+    id: uid(),
+    size: r.size,
+    count: r.count,
+    editCount: r.count,
+    replace: false,
+    repairDate: '',
+    repairPcs: ''
+  }));
+  render();
+}
+
+function render() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr id="emptyRow"><td colspan="7">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <path d="M3 9h18M9 21V9"/>
+        </svg>
+        <p>Марк сонгон дэр модны жагсаалт үүсгэнэ үү</p>
+      </div>
+    </td></tr>`;
+  } else {
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="size-cell">${r.size.toFixed(2)} м</td>
+        <td class="count-cell">${r.count}</td>
+        <td>
+          <button class="status-btn ${r.replace ? 'status-replace' : 'status-ok'}" onclick="toggleReplace(${i})">
+            ${r.replace
+              ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Солих шаардлагатай`
+              : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Хэвийн`
+            }
+          </button>
+        </td>
+        <td>
+          <input type="number" class="inline-input" value="${r.editCount}" min="0"
+            onchange="rows[${i}].editCount = parseInt(this.value) || 0; updateSummary()">
+        </td>
+        <td>
+          <input type="text" class="repair-date-input" value="${r.repairDate}" placeholder="2025.03"
+            onchange="rows[${i}].repairDate = this.value">
+        </td>
+        <td>
+          <input type="number" class="repair-pcs-input" value="${r.repairPcs}" min="0" placeholder="0"
+            onchange="rows[${i}].repairPcs = parseInt(this.value) || ''">
+        </td>
+        <td>
+          <div class="action-cell">
+            <button class="btn btn-sm" onclick="openEditModal(${i})" title="Засах">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteRow(${i})" title="Устгах">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  calculateTotal();
+  updateSummary();
+}
+
+function toggleReplace(i) {
+  rows[i].replace = !rows[i].replace;
+  render();
+}
+
+function deleteRow(i) {
+  if (!confirm(`${rows[i].size.toFixed(2)} м-ийн дүнзийг устгах уу?`)) return;
+  rows.splice(i, 1);
+  render();
+}
+
+function openAddModal() {
+  document.getElementById('newSize').value = '';
+  document.getElementById('newCount').value = '';
+  document.getElementById('addModal').classList.add('open');
+}
+
+function addRow() {
+  const size = parseFloat(document.getElementById('newSize').value);
+  const count = parseInt(document.getElementById('newCount').value);
+  if (isNaN(size) || size <= 0) { alert('Зөв хэмжээ оруулна уу!'); return; }
+  if (isNaN(count) || count < 1) { alert('Тоо ширхэгийг зөв оруулна уу!'); return; }
+  const exists = rows.find(r => r.size === size);
+  if (exists) { alert('Тэр хэмжээний дүнз аль хэдийн бий!'); return; }
+  rows.push({ id: uid(), size, count, editCount: count, replace: false, repairDate: '', repairPcs: '' });
+  rows.sort((a, b) => a.size - b.size);
+  closeModal('addModal');
+  render();
+}
+
+function openEditModal(i) {
+  editIdx = i;
+  document.getElementById('editSize').value = rows[i].size;
+  document.getElementById('editCount').value = rows[i].count;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function confirmEdit() {
+  const size = parseFloat(document.getElementById('editSize').value);
+  const count = parseInt(document.getElementById('editCount').value);
+  if (isNaN(size) || size <= 0) { alert('Зөв хэмжээ оруулна уу!'); return; }
+  if (isNaN(count) || count < 1) { alert('Тоо ширхэгийг зөв оруулна уу!'); return; }
+  rows[editIdx].size = size;
+  rows[editIdx].count = count;
+  rows[editIdx].editCount = count;
+  rows.sort((a, b) => a.size - b.size);
+  closeModal('editModal');
+  render();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function calculateTotal() {
+  const total = rows.reduce((s, r) => s + r.count, 0);
+  document.getElementById('totalBadge').innerHTML = `Нийт: <strong>${total}</strong> ширхэг`;
+}
+
+function updateSummary() {
+  const sec = document.getElementById('summarySection');
+  const grid = document.getElementById('summaryGrid');
+  const replaceRows = rows.filter(r => r.replace);
+
+  if (!replaceRows.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+
+  let totalPcs = 0, totalLen = 0;
+  grid.innerHTML = '';
+
+  replaceRows.forEach(r => {
+    const pcs = r.editCount || r.count;
+    const len = r.size * pcs;
+    totalPcs += pcs;
+    totalLen += len;
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.innerHTML = `
+      <div class="s-size">${r.size.toFixed(2)} м</div>
+      <div class="s-count">${pcs}</div>
+      <div class="s-len">${len.toFixed(2)} м нийт урт</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('sumTotalPcs').textContent = `${totalPcs} ширхэг`;
+  document.getElementById('sumTotalLen').textContent = `${totalLen.toFixed(2)} м`;
+}
+
+function saveData() {
+  const mark = document.getElementById('markSelect').value;
+  const note = document.getElementById('noteInput').value.trim();
+  if (!mark) { alert('Маркаа сонгоно уу!'); return; }
+  if (!rows.length) { alert('Жагсаалт хоосон байна!'); return; }
+
+  const replaceList = rows.filter(r => r.replace)
+    .map(r => `  • ${r.size.toFixed(2)} м — ${r.editCount} ш`)
+    .join('\n');
+
+  const repairList = rows.filter(r => r.repairDate || r.repairPcs)
+    .map(r => `  • ${r.size.toFixed(2)} м: ${r.repairPcs || 0} ш (${r.repairDate || '—'})`)
+    .join('\n');
+
+  const total = rows.reduce((s, r) => s + r.count, 0);
+
+  let msg = `✅ Амжилттай хадгалагдлаа!\n\n`;
+  msg += `Марк: ${mark}\n`;
+  if (note) msg += `Тэмдэглэл: ${note}\n`;
+  msg += `Нийт дүнз: ${total} ш\n`;
+  if (replaceList) msg += `\n⚠ Солих шаардлагатай:\n${replaceList}`;
+  if (repairList) msg += `\n🔧 Засварын бүртгэл:\n${repairList}`;
+
+  alert(msg);
+}
+</script>
+</body>
+</html>

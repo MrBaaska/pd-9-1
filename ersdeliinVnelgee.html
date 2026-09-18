@@ -505,8 +505,8 @@
         <div class="header-left">
             <div class="logo-mark">🛡️</div>
             <div>
-                <h1>Эрсдэлийн мэдээлэл</h1>
-                <p>А-58 эрсдэлийн үнэлгээ</p>
+                <h1 id="page-title">Эрсдэлийн мэдээлэл</h1>
+                <p id="page-subtitle">А-58 эрсдэлийн үнэлгээ</p>
             </div>
         </div>
         <div class="status-badge">
@@ -519,23 +519,23 @@
     <div class="stats-row">
         <div class="stat-card low">
             <div class="stat-icon">🟢</div>
-            <div class="stat-label">Бага эрсдэл</div>
+            <div class="stat-label" id="label-low">Бага эрсдэл</div>
             <div class="stat-value" id="count-low">—</div>
         </div>
         <div class="stat-card medium">
             <div class="stat-icon">🟡</div>
-            <div class="stat-label">Дунд эрсдэл</div>
+            <div class="stat-label" id="label-medium">Дунд эрсдэл</div>
             <div class="stat-value" id="count-medium">—</div>
         </div>
         <div class="stat-card high">
             <div class="stat-icon">🟠</div>
-            <div class="stat-label">Их эрсдэл</div>
+            <div class="stat-label" id="label-high">Их эрсдэл</div>
             <div class="stat-value" id="count-high">—</div>
         </div>
     </div>
 
     <!-- Charts -->
-    <div class="charts-section">
+    <div class="charts-section" id="charts-section">
         <div class="section-title">График шинжилгээ</div>
         <div class="charts-grid">
 
@@ -591,7 +591,7 @@
     <div class="table-section">
         <div class="table-toolbar">
             <div class="toolbar-left">
-                <span class="toolbar-title">Бүх мэдээлэл</span>
+                <span class="toolbar-title" id="table-title">Бүх мэдээлэл</span>
             </div>
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -632,6 +632,7 @@
     let searchQuery = '';
     let lineChartMode = 'month';
     let barChartMode = 'month';
+    let hasRiskDataset = false;
 
     // Chart instances
     let donutChart, lineChart, barChart, radarChart;
@@ -680,10 +681,65 @@
         return 'unknown';
     }
 
+    function hasExplicitRiskField(data) {
+        return data.some(item => String(getRiskLevelValue(item) || '').trim() !== '');
+    }
+
+    function countUniqueField(data, fieldName) {
+        const values = new Set();
+
+        data.forEach(item => {
+            const value = String(item?.[fieldName] ?? '').trim();
+            if (value) {
+                values.add(value);
+            }
+        });
+
+        return values.size;
+    }
+
+    function getLatestDateLabel(data) {
+        const dates = data
+            .map(item => detectDate(item))
+            .filter(date => date instanceof Date && !Number.isNaN(date.getTime()));
+
+        if (!dates.length) {
+            return '—';
+        }
+
+        const latestDate = dates.sort((left, right) => right.getTime() - left.getTime())[0];
+        return `${latestDate.getFullYear()}-${String(latestDate.getMonth() + 1).padStart(2, '0')}-${String(latestDate.getDate()).padStart(2, '0')}`;
+    }
+
     function detectDate(item) {
         for (const k of Object.keys(item)) {
             const v = item[k];
-            if (v && /\d{4}/.test(v) && !isNaN(Date.parse(v))) return new Date(v);
+            if (!v) continue;
+
+            const rawValue = String(v).trim();
+            if (!/\d{4}/.test(rawValue)) continue;
+
+            const directDate = new Date(rawValue);
+            if (!Number.isNaN(directDate.getTime())) {
+                return directDate;
+            }
+
+            const normalizedValue = rawValue.split('/')[0].trim();
+            const match = normalizedValue.match(/^(\d{4})[.-](\d{1,2})[.-](\d{1,2})(?:\s+(\d{1,2}):(\d{2})(?:\s*(AM|PM))?)?$/i);
+            if (!match) continue;
+
+            const [, year, month, day, hourText = '0', minuteText = '0', meridiem = ''] = match;
+            let hours = Number(hourText);
+            const minutes = Number(minuteText);
+
+            if (meridiem.toUpperCase() === 'PM' && hours < 12) {
+                hours += 12;
+            }
+            if (meridiem.toUpperCase() === 'AM' && hours === 12) {
+                hours = 0;
+            }
+
+            return new Date(Number(year), Number(month) - 1, Number(day), hours, minutes);
         }
         return null;
     }
@@ -1233,6 +1289,49 @@
         document.getElementById('count-high').textContent = counts.high;
     }
 
+    function updateSummaryStats(data) {
+        document.getElementById('count-low').textContent = data.length;
+        document.getElementById('count-medium').textContent = countUniqueField(data, 'Зам');
+        document.getElementById('count-high').textContent = countUniqueField(data, 'Хянасан');
+    }
+
+    function configureDataView(data) {
+        hasRiskDataset = hasExplicitRiskField(data);
+
+        document.getElementById('page-title').textContent = hasRiskDataset
+            ? 'Эрсдэлийн мэдээлэл'
+            : 'PD-3 мэдээлэл';
+        document.getElementById('page-subtitle').textContent = hasRiskDataset
+            ? 'А-58 эрсдэлийн үнэлгээ'
+            : `Сүүлийн огноо: ${getLatestDateLabel(data)}`;
+        document.getElementById('table-title').textContent = hasRiskDataset
+            ? 'Бүх мэдээлэл'
+            : 'PD-3 бүртгэлийн жагсаалт';
+        document.getElementById('search-input').placeholder = hasRiskDataset
+            ? 'Хайх...'
+            : 'Хайх: огноо, зам, км, гэмтэл...';
+        document.getElementById('filter-chips').style.display = hasRiskDataset ? 'flex' : 'none';
+        document.getElementById('charts-section').style.display = hasRiskDataset ? 'block' : 'none';
+
+        if (hasRiskDataset) {
+            document.getElementById('label-low').textContent = 'Бага эрсдэл';
+            document.getElementById('label-medium').textContent = 'Дунд эрсдэл';
+            document.getElementById('label-high').textContent = 'Их эрсдэл';
+            return;
+        }
+
+        activeFilter = 'all';
+        document.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+        const allChip = document.querySelector('.chip.all');
+        if (allChip) {
+            allChip.classList.add('active');
+        }
+
+        document.getElementById('label-low').textContent = 'Нийт бүртгэл';
+        document.getElementById('label-medium').textContent = 'Замын тоо';
+        document.getElementById('label-high').textContent = 'Шалгагч';
+    }
+
     function getRiskBadge(risk) {
         const label = RISK_LABELS[risk] || risk;
         return `<span class="risk-badge risk-${risk}"><span class="risk-dot"></span>${label}</span>`;
@@ -1307,7 +1406,7 @@
     function getFilteredData() {
         return allData.filter(item => {
             const risk = detectRisk(item);
-            const matchFilter = activeFilter === 'all' || risk === activeFilter;
+            const matchFilter = !hasRiskDataset || activeFilter === 'all' || risk === activeFilter;
             const q = searchQuery.toLowerCase();
             const matchSearch = !q || Object.values(item).some(v => String(v).toLowerCase().includes(q));
             return matchFilter && matchSearch;
@@ -1353,14 +1452,22 @@
 
             allData = normalizeTableRecords(extractRowsFromPayload(payload, sheetName));
 
+            configureDataView(allData);
+
             const counts = countRisks(allData);
-            updateStats(counts);
+            if (hasRiskDataset) {
+                updateStats(counts);
+            } else {
+                updateSummaryStats(allData);
+            }
 
             // Charts
-            initDonut(counts);
-            initLineChart();
-            initBarChart();
-            initRadarChart(counts);
+            if (hasRiskDataset) {
+                initDonut(counts);
+                initLineChart();
+                initBarChart();
+                initRadarChart(counts);
+            }
 
             // Table
             renderTable(getFilteredData());
@@ -1368,7 +1475,9 @@
             document.getElementById('loading-state').style.display = 'none';
             document.getElementById('table-wrap').style.display = 'block';
             document.getElementById('error-state').style.display = 'none';
-            document.getElementById('status-text').textContent = `${sheetName} - ${allData.length} бичлэг ачааллаа · Source: Google Apps Script`;
+            document.getElementById('status-text').textContent = hasRiskDataset
+                ? `${sheetName} - ${allData.length} бичлэг ачааллаа · Source: Google Apps Script`
+                : `${sheetName} - ${allData.length} мөр ачааллаа · PD-3 өгөгдөл`;
 
         } catch (error) {
             console.error('Алдаа:', error);

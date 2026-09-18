@@ -394,7 +394,7 @@
         }
 
         .name-selector-head {
-            display: none;
+            display: flex;
             gap: 8px;
             align-items: center;
         }
@@ -982,7 +982,7 @@
                 <input type="datetime-local" id="workDate">
                 <span>ӨДӨР</span>
                 <select id="location1">
-                     <option value="АМГАЛАН">АМГАЛАН</option>
+                    <option value="АМГАЛАН">АМГАЛАН</option>
                     <option value="ТУУЛ">ТУУЛ</option>
                     <option value="ХОНХОР">ХОНХОР</option>
                     <option value="БУМБАТ">БУМБАТ</option>
@@ -1121,10 +1121,6 @@
                 <div class="worker-form">
                     <input type="text" id="job" placeholder="Ажлын нэр">
                     <div class="name-selector">
-                        <div class="name-selector-head">
-                            <input type="text" id="nameSearch" placeholder="Нэр шүүж эсвэл шинэ нэр бичих">
-                            <button type="button" id="addNameOption">Нэмэх</button>
-                        </div>
                         <div class="name-selector-meta">
                             <span>Товшиж сонгох</span>
                             <span id="nameSelectionSummary" class="name-selector-summary">0 сонгогдсон</span>
@@ -1146,18 +1142,18 @@
 
             <div class="footer-section batlav">
                 <label style="color: #000; text-align: center; font-size: 1.4em; font-weight: 900;">Боловсруулсан:</label>
-                <select id="preparedBy" data-allow-view-mode-edit="true">
+                <select id="preparedBy" data-allow-view-edit="1">
                     <option value="ПДБ Н.Дамдинсүрэн">ПДБ Н.Дамдинсүрэн</option>
                     <option value="ПДБ Д.Доржбаатар">ПДБ Д.Доржбаатар</option>
                     <option value="ПДБ Д.Хүчитбаатар">ПДБ Д.Хүчитбаатар</option>
                     <option value="ПДБ А.Шижирээ">ПДБ А.Шижирээ</option>
                 </select>
                 <label>Хянасан:</label>
-                <select id="reviewedBy" data-allow-view-mode-edit="true">
+                <select id="reviewedBy" data-allow-view-edit="1">
                     <option value="ПД Г.Хатанбаатар">ПД Г.Хатанбаатар</option>
                     <option value="ПДБ Н.Дамдинсүрэн">ПДБ Н.Дамдинсүрэн</option>
                 </select>
-                <button type="button" class="save-btn" id="saveDataBtn" data-allow-view-mode-edit="true">💾 Хадгалах</button>
+                <button type="button" class="save-btn" id="saveDataBtn" data-allow-view-edit="1">💾 Хадгалах</button>
             </div>
         </div>
 
@@ -1226,105 +1222,19 @@
                 "С/Ц Ч.Өлзийбаяр",
                 "Т/З А.Ариунхэрлэн", 
                 "Т/З Н.Шархүү", 
-                "жолооч О.Эрдэмбаяр", 
+                "жолооч О.Эрдэмбаяр",                            
             ];
             let savedRecords = [];
             let employeeNames = [];
             let selectedNames = new Set();
+            const DEFAULT_EMPLOYEE_NAME_SET = new Set(DEFAULT_EMPLOYEE_NAMES.map(normalizeName));
 
         function normalizeName(value) {
             return value ? value.trim().replace(/\s+/g, " ") : "";
         }
 
-        function safeDecode(value) {
-            if (typeof value !== "string") {
-                return "";
-            }
-            try {
-                return decodeURIComponent(value.replace(/\+/g, "%20"));
-            } catch (error) {
-                return value;
-            }
-        }
-
-        function extractNameFromLinkedInput(rawValue) {
-            const raw = normalizeName(rawValue);
-            if (!raw) {
-                return "";
-            }
-
-            const queryLikeMatch = raw.match(/(?:^|[?&#\s,;])(?:name|worker|employee|fullname)=([^&#\s]+)/i);
-            if (queryLikeMatch && queryLikeMatch[1]) {
-                return normalizeName(safeDecode(queryLikeMatch[1]));
-            }
-
-            if (/^(https?:\/\/|www\.)/i.test(raw)) {
-                try {
-                    const parsed = new URL(raw, window.location.origin);
-                    const keyList = ["name", "worker", "employee", "fullname"];
-                    for (let i = 0; i < keyList.length; i += 1) {
-                        const value = parsed.searchParams.get(keyList[i]);
-                        if (value) {
-                            return normalizeName(safeDecode(value));
-                        }
-                    }
-                    return "";
-                } catch (error) {
-                    return "";
-                }
-            }
-
-            return raw;
-        }
-
-        function sanitizeEmployeeName(rawValue) {
-            let candidate = extractNameFromLinkedInput(rawValue);
-            if (!candidate) {
-                return "";
-            }
-
-            const roleKeywords = /(албан\s*тушаал|position|job|operator|инженер|диспетчер|техникч|жолооч|замчин|мастер|гадасчин|краны|цахилгаанчин)/i;
-            const splitMatch = candidate.match(/^(.+?)\s[-|–—/]\s(.+)$/);
-            if (splitMatch && roleKeywords.test(splitMatch[2])) {
-                candidate = normalizeName(splitMatch[1]);
-            }
-
-            const bracketSuffixMatch = candidate.match(/^(.+?)\s\(([^)]+)\)$/);
-            if (bracketSuffixMatch && roleKeywords.test(bracketSuffixMatch[2])) {
-                candidate = normalizeName(bracketSuffixMatch[1]);
-            }
-
-            if (/^(https?:\/\/|www\.)/i.test(candidate)) {
-                return "";
-            }
-
-            candidate = candidate.replace(/[<>]/g, "").trim();
-            return normalizeName(candidate);
-        }
-
-        function normalizeWorkerJob(value) {
-            const text = normalizeName(value);
-            if (!text) {
-                return "";
-            }
-            if (/^(https?:\/\/|www\.)/i.test(text)) {
-                return "";
-            }
-            return text;
-        }
-
-        const LOCKED_EMPLOYEE_NAMES = Array.from(new Set(
-            DEFAULT_EMPLOYEE_NAMES.map(sanitizeEmployeeName).filter(Boolean)
-        )).sort((left, right) => left.localeCompare(right, "mn"));
-        const LOCKED_EMPLOYEE_NAME_SET = new Set(LOCKED_EMPLOYEE_NAMES);
-
         function isAllowedEmployeeName(name) {
-            return LOCKED_EMPLOYEE_NAME_SET.has(sanitizeEmployeeName(name));
-        }
-
-        function flushWorkerStateToStorage() {
-            persistEmployeeNames();
-            saveWorkerDraft();
+            return DEFAULT_EMPLOYEE_NAME_SET.has(normalizeName(name));
         }
 
         function persistEmployeeNames() {
@@ -1345,8 +1255,8 @@
             }
 
             const workers = Array.from(workerList.querySelectorAll("li[data-name]")).map((item) => ({
-                name: sanitizeEmployeeName(item.dataset.name),
-                job: normalizeWorkerJob(item.dataset.job),
+                name: normalizeName(item.dataset.name),
+                job: (item.dataset.job || "").trim(),
                 rank: (item.dataset.rank || "").trim()
             }));
 
@@ -1445,8 +1355,8 @@
                 const parsed = JSON.parse(raw);
                 const selectedFromDraft = Array.isArray(parsed?.selectedNames)
                     ? parsed.selectedNames
-                        .map(sanitizeEmployeeName)
-                        .filter((name) => isAllowedEmployeeName(name))
+                        .map(normalizeName)
+                        .filter((name) => name && isAllowedEmployeeName(name))
                     : [];
                 selectedNames = new Set(selectedFromDraft);
 
@@ -1456,11 +1366,11 @@
 
                 if (Array.isArray(parsed?.workers) && parsed.workers.length > 0) {
                     parsed.workers.forEach((worker) => {
-                        const name = sanitizeEmployeeName(worker?.name);
+                        const name = normalizeName(worker?.name);
                         if (!name || !isAllowedEmployeeName(name)) {
                             return;
                         }
-                        const job = normalizeWorkerJob(worker?.job);
+                        const job = (worker?.job || "").trim();
                         const rank = (worker?.rank || "").trim();
                         appendWorkerListItem(name, job, rank);
                     });
@@ -1468,7 +1378,17 @@
 
                 if (recentSelectionPanel) {
                     recentSelectionPanel.innerHTML = parsed?.recentSelectionHtml || "";
-                    recentSelectionPanel.style.display = parsed?.recentSelectionVisible && recentSelectionPanel.innerHTML
+                    Array.from(recentSelectionPanel.querySelectorAll(".recent-selection-item")).forEach((item) => {
+                        if (!isAllowedEmployeeName(item.textContent || "")) {
+                            item.remove();
+                        }
+                    });
+                    Array.from(recentSelectionPanel.querySelectorAll(".recent-selection-entry")).forEach((entry) => {
+                        if (entry.querySelectorAll(".recent-selection-item").length === 0) {
+                            entry.remove();
+                        }
+                    });
+                    recentSelectionPanel.style.display = parsed?.recentSelectionVisible && recentSelectionPanel.querySelectorAll(".recent-selection-entry").length > 0
                         ? "block"
                         : "none";
                 }
@@ -1479,25 +1399,30 @@
         }
 
         function loadEmployeeNames() {
-            employeeNames = [...LOCKED_EMPLOYEE_NAMES];
-            persistEmployeeNames();
+            try {
+                employeeNames = [...DEFAULT_EMPLOYEE_NAME_SET].sort((left, right) => left.localeCompare(right, "mn"));
+                persistEmployeeNames();
+            } catch (error) {
+                console.error("Employee names load error:", error);
+                employeeNames = [...DEFAULT_EMPLOYEE_NAME_SET].sort((left, right) => left.localeCompare(right, "mn"));
+                persistEmployeeNames();
+            }
         }
 
         function setEmployeeNames(nextNames) {
-            employeeNames = [...LOCKED_EMPLOYEE_NAMES];
+            employeeNames = [...DEFAULT_EMPLOYEE_NAME_SET].sort((left, right) => left.localeCompare(right, "mn"));
             persistEmployeeNames();
             renderNameOptions();
         }
 
         function addEmployeeName(name) {
-            const normalized = sanitizeEmployeeName(name);
+            const normalized = normalizeName(name);
             if (!normalized) {
-                alert("Хүчинтэй нэр оруулна уу.");
                 return false;
             }
 
             if (!isAllowedEmployeeName(normalized)) {
-                alert("Зөвхөн урьдчилан оруулсан жагсаалтын нэрсээс сонгоно.");
+                alert(`\"${normalized}\" нэр жагсаалтад байхгүй тул нэмэгдэхгүй.`);
                 return false;
             }
 
@@ -1508,11 +1433,11 @@
         }
 
         function editEmployeeName(oldName) {
-            alert("Нэр засах боломжгүй. Зөвхөн баталгаажсан жагсаалтын нэрс ашиглана.");
+            alert("Нэр засах боломж хаалттай.");
         }
 
         function deleteEmployeeName(name) {
-            alert("Нэр устгах боломжгүй. Зөвхөн баталгаажсан жагсаалтын нэрс ашиглана.");
+            alert("Нэр устгах боломж хаалттай.");
         }
 
         function getKnownNames() {
@@ -1547,7 +1472,7 @@
                 emptyState.className = "name-options-empty";
                 emptyState.innerHTML = query
                     ? `<strong>${nameSearchInput.value}</strong> нэр олдсонгүй`
-                    : "Хадгалсан нэр алга. Эхний нэрийг дээрх талбараар нэмнэ үү.";
+                    : "Одоогоор сонгох нэрийн жагсаалт хоосон байна.";
                 nameOptions.appendChild(emptyState);
                 updateNameSelectionSummary();
                 return;
@@ -1598,18 +1523,13 @@
         }
 
         function seedNameFromInput() {
-            const newName = sanitizeEmployeeName(nameSearchInput ? nameSearchInput.value : "");
+            const newName = normalizeName(nameSearchInput ? nameSearchInput.value : "");
             if (!newName) {
                 return;
             }
 
-            if (!isAllowedEmployeeName(newName)) {
-                alert("Шинэ нэр нэмэхгүй. Жагсаалт дахь нэрийг сонгоно уу.");
-                return;
-            }
-
-            addEmployeeName(newName);
-            if (nameSearchInput) {
+            const isSelected = addEmployeeName(newName);
+            if (isSelected && nameSearchInput) {
                 nameSearchInput.value = "";
             }
             renderNameOptions();
@@ -1648,15 +1568,10 @@
                 return;
             }
 
-            const safeNames = names.map(sanitizeEmployeeName).filter(Boolean);
-            if (safeNames.length === 0) {
-                return;
-            }
-
             const jobText = job ? job : "Ажлын нэр оруулаагүй";
             const rankText = rank ? ` (${rank}-р зэрэг)` : "";
             const title = `<div class="recent-selection-title">Сүүлд сонгож нэмсэн хүмүүс: ${jobText}${rankText}</div>`;
-            const list = `<div class="recent-selection-list">${safeNames.map((name) => `<div class="recent-selection-item">${name}</div>`).join("")}</div>`;
+            const list = `<div class="recent-selection-list">${names.map((name) => `<div class="recent-selection-item">${name}</div>`).join("")}</div>`;
             const entry = `<div class="recent-selection-entry">${title}${list}</div>`;
 
             recentSelectionPanel.insertAdjacentHTML("beforeend", entry);
@@ -1779,90 +1694,17 @@
 
         function getRecordDayKey(record) {
             const source = record.workDate || record.timestamp;
-            const parts = getUlaanbaatarDateTimeParts(source);
-            if (!parts) {
+            if (!source) {
                 return "Огноо тодорхойгүй";
             }
-            const yyyy = parts.year;
-            const mm = parts.month;
-            const dd = parts.day;
-            return `${yyyy}-${mm}-${dd}`;
-        }
-
-        function getUlaanbaatarDateTimeParts(source) {
-            if (!source) {
-                return null;
-            }
-
-            const localDateTimeMatch = String(source).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
-            if (localDateTimeMatch) {
-                return {
-                    year: localDateTimeMatch[1],
-                    month: localDateTimeMatch[2],
-                    day: localDateTimeMatch[3],
-                    hour: localDateTimeMatch[4],
-                    minute: localDateTimeMatch[5],
-                    second: localDateTimeMatch[6] || "00"
-                };
-            }
-
             const dateObj = new Date(source);
             if (Number.isNaN(dateObj.getTime())) {
-                return null;
-            }
-
-            const formatter = new Intl.DateTimeFormat("en-CA", {
-                timeZone: "Asia/Ulaanbaatar",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: false
-            });
-
-            const partMap = {};
-            formatter.formatToParts(dateObj).forEach((part) => {
-                if (part.type !== "literal") {
-                    partMap[part.type] = part.value;
-                }
-            });
-
-            if (!partMap.year || !partMap.month || !partMap.day || !partMap.hour || !partMap.minute || !partMap.second) {
-                return null;
-            }
-
-            return {
-                year: partMap.year,
-                month: partMap.month,
-                day: partMap.day,
-                hour: partMap.hour,
-                minute: partMap.minute,
-                second: partMap.second
-            };
-        }
-
-        function formatUlaanbaatarDateTime(source) {
-            const parts = getUlaanbaatarDateTimeParts(source);
-            if (!parts) {
                 return "Огноо тодорхойгүй";
             }
-            return `${parts.year}.${parts.month}.${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
-        }
-
-        function getCurrentUlaanbaatarDateTimeLocalInputValue() {
-            const nowParts = getUlaanbaatarDateTimeParts(new Date().toISOString());
-            if (!nowParts) {
-                const now = new Date();
-                const yyyy = now.getFullYear();
-                const mm = String(now.getMonth() + 1).padStart(2, "0");
-                const dd = String(now.getDate()).padStart(2, "0");
-                const hh = String(now.getHours()).padStart(2, "0");
-                const min = String(now.getMinutes()).padStart(2, "0");
-                return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
-            }
-            return `${nowParts.year}-${nowParts.month}-${nowParts.day}T${nowParts.hour}:${nowParts.minute}`;
+            const yyyy = dateObj.getFullYear();
+            const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+            const dd = String(dateObj.getDate()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd}`;
         }
 
         function toDateLabel(dayKey) {
@@ -1876,7 +1718,8 @@
             });
         }
 
-        const dateTimeString = getCurrentUlaanbaatarDateTimeLocalInputValue();
+        const now = new Date();
+        const dateTimeString = now.toISOString().slice(0, 16);
         document.getElementById('workDate').value = dateTimeString;
         updateWorkTypeWidth();
         syncWorkerSectionHeight();
@@ -1954,8 +1797,6 @@
         workTypeSelect.addEventListener("change", updateWorkTypeWidth);
         window.addEventListener("resize", updateWorkTypeWidth);
         window.addEventListener("resize", syncWorkerSectionHeight);
-        window.addEventListener("pagehide", flushWorkerStateToStorage);
-        window.addEventListener("beforeunload", flushWorkerStateToStorage);
 
         if (typeof ResizeObserver !== "undefined" && restrictionBox) {
             new ResizeObserver(syncWorkerSectionHeight).observe(restrictionBox);
@@ -2064,7 +1905,9 @@
                 selectedNames.clear();
                 updateNameSelectionSummary();
                 renderNameOptions();
-                nameSearchInput.focus();
+                if (nameSearchInput) {
+                    nameSearchInput.focus();
+                }
                 saveWorkerDraft();
             } else {
                 alert("Чекээр дор хаяж нэг нэр сонгож, ажлын нэр оруулна уу!");
@@ -2187,7 +2030,10 @@
                 const card = document.createElement('div');
                 card.className = 'record-card';
 
-                const formatDate = formatUlaanbaatarDateTime(record.workDate || record.timestamp);
+                const recordDate = new Date(record.workDate || record.timestamp);
+                const formatDate = Number.isNaN(recordDate.getTime())
+                    ? 'Огноо тодорхойгүй'
+                    : recordDate.toLocaleString('mn-MN');
                 
                 card.innerHTML = `
                     <div class="record-header" style="justify-content: flex-start;">
@@ -2249,7 +2095,8 @@
         }
 
         function resetForm() {
-            document.getElementById('workDate').value = getCurrentUlaanbaatarDateTimeLocalInputValue();
+            const now = new Date();
+            document.getElementById('workDate').value = now.toISOString().slice(0, 16);
             document.getElementById('distance1').value = '';
             document.getElementById('meter1').value = '';
             document.getElementById('distance2').value = '';

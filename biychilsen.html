@@ -237,26 +237,6 @@ body {
 .filter-btn.green-btn.active { background: var(--green); border-color: var(--green); color: #000; }
 .filter-btn.red-btn.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 
-.source-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--mono);
-  transition: all 0.2s;
-}
-
-.source-link:hover {
-  border-color: var(--accent);
-  color: #ffd27a;
-}
-
 .reset-btn {
   padding: 7px 14px;
   border-radius: 6px;
@@ -527,8 +507,6 @@ tbody tr.status-zassan td:first-child {
     <button class="filter-btn green-btn" data-filter="zassan">Зассан</button>
   </div>
 
-  <a class="source-link" id="scriptLink" href="#" target="_blank" rel="noopener">Apps Script холбоос</a>
-
 </div>
 
 <!-- Table -->
@@ -562,14 +540,10 @@ tbody tr.status-zassan td:first-child {
 </div>
 
 <script>
-const SHEET_ID = "1wEIDZXjsJiONIiq_oboEEAeeLjSVegROx3cyG78QCPo";
-const SHEET_GID = "0";
-const SHEET_EDIT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?usp=sharing`;
-const SHEET_FALLBACK_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbyMf0mPRYjSj6ZJEZ_ZpQZAsLitPrGiZlVbP4GruNJT4MVS650D24Co41B81hNbz5k/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQCMm-2TyMvWvhLBbcpE9SAooEJURITt2nWDIsbnOnZd43Nl24m8xE3-rUaXKFXTs/exec";
+const SHEET_NAME = "pd-3";
+const SHEET_EDIT_URL = SCRIPT_URL;
 const STORAGE_KEY = "gemtliin_bugd";
-
-document.getElementById("scriptLink").href = SHEET_FALLBACK_URL;
 
 let allRows = [];
 let statusMap = {};
@@ -748,7 +722,7 @@ document.querySelectorAll(".filter-btn").forEach(btn => {
 document.getElementById("searchInput").addEventListener("input", renderRows);
 
 function normalizeCols(cols) {
-  let normalized = [...cols];
+  let normalized = cols.map(col => String(col ?? "").trim());
 
   // 13 оронтой timestamp байвал хасна.
   if (normalized[0] && /^\d{13}$/.test(normalized[0])) {
@@ -772,44 +746,23 @@ function normalizeCols(cols) {
   return normalized;
 }
 
-function parseCsvRows(csvText) {
-  if (!csvText || /^\s*</.test(csvText)) {
-    throw new Error("CSV биш өгөгдөл ирсэн");
-  }
-
-  const rows = csvText.split("\n").slice(1).filter(r => r.trim() !== "");
-  return rows.map(row => {
-    const cols = row.split(",").map(c => c.replace(/^"|"$/g, "").trim());
-    return normalizeCols(cols);
-  });
+function recordToCols(record) {
+  const values = Object.values(record || {}).filter(value => value !== undefined);
+  return normalizeCols(values);
 }
 
 async function fetchSheetRows() {
-  try {
-    const response = await fetch(SHEET_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("JSON fetch алдаа");
-    const json = await response.json();
-    const rows = Array.isArray(json) ? json : json?.value;
-    if (!Array.isArray(rows)) throw new Error("JSON бүтэц буруу");
-
-    return rows.map(item => {
-      const cols = [
-        item?.["Огноо"],
-        item?.["Зам"],
-        item?.["КМ"],
-        item?.["ПК"],
-        item?.["Үе"],
-        item?.["Гэмтэл"],
-        item?.["Хянасан"]
-      ].map(v => String(v ?? "").trim());
-      return normalizeCols(cols);
-    });
-  } catch {
-    const fallbackRes = await fetch(SHEET_FALLBACK_URL, { cache: "no-store" });
-    if (!fallbackRes.ok) throw new Error("Fallback fetch алдаа");
-    const csvText = await fallbackRes.text();
-    return parseCsvRows(csvText);
+  const response = await fetch(`${SCRIPT_URL}?sheet=${encodeURIComponent(SHEET_NAME)}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Apps Script fetch алдаа");
   }
+
+  const json = await response.json();
+  if (!Array.isArray(json)) {
+    throw new Error("JSON өгөгдөл буруу");
+  }
+
+  return json.map(recordToCols);
 }
 
 function renderLoadError() {

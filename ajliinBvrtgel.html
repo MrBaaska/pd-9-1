@@ -33,7 +33,7 @@
     color:var(--ink);
     font-family:'IBM Plex Sans',sans-serif;
   }
-  .wrap{width:100%;max-width:none;margin:0 auto;padding:0 20px 64px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 64px;}
 
   /* ---------- header: signal plaque ---------- */
   header.masthead{
@@ -44,7 +44,7 @@
     position:relative;
     border-bottom:4px solid var(--signal-amber);
   }
-  header.masthead .inner{width:100%;max-width:none;margin:0 auto;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;justify-content:space-between;}
+  header.masthead .inner{max-width:1180px;margin:0 auto;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;justify-content:space-between;}
   .masthead h1{
     font-family:'Oswald',sans-serif;
     font-weight:600;
@@ -307,14 +307,34 @@
 <script>
 const reportForm = document.getElementById('reportForm');
 const tableBody = document.getElementById('tableBody');
+const REPORT_STORAGE_KEY = 'ubtz:ajliin-bvrtgel:reports';
 
 // In-memory өгөгдлийн сан (уг мэдээллийг эндээс download/export хийж, өөрийн серверт localStorage-той хувилбараар ажиллуулж болно)
-let reportData = [
+const defaultReportData = [
   { date:'2026-08-28', work:'ушп', plan:'тийм', workers:5, leader:'Бат', signaler:'Болд', movement:'тийм', safety:'СЦБ', comm:'тийм', weather:'тахир тойруу', weatherCondition:'Салхитай' },
   { date:'2026-08-27', work:'зам засвар', plan:'тийм', workers:8, leader:'Бат', signaler:'Мөнх', movement:'тийм', safety:'Дохио тэмдэгт', comm:'тийм', weather:'шулуун замд', weatherCondition:'Бороотой' },
   { date:'2026-08-26', work:'бүрхүүл солих', plan:'үгүй', workers:4, leader:'Оюун', signaler:'Болд', movement:'үгүй', safety:'Анхаарамж маягт', comm:'гэмтэлтэй', weather:'бороо', weatherCondition:'Цастай' },
   { date:'2026-08-25', work:'хяналтын үзлэг', plan:'тийм', workers:6, leader:'Оюун', signaler:'Мөнх', movement:'тийм', safety:'СЦБ', comm:'тийм', weather:'манан', weatherCondition:'Манантай' }
 ];
+
+function loadReportData(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(REPORT_STORAGE_KEY) || 'null');
+    return Array.isArray(saved) ? saved : defaultReportData;
+  } catch (error) {
+    return defaultReportData;
+  }
+}
+
+function saveReportData(){
+  try {
+    localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(reportData));
+  } catch (error) {
+    console.warn('Ажлын бүртгэл хадгалах боломжгүй:', error);
+  }
+}
+
+let reportData = loadReportData();
 
 let trendChart, planChart, safetyChart, commChart, weatherChart, weatherConditionChart;
 
@@ -502,6 +522,7 @@ reportForm.addEventListener('submit', function(e){
     weather: document.getElementById('weatherSelect').value,
     weatherCondition: document.getElementById('weatherConditionSelect').value
   });
+  saveReportData();
   renderTable();
   reportForm.reset();
 });

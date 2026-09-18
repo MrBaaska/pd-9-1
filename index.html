@@ -31,7 +31,7 @@
       --shell-gap: clamp(12px, 2vw, 24px);
       --shell-pad: clamp(12px, 2vw, 28px);
       --sidebar-width: 320px;
-      --frame-min-height: calc(100dvh - var(--topbar-height) - var(--shell-gap));
+      --frame-min-height: calc(100dvh - var(--topbar-height) - (var(--shell-gap) * 2));
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -251,40 +251,43 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 12px;
+      padding: 6px 10px;
       border-radius: 999px;
+      border: 1px solid var(--border);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-muted);
+    }
+    .mode-badge.edit {
+      color: var(--accent);
+      background: rgba(0,212,255,0.08);
+      border-color: rgba(0,212,255,0.22);
+    }
+    .mode-toggle {
+      appearance: none;
       border: 1px solid var(--border-glow);
-      background: rgba(0, 212, 255, 0.08);
+      background: linear-gradient(180deg, rgba(0,212,255,0.14), rgba(0,212,255,0.08));
       color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .mode-badge.editable {
-      border-color: rgba(9,243,114,0.35);
-      background: rgba(9,243,114,0.12);
-      color: #baffdb;
-    }
-    .mode-badge.readonly {
-      border-color: rgba(255,159,67,0.35);
-      background: rgba(255,159,67,0.12);
-      color: #ffe0ba;
-    }
-    .auth-btn {
-      border: 1px solid var(--border-glow);
-      background: rgba(0, 212, 255, 0.08);
-      color: var(--text-primary);
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 700;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 9px 12px;
+      border-radius: 999px;
       cursor: pointer;
-      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
     }
-    .auth-btn:hover {
-      background: rgba(0, 212, 255, 0.16);
-      border-color: var(--accent);
+    .mode-toggle:hover {
       transform: translateY(-1px);
+      background: linear-gradient(180deg, rgba(0,212,255,0.22), rgba(0,212,255,0.12));
+      border-color: var(--accent);
+    }
+    .mode-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
     .status-dot {
       width: 7px; height: 7px;
@@ -434,6 +437,11 @@
       background-image: var(--rail-stripe);
       overflow: auto;
       padding: var(--shell-gap);
+      min-height: calc(100dvh - var(--topbar-height));
+      display: flex;
+    }
+    .main.fullscreen-main {
+      padding: 0;
     }
 
     /* Welcome / Dashboard panel */
@@ -443,6 +451,8 @@
       margin: 0;
       padding: 0;
       min-width: 0;
+      display: flex;
+      flex: 1;
     }
     .dash-hero {
       position: relative;
@@ -562,48 +572,21 @@
       border: 1px solid var(--border);
       border-radius: 18px;
       overflow: hidden;
-      height: auto;
-      min-height: 520px;
-      min-height: var(--frame-min-height);
+      height: var(--frame-min-height);
+      min-height: calc(100dvh - var(--topbar-height) - (var(--shell-gap) * 2));
+      max-height: calc(100dvh - var(--topbar-height) - (var(--shell-gap) * 2));
+      width: 100%;
       display: flex;
       flex-direction: column;
       box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
     }
-    .main.tushaal-expanded {
-      padding: 0;
-      overflow: hidden;
-    }
-    .main.tushaal-expanded .dashboard {
-      height: calc(100dvh - var(--topbar-height));
-    }
-    .main.tushaal-expanded .content-frame-wrap {
+    .main.fullscreen-main .content-frame-wrap {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
       height: calc(100dvh - var(--topbar-height));
       min-height: calc(100dvh - var(--topbar-height));
-      border-radius: 0;
-      border-left: 0;
-      border-right: 0;
-      box-shadow: none;
-    }
-    .main.tushaal-expanded #content-frame {
-      min-height: calc(100dvh - var(--topbar-height) - 54px);
-    }
-    .main.fullscreen-page {
-      padding: 0;
-      overflow: hidden;
-    }
-    .main.fullscreen-page .dashboard {
-      height: calc(100dvh - var(--topbar-height));
-    }
-    .main.fullscreen-page .content-frame-wrap {
-      height: calc(100dvh - var(--topbar-height));
-      min-height: calc(100dvh - var(--topbar-height));
-      border-radius: 0;
-      border-left: 0;
-      border-right: 0;
-      box-shadow: none;
-    }
-    .main.fullscreen-page #content-frame {
-      min-height: calc(100dvh - var(--topbar-height) - 54px);
+      max-height: calc(100dvh - var(--topbar-height));
     }
     .frame-titlebar {
       display: flex;
@@ -616,6 +599,9 @@
       color: var(--text-muted);
       min-height: 54px;
     }
+    .main.fullscreen-main .frame-titlebar {
+      display: none;
+    }
     .frame-dot {
       width: 9px; height: 9px;
       border-radius: 50%;
@@ -624,10 +610,12 @@
       width: 100%;
       flex: 1;
       min-height: 0;
-      min-height: 620px;
       border: none;
       display: block;
       background: transparent;
+    }
+    .main.fullscreen-main #content-frame {
+      min-height: calc(100dvh - var(--topbar-height));
     }
 
     .sidebar-overlay {
@@ -742,12 +730,6 @@
       }
       .main {
         padding: 12px;
-      }
-      .main.tushaal-expanded {
-        padding: 0;
-      }
-      .main.fullscreen-page {
-        padding: 0;
       }
       .content-frame-wrap {
         width: 100%;
@@ -935,12 +917,10 @@
 
       <li><a href="#" data-page-key="Үүрэг даалгавар"><i class="fa fa-clipboard-list"></i>Үүрэг даалгавар</a></li>
     </ul>
+
     <div class="topbar-status">
-      <div class="mode-badge readonly" id="editModeBadge"><i class="fa fa-eye"></i><span>Харах горим</span></div>
-      <button class="auth-btn" id="editModeButton" type="button">Кодоор нэвтрэх</button>
-      <div class="status-badge">
-        <div class="status-dot"></div>
-      </div>
+      <div class="mode-badge view" id="mode-badge">Харах горим</div>
+      <button class="mode-toggle" id="mode-toggle" type="button" aria-pressed="false">Кодоор нэвтрэх</button>
       <div class="clock" id="clock">--:--:--</div>
     </div>
 
@@ -955,10 +935,11 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">⬡ Үйл ажиллагаа</div>
+
     <nav class="sidebar-nav">
 
       <div class="sidebar-item">
-        <a href="#" class="sidebar-link" id="irts-link" data-page-key="Ирц бүртгэл"><i class="fa fa-calendar-check"></i> Ирц бүртгэл</a>
+        <a href="irts.html" class="sidebar-link" id="irts-link" data-page-key="Ирц бүртгэл"><i class="fa fa-calendar-check"></i> Ирц бүртгэл</a>
       </div>
 
       <div class="sidebar-item has-sub" onclick="toggleSub(this)">
@@ -979,7 +960,7 @@
       </div>
 
       <div class="sidebar-item">
-        <a href="#" class="sidebar-link" id="burtgel-link" data-page-key="Бүртгэл"><i class="fa fa-folder-open"></i> Зааварчилгаа авсан ажилтаны бүртгэл</a>
+        <a href="#" class="sidebar-link" id="burtgel-link" data-page-key="Бүртгэл"><i class="fa fa-folder-open"></i>Зааварчилгаа авсан ажилтаны бүртгэл</a>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -1009,12 +990,12 @@
         <div class="sidebar-sub">
           <a href="#" id="ajiltan-link" data-page-key="Ажилтануудын мэдээлэл">Ажилтануудын мэдээлэл</a>
           <a href="#" id="sum-link" data-page-key="Суман шилжүүлгийн бүртгэл">Суман шилжүүлгийн бүртгэл</a>
-          <a href="#" data-page-key="Малтай айлын судалгаа">Малтай айлын судалгаа</a>
-          <a href="#" data-page-key="Гүүр, хоолойн судалгаа">Гүүр, хоолойн судалгаа</a>
-          <a href="#" data-page-key="ПУ-5 дэр модны судалгаа">ПУ-5 дэр модны судалгаа</a>
-          <a href="#" data-page-key="ПУ-2 зам төмрийн судалгаа">ПУ-2 зам төмрийн судалгаа</a>
-          <a href="#" data-page-key="нөөц зам төмрийн судалгаа">Нөөц зам төмрийн судалгаа</a>
-          <a href="#" data-page-key="уулзварын зайн судалгаа">Уулзварын зайн судалгаа</a>
+          <a href="#" id="maltai-ail-link" data-page-key="Малтай айлын судалгаа">Малтай айлын судалгаа</a>
+          <a href="#" id="guur-hooloi-link" data-page-key="Гүүр, хоолойн судалгаа">Гүүр, хоолойн судалгаа</a>
+          <a href="#" id="pu5-dermod-link" data-page-key="ПУ-5 дэр модны судалгаа">ПУ-5 дэр модны судалгаа</a>
+          <a href="#" id="pu2-zamtomor-link" data-page-key="ПУ-2 зам төмрийн судалгаа">ПУ-2 зам төмрийн судалгаа</a>
+          <a href="#" id="noots-zamtomor-link" data-page-key="Нөөц зам төмрийн судалгаа">Нөөц зам төмрийн судалгаа</a>
+          <a href="#" id="uulzvar-zai-link" data-page-key="Уулзварын зайн судалгаа">Уулзварын зайн судалгаа</a>
         </div>
       </div>
 
@@ -1022,11 +1003,16 @@
         <a href="#" class="sidebar-link" id="habea-link" data-page-key="ХАБЭА-н үзлэг"><i class="fa fa-layer-group"></i>ХАБЭА-н үзлэг</a>
       </div>
 
-      <div class="sidebar-item">
-          <a href="#" class="sidebar-link" id="passport-link" data-page-key="Паспортын үзлэг"><i class="fa fa-calculator"></i> Паспортын үзлэг</a>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-item has-sub" onclick="toggleSub(this)">
+        <div class="sidebar-link"><i class="fa fa-calculator"></i> Паспортын үзлэг</div>
+        <div class="sidebar-sub">
+          <a href="passport.html" id="passport-link" data-page-key="Паспортын үзлэг">Дэр модны үзлэг</a>
+          <a href="dvnz.html" id="dvnz-link" data-page-key="Дүнзний үзлэг">Дүнзний үзлэг</a>
+        </div>
       </div>
       <div class="sidebar-item">
-        <a href="#" class="sidebar-link" data-page-key="ХАБЭА / Эрсдэлийн үнэлгээ" id="ersdel-link"><i class="fa fa-chart-bar"></i> Эрсдэлийн үнэлгээ</a>
+        <a href="#" class="sidebar-link" data-page-key="ХАБЭА / Эрсдэлийн үнэлгээ"><i class="fa fa-chart-bar"></i> Эрсдэлийн үнэлгээ</a>
       </div>
       <div class="sidebar-item">
         <a href="#" class="sidebar-link" id="tech-link" data-page-key="Замын техникийн байдал"><i class="fa fa-gauge-high"></i> Замын техникийн байдал</a>
@@ -1054,7 +1040,7 @@
           <div class="frame-dot" style="background:#27c93f"></div>
           <span id="frame-title-label" style="margin-left:8px; font-family:'Share Tech Mono',monospace; font-size:11px;">ХЭСГИЙН ТАНИЛЦУУЛГА</span>
         </div>
-        <iframe id="content-frame" src="./heseg.html" frameborder="0" allow="camera *; microphone *; autoplay *; clipboard-write *; encrypted-media *; gyroscope *; picture-in-picture *; fullscreen *"></iframe>
+        <iframe id="content-frame" src="./heseg.html" frameborder="0" style="width:100%;" allow="camera *; microphone *; autoplay *; clipboard-write *; encrypted-media *; gyroscope *; picture-in-picture *; fullscreen *"></iframe>
       </div>
     </div>
   </main>
@@ -1065,184 +1051,16 @@
 
 <script>
   let pageMap = {};
-  const EDIT_ACCESS_CODE = '54@928#16';
   const UI_STORAGE_KEYS = {
     lastPage: 'ubtz:index:last-page',
     editMode: 'ubtz:index:edit-mode'
   };
   const FRAME_STORAGE_PREFIX = 'ubtz:autosave:';
-
-  function readEditMode() {
-    try {
-      return sessionStorage.getItem(UI_STORAGE_KEYS.editMode) === 'true';
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function writeEditMode(isEditable) {
-    try {
-      sessionStorage.setItem(UI_STORAGE_KEYS.editMode, isEditable ? 'true' : 'false');
-    } catch (error) {
-      console.warn('Edit mode state write failed:', error);
-    }
-  }
-
-  function updateEditModeUi() {
-    const badge = document.getElementById('editModeBadge');
-    const button = document.getElementById('editModeButton');
-    const editable = readEditMode();
-    if (badge) {
-      badge.classList.toggle('editable', editable);
-      badge.classList.toggle('readonly', !editable);
-      badge.innerHTML = editable
-        ? '<i class="fa fa-pen-to-square"></i><span>Засварлах горим</span>'
-        : '<i class="fa fa-eye"></i><span>Харах горим</span>';
-    }
-    if (button) {
-      button.textContent = editable ? 'Гарах' : 'Кодоор нэвтрэх';
-    }
-  }
-
-  function setElementEditability(element, editable) {
-    if (!(element instanceof element.ownerDocument.defaultView.HTMLElement)) {
-      return;
-    }
-
-    const allowInteractiveContainer = element.closest('[data-allow-view-mode-edit="true"]');
-    if (allowInteractiveContainer) {
-      return;
-    }
-
-    if (element.dataset.allowViewModeEdit === 'true') {
-      return;
-    }
-
-    if (editable) {
-      if (element.dataset.viewModeDisabled === 'true') {
-        element.disabled = false;
-        delete element.dataset.viewModeDisabled;
-      }
-      if (element.dataset.viewModeReadonly === 'true') {
-        element.readOnly = false;
-        delete element.dataset.viewModeReadonly;
-      }
-      if (element.dataset.viewModeContenteditable === 'true') {
-        element.contentEditable = 'true';
-        delete element.dataset.viewModeContenteditable;
-      }
-      return;
-    }
-
-    if (element.matches('input, textarea')) {
-      if (!element.readOnly) {
-        element.readOnly = true;
-        element.dataset.viewModeReadonly = 'true';
-      }
-      return;
-    }
-
-    if (element.matches('select, button')) {
-      if (!element.disabled) {
-        element.disabled = true;
-        element.dataset.viewModeDisabled = 'true';
-      }
-      return;
-    }
-
-    if (element.isContentEditable) {
-      element.contentEditable = 'false';
-      element.dataset.viewModeContenteditable = 'true';
-    }
-  }
-
-  function applyFrameAccessMode(frame) {
-    try {
-      const doc = frame && frame.contentDocument;
-      if (!doc || !doc.body) {
-        return;
-      }
-
-      const frameSrc = String(frame.getAttribute('src') || frame.src || '').toLowerCase();
-      if (frameSrc.includes('bvrtgel.html')) {
-        return;
-      }
-
-      const editable = readEditMode();
-      doc.querySelectorAll('input, textarea, select, button, [contenteditable="true"]').forEach(function(element) {
-        setElementEditability(element, editable);
-      });
-    } catch (error) {
-      console.warn('Frame access mode skipped:', error);
-    }
-  }
-
-  function setupFrameAccessControl(frame) {
-    try {
-      const doc = frame.contentDocument;
-      if (!doc || !doc.body) {
-        return;
-      }
-
-      applyFrameAccessMode(frame);
-
-      if (frame._accessModeObserver) {
-        frame._accessModeObserver.disconnect();
-      }
-
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          mutation.addedNodes.forEach(function(node) {
-            if (node.nodeType !== 1) {
-              return;
-            }
-            if (node.matches && node.matches('input, textarea, select, button, [contenteditable="true"]')) {
-              setElementEditability(node, readEditMode());
-            }
-            if (node.querySelectorAll) {
-              node.querySelectorAll('input, textarea, select, button, [contenteditable="true"]').forEach(function(element) {
-                setElementEditability(element, readEditMode());
-              });
-            }
-          });
-        });
-      });
-      observer.observe(doc.body, { childList: true, subtree: true });
-      frame._accessModeObserver = observer;
-    } catch (error) {
-      console.warn('Frame access control binding skipped:', error);
-    }
-  }
-
-  function refreshCurrentFrameAccessMode() {
-    const frame = document.getElementById('content-frame');
-    if (frame) {
-      applyFrameAccessMode(frame);
-    }
-    updateEditModeUi();
-  }
-
-  function handleEditModeButton() {
-    if (readEditMode()) {
-      writeEditMode(false);
-      refreshCurrentFrameAccessMode();
-      return;
-    }
-
-    const code = prompt('Засварлах код оруулна уу:');
-    if (code === null) {
-      return;
-    }
-
-    if (code === EDIT_ACCESS_CODE) {
-      writeEditMode(true);
-      refreshCurrentFrameAccessMode();
-      alert('Засварлах горим идэвхжлээ.');
-      return;
-    }
-
-    alert('Код буруу байна. Харах горим хэвээр үлдлээ.');
-  }
+  const EDIT_UNLOCK_CODE = '54@928#16';
+  const FULLSCREEN_PAGE_KEYS = new Set([
+    'Ажлын бүртгэл',
+    'Хурлын тэмдэглэл'
+  ]);
 
   function readLastPage() {
     try {
@@ -1260,15 +1078,148 @@
     }
   }
 
+  function readEditMode() {
+    try {
+      return sessionStorage.getItem(UI_STORAGE_KEYS.editMode) === 'edit' ? 'edit' : 'view';
+    } catch (error) {
+      return 'view';
+    }
+  }
+
+  function writeEditMode(mode) {
+    try {
+      sessionStorage.setItem(UI_STORAGE_KEYS.editMode, mode === 'edit' ? 'edit' : 'view');
+    } catch (error) {
+      console.warn('Edit mode state write failed:', error);
+    }
+  }
+
+  function isEditModeEnabled() {
+    return readEditMode() === 'edit';
+  }
+
+  function syncEditModeUi() {
+    const enabled = isEditModeEnabled();
+    const badge = document.getElementById('mode-badge');
+    const button = document.getElementById('mode-toggle');
+    if (badge) {
+      badge.textContent = enabled ? 'Засварлах горим' : 'Харах горим';
+      badge.classList.toggle('edit', enabled);
+    }
+    if (button) {
+      button.textContent = enabled ? 'Гарах' : 'Кодоор нэвтрэх';
+      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    }
+    document.body.dataset.editMode = enabled ? 'edit' : 'view';
+  }
+
+  function setEditMode(enabled) {
+    writeEditMode(enabled ? 'edit' : 'view');
+    syncEditModeUi();
+    const frame = document.getElementById('content-frame');
+    if (frame) {
+      applyFrameEditMode(frame);
+    }
+  }
+
+  function captureEditState(element) {
+    if (element.dataset.copilotEditStateCaptured === 'true') {
+      return;
+    }
+    element.dataset.copilotEditStateCaptured = 'true';
+    element.dataset.copilotOrigDisabled = element.disabled ? 'true' : 'false';
+    if ('readOnly' in element) {
+      element.dataset.copilotOrigReadonly = element.readOnly ? 'true' : 'false';
+    }
+    element.dataset.copilotOrigHasContenteditable = element.hasAttribute('contenteditable') ? 'true' : 'false';
+    if (element.hasAttribute('contenteditable')) {
+      element.dataset.copilotOrigContenteditable = element.getAttribute('contenteditable') || '';
+    }
+  }
+
+  function restoreEditState(element) {
+    if (element.dataset.copilotOrigDisabled !== undefined) {
+      element.disabled = element.dataset.copilotOrigDisabled === 'true';
+    }
+    if ('readOnly' in element && element.dataset.copilotOrigReadonly !== undefined) {
+      element.readOnly = element.dataset.copilotOrigReadonly === 'true';
+    }
+    if (element.dataset.copilotOrigHasContenteditable === 'true') {
+      const originalValue = element.dataset.copilotOrigContenteditable || '';
+      if (originalValue === '') {
+        element.removeAttribute('contenteditable');
+      } else {
+        element.setAttribute('contenteditable', originalValue);
+      }
+    } else if (element.matches('[contenteditable]')) {
+      element.removeAttribute('contenteditable');
+    }
+    element.removeAttribute('aria-readonly');
+  }
+
+  function setElementEditableState(element, enabled) {
+    if (!(element instanceof element.ownerDocument.defaultView.HTMLElement)) {
+      return;
+    }
+
+    // Keep selected footer controls interactive on the daily briefing page.
+    if (element.id === 'preparedBy' || element.id === 'reviewedBy' || element.id === 'saveDataBtn') {
+      captureEditState(element);
+      restoreEditState(element);
+      return;
+    }
+
+    // Keep the management checklist table fully interactive.
+    if (element.closest && element.closest('#recordTable')) {
+      captureEditState(element);
+      restoreEditState(element);
+      return;
+    }
+
+    captureEditState(element);
+
+    if (enabled) {
+      restoreEditState(element);
+      return;
+    }
+
+    if (element.matches('button, input[type="button"], input[type="submit"], input[type="reset"], input[type="file"], select')) {
+      element.disabled = true;
+      return;
+    }
+
+    if (element.matches('textarea')) {
+      element.readOnly = true;
+      element.setAttribute('aria-readonly', 'true');
+      return;
+    }
+
+    if (element.matches('input')) {
+      const inputType = (element.getAttribute('type') || 'text').toLowerCase();
+      if (inputType === 'checkbox' || inputType === 'radio' || inputType === 'range' || inputType === 'color') {
+        element.disabled = true;
+      } else {
+        element.readOnly = true;
+        element.setAttribute('aria-readonly', 'true');
+      }
+      return;
+    }
+
+    if (element.isContentEditable) {
+      element.setAttribute('contenteditable', 'false');
+      element.setAttribute('aria-readonly', 'true');
+    }
+  }
+
   const staticPageFallbacks = {
-    'Ажлын бүртгэл': 'ajliinBvrtgel.html',
-    'Хурлын тэмдэглэл': 'hural.html',
-      'Ирц бүртгэл': 'irts.html',
+    'Ирц бүртгэл': 'irts.html',
     'Өдөр тутмын зааварчилгаа': 'zoovorchilgoo.html',
     'Зааварчилгаа / Зам засвар': 'zoovorchilgoo.html',
     'Цахилгаан': 'tsahilgaan.html',
     'Төлөвлөгөө / Сарын ажлын төлөвлөгөө': 'sariin.html',
     'Шийдвэр': 'shiidwer.html',
+    'Ажлын бүртгэл': 'ajliinBvrtgel.html',
+    'Хурлын тэмдэглэл': 'hural.html',
     'Үүрэг даалгавар': 'ita.html',
     'Менежментийн нэгдсэн тогтолцоо': 'anhaar.html',
     'Ажилтануудын мэдээлэл': 'ajiltan.html',
@@ -1277,13 +1228,14 @@
     'Гүүр, хоолойн судалгаа': 'isso.html',
     'ПУ-5 дэр модны судалгаа': 'pu5.html',
     'ПУ-2 зам төмрийн судалгаа': 'gemtelteiZT.html',
-    'нөөц зам төмрийн судалгаа': 'nootsZT.html',
-    'уулзварын зайн судалгаа': 'uZai.html',
+    'Нөөц зам төмрийн судалгаа': 'nootsZT.html',
+    'Уулзварын зайн судалгаа': 'uZai.html',
     'ХАБЭА-н үзлэг': 'habea.html',
     'Паспортын үзлэг': 'passport.html',
     'Замын техникийн байдал': 'tech.html',
     'Хэсгийн танилцуулга': 'heseg.html',
-    'Бүртгэл': 'bvrtgel.html'
+    'Бүртгэл': 'bvrtgel.html',
+    'ХАБЭА / Эрсдэлийн үнэлгээ': 'ersdeliinVnelgee.html'
   };
 
   function findPageElement(pageKey) {
@@ -1472,6 +1424,61 @@
     observer.observe(doc.body, { childList: true, subtree: true });
   }
 
+  function setupFrameEditMode(doc) {
+    if (doc.documentElement.dataset.editModeReady === 'true') {
+      return;
+    }
+    doc.documentElement.dataset.editModeReady = 'true';
+
+    function refreshElement(node) {
+      if (!(node instanceof node.ownerDocument.defaultView.HTMLElement)) {
+        return;
+      }
+      if (node.matches('input, textarea, select, button, [contenteditable]')) {
+        setElementEditableState(node, isEditModeEnabled());
+      }
+      node.querySelectorAll('input, textarea, select, button, [contenteditable]').forEach(function(element) {
+        setElementEditableState(element, isEditModeEnabled());
+      });
+    }
+
+    refreshElement(doc.body);
+
+    const observer = new MutationObserver(function(mutations) {
+      const enabled = isEditModeEnabled();
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) {
+            if (node.matches('input, textarea, select, button, [contenteditable]')) {
+              setElementEditableState(node, enabled);
+            }
+            node.querySelectorAll('input, textarea, select, button, [contenteditable]').forEach(function(element) {
+              setElementEditableState(element, enabled);
+            });
+          }
+        });
+      });
+    });
+    observer.observe(doc.body, { childList: true, subtree: true });
+  }
+
+  function applyFrameEditMode(frame) {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.body) {
+        return;
+      }
+      const enabled = isEditModeEnabled();
+      doc.documentElement.dataset.editMode = enabled ? 'edit' : 'view';
+      doc.body.dataset.editMode = enabled ? 'edit' : 'view';
+      doc.querySelectorAll('input, textarea, select, button, [contenteditable]').forEach(function(element) {
+        setElementEditableState(element, enabled);
+      });
+    } catch (error) {
+      console.warn('Frame edit mode sync skipped:', error);
+    }
+  }
+
   function injectFrameStyles(doc) {
     if (doc.getElementById('copilot-frame-responsive-style')) {
       return;
@@ -1484,13 +1491,21 @@
       'img, svg { max-width: 100%; height: auto; }',
       'iframe { max-width: 100%; }',
       'input, textarea, select { max-width: 100%; }',
-      '.container, .wrapper, .dashboard, .main-content { width: 100% !important; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }',
+      '.container, .wrapper, .dashboard, .main-content, .wrap, .inner, .max-w-7xl { width: 100% !important; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }',
       '.table-container, .table-wrapper, [class*="table-container"], [class*="table-wrapper"] { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }',
       '@media (max-width: 768px) {',
       '  body { min-width: 0 !important; }',
       '}'
     ].join(' ');
     doc.head.appendChild(style);
+  }
+
+  function syncFramePresentation(pageKey) {
+    const main = document.querySelector('.main');
+    if (!main) {
+      return;
+    }
+    main.classList.toggle('fullscreen-main', FULLSCREEN_PAGE_KEYS.has(pageKey));
   }
 
   function getFrameContentHeight(doc) {
@@ -1602,13 +1617,14 @@
       ensureFrameViewport(doc);
       injectFrameStyles(doc);
       bindFrameAutoHeight(frame);
+      setupFrameEditMode(doc);
+      applyFrameEditMode(frame);
       syncFrameSize(frame);
       const autosaveMeta = doc.querySelector('meta[name="copilot-frame-autosave"]');
       const autosaveDisabled = autosaveMeta && String(autosaveMeta.getAttribute('content') || '').toLowerCase() === 'off';
       if (!autosaveDisabled) {
         setupFrameAutosave(doc, getAutosaveStorageKey(frame));
       }
-      setupFrameAccessControl(frame);
     } catch (error) {
       console.warn('Frame enhancements skipped:', error);
     }
@@ -1679,16 +1695,8 @@
   function loadFramePage(pageKey, clickedElement) {
     const frame = document.getElementById('content-frame');
     const frameTitle = document.getElementById('frame-title-label');
-    const main = document.querySelector('.main');
     const titleText = clickedElement.textContent.trim().replace(/\s+/g, ' ');
-    const isTushaalPage = pageKey === 'Тушаал, стандарт' || pageKey === 'уулзварын зайн судалгаа';
-    const isFullscreenPage = pageKey === 'Ажлын бүртгэл' || pageKey === 'Хурлын тэмдэглэл';
-
-    if (main) {
-      main.classList.toggle('tushaal-expanded', isTushaalPage);
-      main.classList.toggle('fullscreen-page', isFullscreenPage);
-    }
-
+    syncFramePresentation(pageKey);
     frame.src = resolvePageSrc(pageKey, titleText);
     writeLastPage(pageKey);
     if (frameTitle) {
@@ -1703,17 +1711,39 @@
 
   document.addEventListener('DOMContentLoaded', async function() {
     await loadPageMap();
+    syncEditModeUi();
 
     const frame = document.getElementById('content-frame');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const editModeButton = document.getElementById('editModeButton');
-
-    updateEditModeUi();
+    const modeToggle = document.getElementById('mode-toggle');
 
     if (frame) {
       frame.addEventListener('load', function() {
         enhanceFrame(frame);
+      });
+      if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
+        enhanceFrame(frame);
+      }
+    }
+
+    if (modeToggle) {
+      modeToggle.addEventListener('click', function() {
+        if (isEditModeEnabled()) {
+          setEditMode(false);
+          return;
+        }
+
+        const enteredCode = window.prompt('Кодоор нэвтрэх код оруулна уу');
+        if (enteredCode === null) {
+          return;
+        }
+
+        if (enteredCode === EDIT_UNLOCK_CODE) {
+          setEditMode(true);
+        } else {
+          window.alert('Код буруу байна.');
+        }
       });
     }
 
@@ -1726,10 +1756,6 @@
 
     if (sidebarOverlay) {
       sidebarOverlay.addEventListener('click', closeSidebar);
-    }
-
-    if (editModeButton) {
-      editModeButton.addEventListener('click', handleEditModeButton);
     }
 
     document.addEventListener('keydown', function(event) {
@@ -1747,29 +1773,7 @@
       }
     });
 
-
-    // Custom handler for Эрсдэлийн үнэлгээ
-    const ersdelLink = document.getElementById('ersdel-link');
-    if (ersdelLink) {
-      ersdelLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const frame = document.getElementById('content-frame');
-        const frameTitle = document.getElementById('frame-title-label');
-        frame.src = './ersdeliinVnelgee.html';
-        writeLastPage('ХАБЭА / Эрсдэлийн үнэлгээ');
-        if (frameTitle) {
-          frameTitle.textContent = 'ЭРСДЭЛИЙН ҮНЭЛГЭЭ';
-        }
-        setActiveSidebarLink(ersdelLink.closest('.sidebar-link'));
-        closeTopNavMenus();
-        if (window.matchMedia('(max-width: 1024px)').matches) {
-          closeSidebar();
-        }
-      });
-    }
-
-    document.querySelectorAll('[data-page-key]:not([id="ersdel-link"])').forEach(function(link) {
+    document.querySelectorAll('[data-page-key]').forEach(function(link) {
       link.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();

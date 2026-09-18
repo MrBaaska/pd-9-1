@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ПАССПОРТЫН ҮЗЛЭГ</title>
+    <title>ДЭР МОДНЫ ҮЗЛЭГ</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -479,6 +479,9 @@
                     <div class="stat-box full">
                         <div class="stat-num" style="color:#ff7675" id="statReplaceTotal">0</div>
                         <div class="stat-lbl">НИЙТ СОЛИХ ДЭР МОД</div>
+                    </div>
+                    <div class="stat-box full" style="margin-top:10px;">
+                        <button class="btn" onclick="sendToGoogleSheets()" style="background:#27ae60;">ПАССПОРТЫН ИНЖЕНЕР-Т ИЛГЭЭХ</button>
                     </div>
                 </div>
             </div>
@@ -1049,5 +1052,39 @@ updateStats();
 renderSearch();
 refreshConsecutiveSelectors();
 </script>
+
+
+    <script>
+    function sendToGoogleSheets() {
+        // Дэлгэц дээрх утгуудыг цуглуулах
+        const data = {
+            totalSleeper: document.getElementById('statTotalSleepers').innerText,
+            concreteSleeper: document.getElementById('statMarked').value,
+            kmCount: document.getElementById('statKmCount').innerText,
+            invalidSleeper: document.getElementById('statTotalEntries').innerText,
+            consec3: document.getElementById('stat3').innerText,
+            consec4: document.getElementById('stat4').innerText,
+            consec5: document.getElementById('stat5').innerText,
+            totalReplace: document.getElementById('statReplaceTotal').innerText
+        };
+
+        // Google Sheets рүү илгээх (Fetch API)
+        fetch('https://script.google.com/macros/s/AKfycbxpvWncp7iUJT6za0fmaza17iKTOs6I092IlbtUDbVKowgIqEH0kpWeijFEat5FSF91/exec', {
+            method: 'POST',
+            mode: 'no-cors', // Cross-origin асуудлаас сэргийлнэ
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            alert("Мэдээллийг Google Sheets рүү амжилттай илгээлээ!");
+        })
+        .catch(error => {
+            console.error('Алдаа гарлаа:', error);
+            alert("Илгээхэд алдаа гарлаа.");
+        });
+    }
+    </script>
 </body>
 </html>

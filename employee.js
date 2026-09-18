@@ -1,10 +1,7 @@
 (function () {
   'use strict';
 
-  const WORKERS_URL = 'workers.json';
-  const CACHE_KEY_WORKERS = 'workersCache_v1';
   const CACHE_KEY_REGISTERED = 'registeredWorkers_v1';
-  const CACHE_KEY_WORKERS_CUSTOM = 'workersCustom_v1';
 
   const state = {
     workersMap: new Map(),
@@ -29,84 +26,6 @@
 
     const name = String(worker.name || '').trim();
     return name;
-  }
-
-  function normalizeName(value) {
-    return String(value || '').trim().toLowerCase();
-  }
-
-  function collectScannerCandidates(rawValue) {
-    const text = String(rawValue || '').trim();
-    const candidates = [];
-
-    if (text) {
-      candidates.push(text);
-    }
-
-    const empMatch = text.match(/EMP\d{1,6}/i);
-    if (empMatch) {
-      candidates.push(empMatch[0]);
-    }
-
-    try {
-      const url = new URL(text);
-      ['id', 'empId', 'employeeId', 'code', 'name', 'fullName', 'employeeName', 'employee'].forEach(function (key) {
-        const v = String(url.searchParams.get(key) || '').trim();
-        if (v) candidates.push(v);
-      });
-    } catch (e) {
-      // Not URL format.
-    }
-
-    try {
-      const parsed = JSON.parse(text);
-      ['id', 'empId', 'employeeId', 'code', 'name', 'fullName', 'employeeName', 'employee'].forEach(function (key) {
-        const v = String((parsed && parsed[key]) || '').trim();
-        if (v) candidates.push(v);
-      });
-    } catch (e) {
-      // Not JSON format.
-    }
-
-    return Array.from(new Set(candidates.filter(Boolean)));
-  }
-
-  function findWorkerFromScanValue(rawValue) {
-    const candidates = collectScannerCandidates(rawValue);
-    if (!candidates.length) return null;
-
-    for (let i = 0; i < candidates.length; i += 1) {
-      const byCode = state.workersMap.get(normalizeCode(candidates[i]));
-      if (byCode) return byCode;
-    }
-
-    const workers = getWorkersArrayFromMap();
-    for (let i = 0; i < candidates.length; i += 1) {
-      const candidateName = normalizeName(candidates[i]);
-      if (!candidateName) continue;
-
-      const exact = workers.find(function (w) {
-        return normalizeName(w.name) === candidateName || normalizeName(buildDisplayName(w)) === candidateName;
-      });
-      if (exact) return exact;
-    }
-
-    for (let i = 0; i < candidates.length; i += 1) {
-      const candidateName = normalizeName(candidates[i]);
-      if (!candidateName) continue;
-
-      const fuzzy = workers.find(function (w) {
-        const workerName = normalizeName(w.name);
-        const workerDisplay = normalizeName(buildDisplayName(w));
-        return workerName.includes(candidateName)
-          || candidateName.includes(workerName)
-          || workerDisplay.includes(candidateName)
-          || candidateName.includes(workerDisplay);
-      });
-      if (fuzzy) return fuzzy;
-    }
-
-    return null;
   }
 
   function toast(message, kind) {
@@ -238,15 +157,6 @@
     return formatEmpCode(max + 1);
   }
 
-  function persistCustomWorkers() {
-    try {
-      const workers = getWorkersArrayFromMap();
-      localStorage.setItem(CACHE_KEY_WORKERS_CUSTOM, JSON.stringify(workers));
-    } catch (e) {
-      // Ignore localStorage write errors.
-    }
-  }
-
   function setWorkersMap(workers) {
     const map = new Map();
 
@@ -260,73 +170,13 @@
     state.workersMap = map;
     state.workersLoaded = true;
     state.workersLoadError = null;
-
-    try {
-      localStorage.setItem(CACHE_KEY_WORKERS, JSON.stringify(workers));
-    } catch (e) {
-      // Ignore cache write errors.
-    }
   }
 
-  function loadWorkersFromCache() {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY_WORKERS);
-      if (!cached) return false;
-
-      const parsed = parseWorkers(JSON.parse(cached));
-      if (!parsed.length) return false;
-
-      setWorkersMap(parsed);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function loadWorkersFromCustomStore() {
-    try {
-      const custom = localStorage.getItem(CACHE_KEY_WORKERS_CUSTOM);
-      if (!custom) return false;
-
-      const parsed = parseWorkers(JSON.parse(custom));
-      if (!parsed.length) return false;
-
-      setWorkersMap(parsed);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  async function loadWorkers() {
-    const hasCustomWorkers = loadWorkersFromCustomStore();
-    if (!hasCustomWorkers) {
-      loadWorkersFromCache();
-    }
-
-    if (state.workersLoaded) {
-      syncRegisteredWorkersFromCurrentSession();
-      renderRegisteredWorkersTab();
-    }
-
-    if (hasCustomWorkers) {
-      return;
-    }
-
-    try {
-      const res = await fetch(WORKERS_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
-      const parsed = parseWorkers(await res.json());
-      setWorkersMap(parsed);
-      syncRegisteredWorkersFromCurrentSession();
-      renderRegisteredWorkersTab();
-    } catch (err) {
-      state.workersLoadError = err;
-      if (!state.workersLoaded) {
-        toast('workers.json уншиж чадсангүй.', 'warn');
-      }
-    }
+  function loadWorkers() {
+    const parsed = parseWorkers(Array.isArray(window.HTML_EMPLOYEES) ? window.HTML_EMPLOYEES : []);
+    setWorkersMap(parsed);
+    syncRegisteredWorkersFromCurrentSession();
+    renderRegisteredWorkersTab();
   }
 
   function readCurrentSessionEntries() {
@@ -439,9 +289,6 @@
       pane.innerHTML = [
         '<div class="panel">',
         '  <div class="panel-title"><i class="bi bi-people"></i>Бүртгэлтэй ажилтны жагсаалт</div>',
-        '  <div class="d-flex justify-content-end mb-2">',
-        '    <button type="button" class="btn btn-add-soft btn-sm" onclick="employeeAddWorker()"><i class="bi bi-plus-lg me-1"></i>Шинэ мөр нэмэх</button>',
-        '  </div>',
         '  <div class="table-responsive" style="max-height:380px; overflow-y:auto;">',
         '    <table class="table rail-table table-bordered mb-0">',
         '      <thead>',
@@ -451,7 +298,6 @@
         '          <th style="text-align:center;">Албан тушаал</th>',
         '          <th style="text-align:center;">Код</th>',
         '          <th style="width:120px; text-align:center;">QR код</th>',
-        '          <th style="width:120px; text-align:center;">Үйлдэл</th>',
         '        </tr>',
         '      </thead>',
         '      <tbody id="employeeListBody"></tbody>',
@@ -473,7 +319,7 @@
     const sorted = getWorkersArrayFromMap();
 
     if (!sorted.length) {
-      body.innerHTML = '<tr class="empty-row"><td colspan="6">Ажилтны жагсаалт ачаалагдаж байна...</td></tr>';
+      body.innerHTML = '<tr class="empty-row"><td colspan="5">HTML кодод бүртгэлтэй ажилтан алга.</td></tr>';
     } else {
       body.innerHTML = sorted
         .map(function (w, idx) {
@@ -486,10 +332,6 @@
             '  <td>' + escapeHtml(w.position || '-') + '</td>',
             '  <td class="fw-semibold">' + escapeHtml(w.id || '-') + '</td>',
             '  <td style="text-align:center;"><img src="' + qrUrl + '" alt="QR ' + escapeHtml(w.id || '') + '" width="96" height="96" loading="lazy"></td>',
-            '  <td style="text-align:center;">',
-            '    <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="employeeEditWorker(\'' + escapeHtml(w.id) + '\')"><i class="bi bi-pencil"></i></button>',
-            '    <button type="button" class="btn btn-sm btn-outline-danger" onclick="employeeDeleteWorker(\'' + escapeHtml(w.id) + '\')"><i class="bi bi-trash"></i></button>',
-            '  </td>',
             '</tr>'
           ].join('');
         })
@@ -500,82 +342,6 @@
     if (count) {
       count.textContent = String(sorted.length);
     }
-  }
-
-  function addWorkerInteractive() {
-    const name = String(window.prompt('Ажилтны нэр оруулна уу (ж: пр-4 Б. ОргилЭрдэнэ):', '') || '').trim();
-    if (!name) {
-      toast('Ажилтны нэр хоосон байна.', 'warn');
-      return;
-    }
-
-    const position = String(window.prompt('Албан тушаал оруулна уу (ж: Замчин):', '') || '').trim();
-    if (!position) {
-      toast('Албан тушаал хоосон байна.', 'warn');
-      return;
-    }
-
-    const id = getNextEmpCode();
-    state.workersMap.set(id, {
-      id: id,
-      name: name,
-      section: '',
-      position: position,
-      phone: ''
-    });
-
-    persistCustomWorkers();
-    renderRegisteredWorkersTab();
-    toast('Шинэ ажилтан нэмэгдлээ: ' + name + ' [' + id + ']', 'ok');
-  }
-
-  function editWorkerInteractive(id) {
-    const code = normalizeCode(id);
-    const worker = state.workersMap.get(code);
-    if (!worker) {
-      toast('Засах ажилтан олдсонгүй.', 'warn');
-      return;
-    }
-
-    const name = String(window.prompt('Ажилтны нэр засах:', worker.name || '') || '').trim();
-    if (!name) {
-      toast('Ажилтны нэр хоосон байж болохгүй.', 'warn');
-      return;
-    }
-
-    const position = String(window.prompt('Албан тушаал засах:', worker.position || '') || '').trim();
-    if (!position) {
-      toast('Албан тушаал хоосон байж болохгүй.', 'warn');
-      return;
-    }
-
-    state.workersMap.set(code, {
-      ...worker,
-      name: name,
-      position: position
-    });
-
-    persistCustomWorkers();
-    renderRegisteredWorkersTab();
-    toast('Мэдээлэл шинэчлэгдлээ: ' + name, 'ok');
-  }
-
-  function deleteWorkerInteractive(id) {
-    const code = normalizeCode(id);
-    const worker = state.workersMap.get(code);
-    if (!worker) {
-      toast('Устгах ажилтан олдсонгүй.', 'warn');
-      return;
-    }
-
-    if (!window.confirm('"' + worker.name + '" ажилтныг устгах уу?')) {
-      return;
-    }
-
-    state.workersMap.delete(code);
-    persistCustomWorkers();
-    renderRegisteredWorkersTab();
-    toast('Ажилтан устгагдлаа: ' + worker.name, 'warn');
   }
 
   function patchUpdateTabCounts() {
@@ -611,8 +377,8 @@
         return original(nameOrCode, source);
       }
 
-      const scannedValue = String(nameOrCode || '').trim();
-      if (!scannedValue) {
+      const code = normalizeCode(nameOrCode);
+      if (!code) {
         beep(false);
         toast('QR код хоосон байна.', 'warn');
         return false;
@@ -624,7 +390,7 @@
         return false;
       }
 
-      const worker = findWorkerFromScanValue(scannedValue);
+      const worker = state.workersMap.get(code);
       if (!worker) {
         beep(false);
         toast('Ажилтан бүртгэлгүй', 'warn');
@@ -655,10 +421,6 @@
     patchUpdateTabCounts();
     patchRenderTable();
     patchAddEmployeeEntry();
-
-    window.employeeAddWorker = addWorkerInteractive;
-    window.employeeEditWorker = editWorkerInteractive;
-    window.employeeDeleteWorker = deleteWorkerInteractive;
 
     document.addEventListener('pointerdown', unlockAudio, { once: true });
     document.addEventListener('keydown', unlockAudio, { once: true });

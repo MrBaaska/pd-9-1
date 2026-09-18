@@ -706,9 +706,25 @@
             font-size: 12px;
             font-family: 'IBM Plex Sans', sans-serif;
             outline: none;
+            cursor: pointer;
         }
         .table-status-select:focus {
             border-color: var(--accent);
+        }
+        .attendance-present-row {
+            background: rgba(63,185,80,0.12);
+        }
+        .attendance-present-row .emp-name-cell,
+        .attendance-present-row .emp-role-cell,
+        .attendance-present-row .time-cell {
+            color: var(--green);
+            font-weight: 600;
+        }
+        .table-status-select.status-present {
+            background: rgba(63,185,80,0.16);
+            border-color: var(--green);
+            color: var(--green);
+            font-weight: 600;
         }
 
         .img-viewer {
@@ -865,9 +881,7 @@
         th {
             padding: 10px 12px;
             text-align: left;
-            font-weight: 600;
             font-size: 11px;
-            text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text2);
             border-bottom: 1px solid var(--border);
@@ -1281,75 +1295,55 @@
 // =====================
 // DATA
 // =====================
-const REGISTERED_WORKERS_CACHE_KEYS = ['registeredWorkers_v1', 'workersCustom_v1', 'workersCache_v1'];
-
-function normalizeWorkerFromRegistered(raw) {
-    if (!raw) return null;
-    const id = String(raw.id || '').trim();
-    const name = String(raw.name || '').trim();
-    const role = String(raw.role || raw.position || '').trim() || 'Тодорхойгүй';
-    if (!id || !name) return null;
-    return { id, name, role };
-}
-
-function loadWorkersFromRegisteredCache() {
-    try {
-        const dedup = new Map();
-
-        REGISTERED_WORKERS_CACHE_KEYS.forEach((key) => {
-            const raw = localStorage.getItem(key);
-            if (!raw) return;
-            const parsed = JSON.parse(raw);
-            if (!Array.isArray(parsed)) return;
-
-            parsed.forEach((item) => {
-                const worker = normalizeWorkerFromRegistered(item);
-                if (worker && !dedup.has(worker.id)) {
-                    dedup.set(worker.id, worker);
-                }
-            });
-        });
-
-        return Array.from(dedup.values());
-    } catch (error) {
-        return [];
-    }
-}
-
-const registeredWorkers = loadWorkersFromRegisteredCache();
-
-let WORKERS = registeredWorkers.length ? registeredWorkers : [
-    { id: 'EMP001', name: 'Б.Баасанжаргал', role: 'ПЧИу' },
-    { id: 'EMP002', name: 'Б.Батболд',       role: 'ПД' },
-    { id: 'EMP003', name: 'О.Нэргүй',        role: 'ПДБк' },
-    { id: 'EMP004', name: 'Л.Жаргал',        role: 'ПДБр' },
-    { id: 'EMP005', name: 'Г.Нямсүрэн',      role: 'ПДБс' },
-    { id: 'EMP006', name: 'Д.Мөнхбаяр',      role: 'пр-4' },
-    { id: 'EMP007', name: 'Т.Оюунтунгалаг',  role: 'пр-3' },
-    { id: 'EMP008', name: 'Э.Сайнзаяа',      role: 'пр-2' },
-    { id: 'EMP009', name: 'Н.Болдбаатар',    role: 'Дагалдан' },
-    { id: 'EMP010', name: 'Х.Уранцэцэг',     role: 'тор засагч' },
-    { id: 'EMP011', name: 'С.Мөнхжаргал',    role: 'жолооч' },
-    { id: 'EMP012', name: 'А.Ганбаатар',     role: 'ус олгогч' },
-    { id: 'EMP013', name: 'Б.Энхтүвшин',     role: 'гармын жижүүр' },
-    { id: 'EMP014', name: 'Д.Батчимэг',      role: 'ПЧИу' },
-    { id: 'EMP015', name: 'Л.Мандах',        role: 'ПД' },
-    { id: 'EMP016', name: 'Н.Эрдэнэчимэг',  role: 'ПДБк' },
-    { id: 'EMP017', name: 'Г.Батсүх',        role: 'ПДБр' },
-    { id: 'EMP018', name: 'Ж.Наранцэцэг',   role: 'пр-4' },
-    { id: 'EMP019', name: 'О.Гантулга',      role: 'пр-3' },
-    { id: 'EMP020', name: 'Х.Баярмаа',       role: 'пр-2' },
-    { id: 'EMP021', name: 'Б.Энхбаяр',       role: 'Дагалдан' },
-    { id: 'EMP022', name: 'С.Чимэдцэрэн',   role: 'тор засагч' },
-    { id: 'EMP023', name: 'Т.Болортуяа',     role: 'жолооч' },
-    { id: 'EMP024', name: 'М.Ганзориг',      role: 'ус олгогч' },
-    { id: 'EMP025', name: 'Д.Туяасүрэн',     role: 'гармын жижүүр' },
-    { id: 'EMP026', name: 'Н.Мөнхбат',       role: 'ПЧИу' },
-    { id: 'EMP027', name: 'Б.Оюунбилэг',    role: 'ПД' },
-    { id: 'EMP028', name: 'Э.Алтантуяа',    role: 'ПДБс' },
-    { id: 'EMP029', name: 'Г.Батжаргал',     role: 'пр-4' },
-    { id: 'EMP030', name: 'Д.Цэрэнпунцаг',  role: 'пр-3' },
+// bvrtgel.html-тэй ижил ажилтны код, нэр, албан тушаалын цорын ганц эх үүсвэр.
+let WORKERS = [
+    { id: 'EMP0001', name: 'Г.Хатанбаатар', role: 'ПД' },
+    { id: 'EMP0002', name: 'Н.Дамдинсүрэн', role: 'ПДБ' },
+    { id: 'EMP0003', name: 'Д.Доржбаатар', role: 'ПДБ' },
+    { id: 'EMP0004', name: 'Д.Хүчитбаатар', role: 'ПДБ' },
+    { id: 'EMP0005', name: 'А.Шижирээ', role: 'ПДБ' },
+    { id: 'EMP0006', name: 'Б.Батболд', role: 'пр-4' },
+    { id: 'EMP0007', name: 'Б.Батгэрэл', role: 'пр-4' },
+    { id: 'EMP0008', name: 'А.Шижирээ', role: 'пр-5' },
+    { id: 'EMP0009', name: 'Б.Батболд', role: 'пр-4' },
+    { id: 'EMP0010', name: 'Б.Батгэрэл', role: 'пр-4' },
+    { id: 'EMP0011', name: 'Ц.Ганболд', role: 'пр-4' },
+    { id: 'EMP0012', name: 'Г.Гансүх', role: 'пр-4' },
+    { id: 'EMP0013', name: 'Г.Ганчимэг', role: 'пр-4' },
+    { id: 'EMP0014', name: 'Л.Ихбаяр', role: 'пр-4' },
+    { id: 'EMP0015', name: 'С.Пүрэвнанзад', role: 'пр-4' },
+    { id: 'EMP0016', name: 'А.Сүхбаатар', role: 'пр-4' },
+    { id: 'EMP0017', name: 'Б.Анхбаатар', role: 'пр-3' },
+    { id: 'EMP0018', name: 'Б.Бадрахгэрэл', role: 'пр-3' },
+    { id: 'EMP0019', name: 'Б.Баттулга', role: 'пр-3' },
+    { id: 'EMP0020', name: 'Ц.Ганхуяг', role: 'пр-3' },
+    { id: 'EMP0021', name: 'Б.Донид', role: 'пр-3' },
+    { id: 'EMP0022', name: 'Д.Отгончимэг', role: 'пр-3' },
+    { id: 'EMP0023', name: 'А.Сувдаа', role: 'пр-3' },
+    { id: 'EMP0024', name: 'Н.Хүлэгбаатар', role: 'пр-3' },
+    { id: 'EMP0025', name: 'Г.Хүрэлхадаг', role: 'пр-3' },
+    { id: 'EMP0026', name: 'Д.Цогтбаатар', role: 'пр-3' },
+    { id: 'EMP0027', name: 'С.Чимэддорж', role: 'пр-3' },
+    { id: 'EMP0028', name: 'А.Будхүү', role: 'пр-2' },
+    { id: 'EMP0029', name: 'О.Гүрбадам', role: 'С/Ц' },
+    { id: 'EMP0030', name: 'Ч.Өлзийбаяр', role: 'С/Ц' },
+    { id: 'EMP0031', name: 'А.Ариунхэрлэн', role: 'Т/З' },
+    { id: 'EMP0032', name: 'Н.Шархүү', role: 'Т/З' },
+    { id: 'EMP0033', name: 'О.Эрдэмбаяр', role : 'жолооч' },
 ];
+const WORKERS_STORAGE_KEY = 'ubtz_workers_autosave_v3';
+
+try {
+    const savedWorkers = JSON.parse(localStorage.getItem(WORKERS_STORAGE_KEY) || 'null');
+    if (Array.isArray(savedWorkers)) {
+            const savedById = new Map(savedWorkers
+            .filter(w => w && w.id && w.name && w.role)
+                .map(w => [String(w.id), { id: String(w.id), name: String(w.name), role: String(w.role) }]));
+            WORKERS = WORKERS.map(worker => savedById.get(worker.id) || worker);
+    }
+} catch (error) {
+    console.warn('Ажилтны autosave уншигдсангүй', error);
+}
 
 const STATUS_MAP = {
     present: { label: 'Ирсэн',            cls: 's-present' },
@@ -1368,7 +1362,7 @@ WORKERS.forEach(w => {
 });
 const newsRegistrations = {};
 let activeNewsId = null;
-const STORAGE_KEY = 'ubtz_news_autosave_v1';
+const STORAGE_KEY = 'ubtz_news_autosave_v2';
 let autosaveTimer = null;
 
 let qrScanner = null;
@@ -1418,6 +1412,14 @@ function getNextWorkerId() {
         return Number.isFinite(n) ? Math.max(acc, n) : acc;
     }, 0);
     return `EMP${String(max + 1).padStart(3, '0')}`;
+}
+
+function saveWorkersAutosave() {
+    try {
+        localStorage.setItem(WORKERS_STORAGE_KEY, JSON.stringify(WORKERS));
+    } catch (error) {
+        console.warn('Ажилтны autosave хадгалагдсангүй', error);
+    }
 }
 
 function syncDataWithWorkers() {
@@ -1483,6 +1485,7 @@ function addWorker() {
     }
 
     WORKERS.push({ id: getNextWorkerId(), name, role: role || 'Тодорхойгүй' });
+    saveWorkersAutosave();
     syncDataWithWorkers();
     refreshManualSelect();
     renderWorkerAdmin();
@@ -1505,6 +1508,7 @@ function editWorker(empId) {
 
     worker.name = newName.trim() || worker.name;
     worker.role = newRole.trim() || worker.role;
+    saveWorkersAutosave();
     refreshManualSelect();
     renderWorkerAdmin();
     renderTable();
@@ -1519,6 +1523,7 @@ function deleteWorker(empId) {
     if (!confirm(`${worker.name} - устгах уу?`)) return;
 
     WORKERS = WORKERS.filter(w => w.id !== empId);
+    saveWorkersAutosave();
     syncDataWithWorkers();
     refreshManualSelect();
     renderWorkerAdmin();
@@ -1585,6 +1590,9 @@ function scheduleAutosave() {
     autosaveTimer = setTimeout(saveAutosaveState, 250);
 }
 
+window.addEventListener('pagehide', saveAutosaveState);
+window.addEventListener('beforeunload', saveAutosaveState);
+
 function normalizeRegistration(raw) {
     const safe = {};
     WORKERS.forEach(w => {
@@ -1634,12 +1642,6 @@ function loadAutosaveState() {
         if (!raw) return false;
         const parsed = JSON.parse(raw);
         if (!parsed || !Array.isArray(parsed.newsCards)) return false;
-
-        if (Array.isArray(parsed.workers) && parsed.workers.length) {
-            WORKERS = parsed.workers
-                .filter(w => w && w.id && w.name && w.role)
-                .map(w => ({ id: String(w.id), name: String(w.name), role: String(w.role) }));
-        }
 
         Object.keys(newsRegistrations).forEach(k => delete newsRegistrations[k]);
 
@@ -1766,7 +1768,7 @@ function collectQrCandidates(rawText) {
 
     try {
         const url = new URL(text);
-        ['id', 'empId', 'employeeId', 'name', 'employeeName', 'fullName'].forEach((key) => {
+        ['id', 'empId', 'employeeId', 'name', 'employeeName', 'fullName', 'role', 'position'].forEach((key) => {
             const v = normalizeQrValue(url.searchParams.get(key));
             if (v) candidates.push(v);
         });
@@ -1775,7 +1777,7 @@ function collectQrCandidates(rawText) {
 
     try {
         const obj = JSON.parse(text);
-        ['id', 'empId', 'employeeId', 'name', 'employeeName', 'fullName', 'employee'].forEach((key) => {
+        ['id', 'empId', 'employeeId', 'name', 'employeeName', 'fullName', 'employee', 'role', 'position'].forEach((key) => {
             const v = normalizeQrValue(obj?.[key]);
             if (v) candidates.push(v);
         });
@@ -1789,28 +1791,29 @@ function findWorkerFromQr(rawText) {
     const candidates = collectQrCandidates(rawText);
     if (!candidates.length) return null;
 
-    const tableWorkers = getWorkersFromTableBody();
-    const sourceWorkers = tableWorkers.length
-        ? [...tableWorkers, ...WORKERS.filter(w => !tableWorkers.some(tw => tw.id === w.id))]
-        : WORKERS;
+    const sourceWorkers = WORKERS;
 
     const byId = sourceWorkers.find(w => candidates.includes(normalizeQrValue(w.id).toLowerCase()));
-    if (byId) return byId;
+    if (byId) {
+        const nameMatches = candidates.includes(normalizeQrValue(byId.name).toLowerCase());
+        const roleMatches = candidates.includes(normalizeQrValue(byId.role).toLowerCase());
+        const hasNameOrRole = candidates.some(candidate => candidate === normalizeQrValue(byId.name).toLowerCase()
+            || candidate === normalizeQrValue(byId.role).toLowerCase());
+        if (candidates.length === 1 || (nameMatches && roleMatches) || hasNameOrRole) return byId;
+    }
 
     const candidateEmpNumbers = candidates
         .map((candidate) => parseEmpNumeric(candidate))
         .filter((num) => Number.isFinite(num));
     if (candidateEmpNumbers.length) {
         const byEmpNumber = sourceWorkers.find((w) => candidateEmpNumbers.includes(parseEmpNumeric(w.id)));
-        if (byEmpNumber) return byEmpNumber;
+        if (byEmpNumber && candidates.length === 1) return byEmpNumber;
     }
 
-    const byName = sourceWorkers.find(w => candidates.includes(normalizeQrValue(w.name).toLowerCase()));
-    if (byName) return byName;
-
-    return sourceWorkers.find((w) => {
+    return sourceWorkers.find(w => {
         const name = normalizeQrValue(w.name).toLowerCase();
-        return candidates.some((candidate) => candidate.includes(name) || name.includes(candidate));
+        const role = normalizeQrValue(w.role).toLowerCase();
+        return candidates.includes(name) && candidates.includes(role);
     }) || null;
 }
 
@@ -1905,14 +1908,15 @@ function renderTable() {
     let i = 1;
     WORKERS.forEach(w => {
         if (searchTerm && !w.name.toLowerCase().includes(searchTerm) && !w.role.toLowerCase().includes(searchTerm)) return;
-        const a = attendance[w.id];
+        const a = attendance[w.id] || { status: 'waiting', time: null, datetime: null, note: '' };
         const tr = document.createElement('tr');
+        tr.className = a.status === 'present' ? 'attendance-present-row' : '';
         tr.innerHTML = `
             <td class="emp-num">${String(i++).padStart(2,'0')}</td>
             <td class="emp-name-cell">${w.name}</td>
             <td class="emp-role-cell">${w.role}</td>
             <td>
-                <select class="table-status-select" onchange="setAttendanceStatus('${w.id}', this.value, 'Хүснэгтээс бүртгэв')">
+            <select class="table-status-select ${a.status === 'present' ? 'status-present' : ''}" data-worker-id="${w.id}" aria-label="${w.name} ажилтны бүртгэлийн төлөв">
                     <option value="waiting" ${a.status === 'waiting' ? 'selected' : ''}>Хүлээгдэж буй</option>
                     <option value="holiday" ${a.status === 'holiday' ? 'selected' : ''}>Ээлжийн амралттай</option>
                     <option value="sick" ${a.status === 'sick' ? 'selected' : ''}>Өвчтэй</option>
@@ -1926,6 +1930,15 @@ function renderTable() {
         `;
         tbody.appendChild(tr);
     });
+    tbody.onclick = event => {
+        if (event.target.closest('.table-status-select')) event.stopPropagation();
+    };
+    tbody.onchange = event => {
+        const select = event.target.closest('.table-status-select');
+        if (!select) return;
+        event.stopPropagation();
+        setAttendanceStatus(select.dataset.workerId, select.value, 'Хүснэгтээс бүртгэв');
+    };
 }
 
 function formatAttendanceNote(note) {
@@ -1938,7 +1951,14 @@ function formatAttendanceNote(note) {
 }
 
 function setAttendanceStatus(empId, status, note = '') {
-    if (!attendance[empId]) return;
+    if (!Object.prototype.hasOwnProperty.call(STATUS_MAP, status)) return;
+
+    const worker = WORKERS.find(w => String(w.id).trim().toUpperCase() === String(empId || '').trim().toUpperCase());
+    if (!worker) return;
+    const workerId = worker.id;
+    if (!attendance[workerId]) {
+        attendance[workerId] = { status: 'waiting', time: null, datetime: null, note: '' };
+    }
 
     let timeStr = null;
     let datetimeStr = null;
@@ -1951,15 +1971,12 @@ function setAttendanceStatus(empId, status, note = '') {
         normalizedNote = '';
     }
 
-    attendance[empId] = { status, time: timeStr, datetime: datetimeStr, note: normalizedNote };
+    attendance[workerId] = { status, time: timeStr, datetime: datetimeStr, note: normalizedNote };
 
     persistCurrentAttendanceToActiveNews();
 
-    const emp = WORKERS.find(w => w.id === empId);
-    if (emp) {
-        const st = STATUS_MAP[status] || STATUS_MAP.waiting;
-        showToast(emp.name, `${st.label}${timeStr ? ' — ' + timeStr : ''}`);
-    }
+    const st = STATUS_MAP[status] || STATUS_MAP.waiting;
+    showToast(worker.name, `${st.label}${timeStr ? ' — ' + timeStr : ''}`);
 
     renderTable();
     updateStats();
@@ -2261,7 +2278,10 @@ function createNewsCard(data = {}, makeActive = true) {
     `;
 
     list.insertBefore(card, list.firstChild);
-    card.onclick = function() { setActiveNews(cardId); };
+    card.onclick = function(event) {
+        if (event.target.closest('select, input, button, textarea')) return;
+        setActiveNews(cardId);
+    };
 
     const noInput = card.querySelector('.news-no');
     const titleInput = card.querySelector('.news-title');
@@ -2296,7 +2316,16 @@ function showToast(name, status) {
 // NEWS CARDS
 // =====================
 function addNews() {
-    createNewsCard({}, true);
+    const cardId = createNewsCard({}, true);
+    newsRegistrations[cardId] = createEmptyRegistration();
+    activeNewsId = cardId;
+    WORKERS.forEach(w => {
+        attendance[w.id] = { status: 'waiting', time: null, datetime: null, note: '' };
+    });
+    renderTable();
+    updateStats();
+    renderDailyReport();
+    renderAllNewsCardStats();
     scheduleAutosave();
 }
 

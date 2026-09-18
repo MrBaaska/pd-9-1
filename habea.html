@@ -108,7 +108,7 @@ canvas{max-height:400px}
 <button type="submit">Нэмэх</button>
 </form>
 <h3>Бүх бүртгэл</h3>
-    <table><thead><tr><th>№</th><th>Ангилал</th><th>Илэрсэн үл тохирол / Тайлбар</th><th>Үзлэг хийсэн хугацаа</th><th>Үзлэгийн төрөл</th><th>Хяналт, шалгалт хийсэн ажилтан <br><span style="font-size:12px;color:#1976d2">Баталгаажуулалт</span></th><th>Гүйцэтгэл</th><th>Үйлдэл</th></tr></thead><tbody id="dataTable"></tbody></table>
+    <table><thead><tr><th>№</th><th>Ангилал</th><th>үл тохирол</th><th> хугацаа</th><th>Үзлэгийн төрөл</th><th>Хяналт хийсэн <br></th><th>Гүйцэтгэл</th><th>Үйлдэл</th></tr></thead><tbody id="dataTable"></tbody></table>
 <h3>Ангиллын статистик</h3>
 <div class="chart-container">
 <div class="chart-box" style="flex:1;min-width:100%"><table><thead><tr><th>Ангилал</th><th>Нийт үл тохирол</th><th>Хувь (%)</th></tr></thead><tbody id="categorySummary"></tbody><tfoot><tr><td>НИЙТ</td><td id="totalCount">0</td><td>100%</td></tr></tfoot></table></div>
@@ -235,10 +235,6 @@ function loadTable(){
                 </td>
                 <td>
                     <div>${item.owner}</div>
-                    <div style="margin-top:6px">
-                        <span style="font-size:12px;color:#1976d2">Гарын үсэг:</span>
-                        <!-- Add your custom content for Гарын үсэг here -->
-                    </div>
                 </td>
                 <td>
                     <select onchange="updateStatus(${i},this.value)">
