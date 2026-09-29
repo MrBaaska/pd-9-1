@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сургалтын систем v5</title>
+    <style>
+        :root {
+            --primary: #5592a3;
+            --secondary: #67a5b5;
+            --dark: #3d6b77;
+            --light: #f1f5f9;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--light);
+            min-height: 100%;
+            display: flex;
+            overflow: auto;
+        }
+
+        .sidebar {
+            display: none;
+        }
+
+        .menu-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--secondary);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .menu-btn.active { background: var(--dark); border-color: white; font-weight: bold; }
+
+        .main-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        .course-select {
+            min-width: min(420px, 100%);
+            max-width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #b8cbd1;
+            border-radius: 8px;
+            background: #f8fbfc;
+            color: var(--dark);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .top-info-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-field { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .instructor-tools { display: flex; gap: 6px; align-items: center; }
+        .instructor-tools .input-field { min-width: 210px; }
+        .manage-instructors { display: none; flex-basis: 100%; padding: 14px; border: 1px solid #dbe7eb; border-radius: 8px; background: #f8fbfc; }
+        .manage-instructors.show { display: block; }
+        .instructor-form { display: flex; gap: 8px; flex-wrap: wrap; }
+        .instructor-form .input-field { flex: 1 1 180px; }
+        .instructor-list { margin-top: 10px; display: grid; gap: 6px; }
+        .instructor-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 9px; background: white; border: 1px solid #dbe7eb; border-radius: 6px; }
+        .instructor-row small { color: #64748b; }
+        .instructor-row button { border: 0; background: transparent; color: #dc2626; cursor: pointer; }
+
+        .content-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+
+        .video-section, .notes-section {
+            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .video-box { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
+
+        .video-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
+
+        .tab-btn { padding: 10px; background: #e2e8f0; border: none; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        textarea { width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: none; box-sizing: border-box; }
+
+        .btn-save { background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+
+        .history-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .history-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .history-filter { min-width: 180px; }
+        .summary-card { margin-top: 20px; }
+        .summary-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .summary-stat { padding: 14px; border: 1px solid #dbe7eb; border-radius: 8px; background: #f8fbfc; }
+        .summary-stat strong { display: block; color: var(--dark); font-size: 22px; }
+        .summary-stat span { color: #64748b; font-size: 12px; }
+        @media (max-width: 700px) { .summary-stats { grid-template-columns: 1fr; } }
+        .table-container { overflow-x: auto; border: 1px solid #b8cbd1; border-radius: 10px; background: #fff; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { padding: 12px 14px; border-right: 1px solid #cbd8dc; border-bottom: 1px solid #cbd8dc; text-align: center; font-size: 13px; }
+        th:last-child, td:last-child { border-right: none; }
+        tbody tr:last-child td { border-bottom: none; }
+        th { background: #dcecf0; color: #294d58; font-weight: 700; border-bottom: 2px solid #8eb2bb; white-space: nowrap; }
+        tbody tr:nth-child(even) td { background: #f7fafb; }
+        tbody tr:hover td { background: #eaf5f7; }
+        td.merged { vertical-align: middle; background: #edf5f6; font-weight: bold; color: #2c3e50; }
+        tbody tr:nth-child(even) td.merged { background: #e5f0f2; }
+        .total-time-badge { display: block; color: #166534; font-size: 11px; margin-top: 5px; }
+
+        .scanner-field { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
+        .scanner-field small { color: #64748b; }
+        .employee-result {
+            display: none;
+            margin: 10px 0 15px;
+            padding: 10px 12px;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            background: #e8f3f6;
+            color: #23434d;
+        }
+        .employee-result.show { display: block; }
+        .employee-entry { padding: 7px 0; border-bottom: 1px solid rgba(61,107,119,0.2); }
+        .employee-entry:last-child { border-bottom: none; }
+        .employee-entry strong { display: block; font-size: 15px; }
+        .employee-entry span { display: block; margin-top: 3px; font-size: 13px; }
+        .employee-result.error { border-left-color: #dc2626; background: #fef2f2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h3 style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px;">СУРГАЛТЫН ЦЭС</h3>
+        <div id="menu-list"></div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="top-info-bar">
+            <select id="current-course-title" class="course-select" aria-label="Сургалт сонгох"></select>
+            
+            <div class="input-group">
+                <label>Огноо:</label>
+                <input type="date" id="doc-date" class="input-field">
+            </div>
+
+            <div class="input-group">
+                <label>Багш:</label>
+                <div class="instructor-tools">
+                    <select id="instructor" class="input-field" aria-label="Багш сонгох"></select>
+                    <button type="button" class="tab-btn" id="manage-instructors-btn">Засах</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Сургалтын цаг:</label>
+                <select id="duration" class="input-field">
+                    <option value="0.5">30 мин</option>
+                    <option value="1">1 цаг</option>
+                    <option value="1.5">1.5 цаг</option>
+                    <option value="2">2 цаг</option>
+                    <option value="4">4 цаг</option>
+                    <option value="8">8 цаг</option>
+                </select>
+            </div>
+
+                <div class="manage-instructors" id="manage-instructors">
+                    <strong>Багшийн нэр, албан тушаал</strong>
+                    <div class="instructor-form">
+                        <input type="text" id="instructor-name" class="input-field" placeholder="Нэр">
+                        <input type="text" id="instructor-position" class="input-field" placeholder="Албан тушаал">
+                        <button type="button" class="btn-save" id="save-instructor-btn" style="width:auto;margin-top:0">Нэмэх / хадгалах</button>
+                    </div>
+                    <div id="instructor-list" class="instructor-list"></div>
+                </div>
+
+        </div>
+
+        <div class="content-row">
+            <div class="video-section">
+                <div class="video-box">
+                    <iframe id="main-video" src="" allowfullscreen width="100%" height="100%"></iframe>
+                </div>
+                <div class="video-tabs" id="vid-tabs"></div>
+            </div>
+
+            <div class="notes-section">
+                <div class="scanner-field">
+                    <label for="employee-scanner">Сургалтанд хамрагдсан ажилтан:</label>
+                    <input type="text" id="employee-scanner" class="input-field" placeholder="Ажилтны код уншуулна уу" autocomplete="off">
+             
+                </div>
+                <input type="hidden" id="viewer-name">
+                <div id="employee-result" class="employee-result" aria-live="polite">
+                    <div id="employee-list"></div>
+                </div>
+                
+                <label>Тэмдэглэл / Тайлбар (Өдрөөр нэгтгэгдэнэ):</label>
+                <textarea id="main-note" placeholder="Тухайн өдрийн сургалтын тэмдэглэл..."></textarea>
+                
+                <button class="btn-save" onclick="saveToHistory()">Мэдээллийг Хадгалах</button>
+            </div>
+        </div>
+
+        <div class="history-card">
+            <div class="history-header">
+                <h4 style="margin:0">Сургалтын бүртгэлийн түүх</h4>
+                <select id="history-date-filter" class="input-field history-filter" aria-label="Түүхээс өдөр сонгох">
+                    <option value="all">Бүх өдөр</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Огноо</th>
+                            <th>Өдрийн нийт цаг</th>
+                            <th>Багш</th>
+                            <th>Сургалт / Бичлэг</th>
+                            <th>Үзсэн хүн</th>
+                            <th>Албан тушаал</th>
+                            <th>Тэмдэглэл</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="history-card summary-card">
+            <div class="history-header">
+                <h4 style="margin:0">Сарын сургалтын тайлан</h4>
+                <select id="summary-month-filter" class="input-field history-filter" aria-label="Сарын тайлангаас сар сонгох">
+                    <option value="all">Бүх сар</option>
+                </select>
+            </div>
+            <div class="summary-stats">
+                <div class="summary-stat"><strong id="summary-total-lessons">0</strong><span>Нийт хичээл</span></div>
+                <div class="summary-stat"><strong id="summary-total-hours">0 цаг</strong><span>Нийт сургалтын цаг</span></div>
+                <div class="summary-stat"><strong id="summary-total-participants">0</strong><span>Хамрагдсан хүн</span></div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Сургалт</th>
+                            <th>Хичээл орсон тоо</th>
+                            <th>Нийт цаг</th>
+                            <th>Багш</th>
+                            <th>Хамрагдсан хүн</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthly-summary-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const courses = [
+        { id: 1, title: "Галын аюулаас урьдчилан сэргийлэх", v: ["1. Онол", "2. Дадлага", "3. Багаж", "4. Анхааруулга", "5. Дүгнэлт"] },
+        { id: 2, title: "Эрүүл мэнд ба Аюулгүй байдал", v: ["1. Хөдөлмөр", "2. Нөхцөл", "3. Хамгаалалт", "4. Хооллолт", "5. Дасгал"] },
+        { id: 3, title: "ЗХВ-ны тууз тайлах сургалт", v: ["1. Танилцуулга", "2. Техник", "3. Заавар", "4. Алдаа", "5. Шалгалт"] },
+        { id: 4, title: "Замын багаж хэрэгсэл засвар", v: ["1. Төрөл", "2. Оношилгоо", "3. Засварлах", "4. Тослох", "5. Хадгалах"] },
+        { id: 5, title: "Замын гэмтэл засах техник", v: ["1. Гэмтэл", "2. Багаж", "3. Ажиллагаа", "4. Аюулгүй байдал", "5. Дуусгах"] },
+        { id: 6, title: "Стресс, харилцаа хандлага", v: ["1. Ойлголт", "2. Шалтгаан", "3. Зохицуулах", "4. Харилцаа", "5. Дасгал"] },
+        { id: 7, title: "Шинэ бүтээл, ашигтай загвар", v: ["1. Санаа", "2. Төсөл", "3. Загвар", "4. Туршилт", "5. Нэвтрүүлэх"] },
+        { id: 8, title: "Учирч болох 100 эрсдэл", v: ["1. Дотор орчинд", "2. Гадна талбайд", "3. Дээрээс", "4. Доороос", "5. Бусад"] },
+        { id: 9, title: "Мэдлэг сорих асуулт, хариулт", v: ["3-р зэргийн замчин", "2. 4-р зэргийн замчин", "3. хууль, журам", "4. ХАБЭА", "5. СИРДПЕ"] },
+        { id: 10, title: "Хууль эрх зүйн сургалт", v: ["1. Үндсэн хууль", "2. Хөдөлмөрийн хууль", "3. Дүрэм", "4. Хариуцлага", "5. Зөвлөгөө"] }
+    ];
+
+    let currentCourse = courses[0];
+    let currentVideoName = "";
+    let selectedEmployees = [];
+    const INSTRUCTOR_STORAGE_KEY = 'training_instructors_v1';
+    const TRAINING_DRAFT_STORAGE_KEY = 'training_current_draft_v1';
+    let instructors = [];
+    let editingInstructorIndex = -1;
+
+    const EMPLOYEE_STORAGE_KEYS = ['ubtz_workers_autosave_v3', 'registeredWorkers_v1'];
+
+    function normalizeEmployeeCode(value) {
+        return String(value || '').trim().toUpperCase();
+    }
+
+    function readInstructors() {
+        const defaults = [
+            { name: 'Б.Бат', position: '' },
+            { name: 'С.Саруул', position: '' },
+            { name: 'Д.Дорж', position: '' }
+        ];
+        try {
+            const saved = JSON.parse(localStorage.getItem(INSTRUCTOR_STORAGE_KEY) || 'null');
+            return Array.isArray(saved) && saved.length ? saved : defaults;
+        } catch (error) {
+            return defaults;
+        }
+    }
+
+    function saveInstructors() {
+        localStorage.setItem(INSTRUCTOR_STORAGE_KEY, JSON.stringify(instructors));
+    }
+
+    function saveTrainingDraft() {
+        const draft = {
+            courseId: currentCourse.id,
+            videoName: currentVideoName,
+            date: document.getElementById('doc-date').value,
+            instructor: document.getElementById('instructor').value,
+            duration: document.getElementById('duration').value,
+            note: document.getElementById('main-note').value,
+            selectedEmployees: selectedEmployees
+        };
+        localStorage.setItem(TRAINING_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    }
+
+    function readTrainingDraft() {
+        try {
+            const draft = JSON.parse(localStorage.getItem(TRAINING_DRAFT_STORAGE_KEY) || 'null');
+            return draft && typeof draft === 'object' ? draft : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function clearTrainingDraft() {
+        localStorage.removeItem(TRAINING_DRAFT_STORAGE_KEY);
+    }
+
+    function restoreTrainingDraft() {
+        const draft = readTrainingDraft();
+        if (!draft) return;
+
+        const courseId = Number(draft.courseId);
+        if (courses.some(course => course.id === courseId) && courseId !== 9) {
+            loadCourse(courseId);
+        }
+        if (draft.date) document.getElementById('doc-date').value = draft.date;
+        if (draft.instructor && instructors.some(instructor => instructor.name === draft.instructor)) {
+            document.getElementById('instructor').value = draft.instructor;
+        }
+        if (draft.duration) document.getElementById('duration').value = draft.duration;
+        document.getElementById('main-note').value = draft.note || '';
+        selectedEmployees = Array.isArray(draft.selectedEmployees) ? draft.selectedEmployees : [];
+        renderEmployeeList();
+        if (draft.videoName) {
+            const videoTab = Array.from(document.querySelectorAll('.tab-btn')).find(button => button.textContent === draft.videoName);
+            if (videoTab) videoTab.click();
+        }
+    }
+
+    function setupTrainingAutosave() {
+        ['doc-date', 'instructor', 'duration', 'main-note'].forEach(id => {
+            const element = document.getElementById(id);
+            element.addEventListener('input', saveTrainingDraft);
+            element.addEventListener('change', saveTrainingDraft);
+        });
+    }
+
+    function renderInstructors(selectedName) {
+        const select = document.getElementById('instructor');
+        const list = document.getElementById('instructor-list');
+        const currentName = selectedName || select.value;
+        select.innerHTML = '';
+        instructors.forEach(instructor => {
+            const option = document.createElement('option');
+            option.value = instructor.name;
+            option.textContent = instructor.position ? `${instructor.name} - ${instructor.position}` : instructor.name;
+            select.appendChild(option);
+        });
+        if (instructors.some(instructor => instructor.name === currentName)) {
+            select.value = currentName;
+        }
+
+        list.innerHTML = '';
+        instructors.forEach((instructor, index) => {
+            const row = document.createElement('div');
+            row.className = 'instructor-row';
+            row.innerHTML = `<span><strong>${instructor.name}</strong> <small>${instructor.position || 'Албан тушаал оруулаагүй'}</small></span><span><button type="button" data-edit-instructor="${index}">Засах</button><button type="button" data-delete-instructor="${index}">Устгах</button></span>`;
+            list.appendChild(row);
+        });
+    }
+
+    function resetInstructorForm() {
+        editingInstructorIndex = -1;
+        document.getElementById('instructor-name').value = '';
+        document.getElementById('instructor-position').value = '';
+    }
+
+    function setupInstructorManager() {
+        instructors = readInstructors();
+        renderInstructors(instructors[0]?.name);
+        document.getElementById('manage-instructors-btn').addEventListener('click', () => {
+            document.getElementById('manage-instructors').classList.toggle('show');
+        });
+        document.getElementById('save-instructor-btn').addEventListener('click', () => {
+            const name = document.getElementById('instructor-name').value.trim();
+            const position = document.getElementById('instructor-position').value.trim();
+            if (!name) return alert('Багшийн нэр оруулна уу.');
+            const duplicate = instructors.findIndex(instructor => instructor.name.toLowerCase() === name.toLowerCase());
+            const targetIndex = editingInstructorIndex >= 0 ? editingInstructorIndex : duplicate;
+            const instructor = { name, position };
+            if (targetIndex >= 0) instructors[targetIndex] = instructor;
+            else instructors.push(instructor);
+            saveInstructors();
+            renderInstructors(name);
+            resetInstructorForm();
+            saveTrainingDraft();
+        });
+        document.getElementById('instructor-list').addEventListener('click', event => {
+            const editIndex = event.target.dataset.editInstructor;
+            const deleteIndex = event.target.dataset.deleteInstructor;
+            if (editIndex !== undefined) {
+                editingInstructorIndex = Number(editIndex);
+                document.getElementById('instructor-name').value = instructors[editingInstructorIndex].name;
+                document.getElementById('instructor-position').value = instructors[editingInstructorIndex].position;
+            }
+            if (deleteIndex !== undefined && instructors.length > 1) {
+                instructors.splice(Number(deleteIndex), 1);
+                saveInstructors();
+                renderInstructors();
+                resetInstructorForm();
+                saveTrainingDraft();
+            }
+        });
+    }
+
+    function readEmployeeDirectory() {
+        const employees = [];
+        EMPLOYEE_STORAGE_KEYS.forEach(key => {
+            try {
+                const stored = JSON.parse(localStorage.getItem(key) || '[]');
+                if (!Array.isArray(stored)) return;
+                stored.forEach(employee => {
+                    const id = normalizeEmployeeCode(employee.id || employee.code || employee.employeeId);
+                    const name = String(employee.name || employee.fullName || '').trim();
+                    const position = String(employee.position || employee.role || '').trim();
+                    if (id && name && !employees.some(item => item.id === id)) {
+                        employees.push({ id, name, position });
+                    }
+                });
+            } catch (error) {
+                console.warn('Ажилтны бүртгэл уншигдсангүй:', key, error);
+            }
+        });
+        return employees;
+    }
+
+    function getScannedEmployee(rawValue) {
+        const raw = String(rawValue || '').trim();
+        if (!raw) return null;
+
+        let scanValue = raw;
+        try {
+            const parsed = JSON.parse(raw);
+            scanValue = parsed.id || parsed.code || parsed.employeeId || parsed.name || parsed.fullName || raw;
+        } catch (error) {
+            // 2D scanner-ийн энгийн текстэн кодыг шууд ашиглана.
+        }
+
+        const normalizedValue = normalizeEmployeeCode(scanValue);
+        return readEmployeeDirectory().find(employee =>
+            employee.id === normalizedValue || normalizeEmployeeCode(employee.name) === normalizedValue
+        ) || null;
+    }
+
+    function renderEmployeeList(message = '') {
+        const result = document.getElementById('employee-result');
+        const list = document.getElementById('employee-list');
+        result.classList.toggle('show', selectedEmployees.length > 0 || Boolean(message));
+        result.classList.toggle('error', Boolean(message));
+        list.innerHTML = '';
+
+        if (message) {
+            const error = document.createElement('div');
+            error.textContent = `${message}. Бүртгэлээс ажилтан олдсонгүй.`;
+            list.appendChild(error);
+            return;
+        }
+
+        selectedEmployees.forEach((employee, index) => {
+            const entry = document.createElement('div');
+            entry.className = 'employee-entry';
+            entry.innerHTML = `<strong>${index + 1}. ${employee.name}</strong><span>Албан тушаал: ${employee.position || 'Бүртгэгдээгүй'}</span>`;
+            list.appendChild(entry);
+        });
+    }
+
+    function handleEmployeeScan(inputId = 'employee-scanner') {
+        const scanner = document.getElementById(inputId);
+        const scannedEmployee = getScannedEmployee(scanner.value);
+        if (!scannedEmployee) {
+            renderEmployeeList('Танигдсан ажилтан алга');
+            return;
+        }
+
+        if (!selectedEmployees.some(employee => employee.id === scannedEmployee.id)) {
+            selectedEmployees.push(scannedEmployee);
+        }
+        saveTrainingDraft();
+        document.getElementById('viewer-name').value = '';
+        renderEmployeeList();
+        scanner.value = '';
+        document.getElementById('employee-scanner').focus();
+    }
+
+    function setupEmployeeScanner() {
+        const scanner = document.getElementById('employee-scanner');
+        const viewer = document.getElementById('viewer-name');
+        if (!scanner) return;
+        let scanTimer;
+        scanner.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                clearTimeout(scanTimer);
+                handleEmployeeScan();
+            }
+        });
+        scanner.addEventListener('input', () => {
+            clearTimeout(scanTimer);
+            scanTimer = setTimeout(handleEmployeeScan, 350);
+        });
+        viewer.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleEmployeeScan('viewer-name');
+            }
+        });
+    }
+
+    function init() {
+        const courseSelect = document.getElementById('current-course-title');
+        const menuList = document.getElementById('menu-list');
+        courses.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c.id;
+            option.textContent = c.title;
+            courseSelect.appendChild(option);
+
+            const btn = document.createElement('button');
+            btn.className = 'menu-btn';
+            btn.innerText = c.title;
+            btn.onclick = () => loadCourse(c.id);
+            btn.id = `m-${c.id}`;
+            menuList.appendChild(btn);
+        });
+        courseSelect.addEventListener('change', () => loadCourse(Number(courseSelect.value)));
+        document.getElementById('doc-date').value = new Date().toISOString().split('T')[0];
+        loadCourse(1);
+        setupInstructorManager();
+        setupTrainingAutosave();
+        restoreTrainingDraft();
+        renderHistory();
+        setupEmployeeScanner();
+    }
+
+    function loadCourse(id) {
+        currentCourse = courses.find(c => c.id === id);
+        document.getElementById('current-course-title').value = String(currentCourse.id);
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`m-${id}`).classList.add('active');
+
+        const tabs = document.getElementById('vid-tabs');
+        tabs.innerHTML = '';
+        currentCourse.v.forEach((vName) => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn';
+            btn.innerText = vName;
+            btn.onclick = () => {
+                currentVideoName = vName;
+                document.getElementById('main-video').src = `https://www.youtube.com/embed/dQw4w9WgXcQ`;
+                saveTrainingDraft();
+                document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            tabs.appendChild(btn);
+        });
+        tabs.firstChild.click();
+    }
+
+    function saveToHistory() {
+        const viewer = document.getElementById('viewer-name').value.trim();
+        const selectedDate = document.getElementById('doc-date').value;
+        const note = document.getElementById('main-note').value;
+        
+        if(!viewer && !selectedEmployees.length) return alert("Нэр оруулна уу!");
+
+        let history = JSON.parse(localStorage.getItem('training_v5')) || [];
+
+        // Нэг өдөр бол тэмдэглэлийг бүгдийг нь ижил болгож шинэчлэх
+        if(note) {
+            history.forEach(h => {
+                if(h.date === selectedDate) h.note = note;
+            });
+        }
+
+        const employeesToSave = selectedEmployees.length
+            ? selectedEmployees
+            : [{ name: viewer, position: '' }];
+        employeesToSave.forEach((employee, index) => {
+            history.push({
+                date: selectedDate,
+                instructor: document.getElementById('instructor').value,
+                duration: parseFloat(document.getElementById('duration').value),
+                courseTitle: currentCourse.title,
+                videoName: currentVideoName,
+                instructorPosition: instructors.find(instructor => instructor.name === document.getElementById('instructor').value)?.position || '',
+                viewer: employee.name,
+                viewerPosition: employee.position || '',
+                note: note || (history.find(h => h.date === selectedDate)?.note || ""),
+                id: Date.now() + index
+            });
+        });
+        localStorage.setItem('training_v5', JSON.stringify(history));
+        clearTrainingDraft();
+        
+        document.getElementById('viewer-name').value = '';
+        selectedEmployees = [];
+        renderEmployeeList();
+        renderHistory();
+        renderMonthlySummary();
+    }
+
+    function renderHistory() {
+        let history = JSON.parse(localStorage.getItem('training_v5')) || [];
+        const filter = document.getElementById('history-date-filter');
+        const selectedDate = filter ? filter.value : 'all';
+        const dates = [...new Set(history.map(entry => entry.date).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+
+        if (filter) {
+            const currentValue = selectedDate;
+            filter.innerHTML = '<option value="all">Бүх өдөр</option>';
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = date;
+                filter.appendChild(option);
+            });
+            filter.value = dates.includes(currentValue) || currentValue === 'all' ? currentValue : 'all';
+        }
+
+        if (selectedDate !== 'all' && dates.includes(selectedDate)) {
+            history = history.filter(entry => entry.date === selectedDate);
+        }
+        history.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+
+        const body = document.getElementById('history-body');
+        body.innerHTML = '';
+
+        // Нийлбэр цаг тооцоолох
+        const dailyTotals = history.reduce((acc, curr) => {
+            acc[curr.date] = (acc[curr.date] || 0) + curr.duration;
+            return acc;
+        }, {});
+
+        for (let i = 0; i < history.length; i++) {
+            const h = history[i];
+            let dateRowspan = 0;
+            
+            // Ижил огноотой хэдэн мөр байгааг тоолох
+            for (let j = i; j < history.length; j++) {
+                if (history[j].date === h.date) dateRowspan++;
+                else break;
+            }
+
+            const row = document.createElement('tr');
+            
+            if (i === 0 || history[i-1].date !== h.date) {
+                // Огноо нүд
+                const tdDate = document.createElement('td');
+                tdDate.className = 'merged';
+                tdDate.rowSpan = dateRowspan;
+                tdDate.innerText = h.date;
+                row.appendChild(tdDate);
+
+                // Нийт цаг нүд
+                const tdTotal = document.createElement('td');
+                tdTotal.className = 'merged';
+                tdTotal.rowSpan = dateRowspan;
+                tdTotal.innerHTML = `${dailyTotals[h.date]} цаг`;
+                row.appendChild(tdTotal);
+            }
+
+            row.innerHTML += `
+                <td>${h.instructor}<br><small>${h.instructorPosition || '-'}</small></td>
+                <td style="text-align:left"><b>${h.courseTitle}</b><br><small>${h.videoName}</small></td>
+                <td>${h.viewer}</td>
+                <td>${h.viewerPosition || '-'}</td>
+            `;
+
+            if (i === 0 || history[i-1].date !== h.date) {
+                // Тэмдэглэл нүд
+                const tdNote = document.createElement('td');
+                tdNote.className = 'merged';
+                tdNote.rowSpan = dateRowspan;
+                tdNote.style.textAlign = 'left';
+                tdNote.innerText = h.note || '-';
+                row.appendChild(tdNote);
+            }
+
+            body.appendChild(row);
+            if (dateRowspan > 1) {
+                // Нэгтгэсэн мөрүүдийг алгасах логик шаардлагагүй, 
+                // учир нь бид зөвхөн огноо солигдох үед л rowspan нүднүүдийг үүсгэж байна.
+            }
+        }
+
+        if (!history.length) {
+            body.innerHTML = '<tr><td colspan="7" style="padding:24px; color:#64748b;">Сонгосон өдөр бүртгэлгүй байна.</td></tr>';
+        }
+    }
+
+    function renderMonthlySummary() {
+        let history = JSON.parse(localStorage.getItem('training_v5')) || [];
+        const filter = document.getElementById('summary-month-filter');
+        const currentMonth = filter ? filter.value : 'all';
+        const months = [...new Set(history.map(entry => String(entry.date || '').slice(0, 7)).filter(Boolean))]
+            .sort((a, b) => b.localeCompare(a));
+
+        if (filter) {
+            filter.innerHTML = '<option value="all">Бүх сар</option>';
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                filter.appendChild(option);
+            });
+            filter.value = months.includes(currentMonth) || currentMonth === 'all' ? currentMonth : 'all';
+        }
+
+        if (currentMonth !== 'all' && months.includes(currentMonth)) {
+            history = history.filter(entry => String(entry.date || '').startsWith(currentMonth));
+        }
+
+        const sessions = new Map();
+        history.forEach(entry => {
+            const key = [entry.date, entry.courseTitle, entry.videoName, entry.instructor].join('|');
+            if (!sessions.has(key)) {
+                sessions.set(key, {
+                    courseTitle: entry.courseTitle || '-',
+                    duration: Number(entry.duration) || 0,
+                    instructor: entry.instructor || '-',
+                    participants: new Set([entry.viewer].filter(Boolean))
+                });
+            } else if (entry.viewer) {
+                sessions.get(key).participants.add(entry.viewer);
+            }
+        });
+
+        const coursesSummary = new Map();
+        const allParticipants = new Set();
+        let totalHours = 0;
+        sessions.forEach(session => {
+            if (!coursesSummary.has(session.courseTitle)) {
+                coursesSummary.set(session.courseTitle, {
+                    lessons: 0,
+                    hours: 0,
+                    instructors: new Set(),
+                    participants: new Set()
+                });
+            }
+            const summary = coursesSummary.get(session.courseTitle);
+            summary.lessons += 1;
+            summary.hours += session.duration;
+            summary.instructors.add(session.instructor);
+            session.participants.forEach(person => {
+                summary.participants.add(person);
+                allParticipants.add(person);
+            });
+            totalHours += session.duration;
+        });
+
+        document.getElementById('summary-total-lessons').textContent = sessions.size;
+        document.getElementById('summary-total-hours').textContent = `${totalHours} цаг`;
+        document.getElementById('summary-total-participants').textContent = allParticipants.size;
+
+        const body = document.getElementById('monthly-summary-body');
+        body.innerHTML = '';
+        coursesSummary.forEach((summary, courseTitle) => {
+            const row = document.createElement('tr');
+            [courseTitle, summary.lessons, `${summary.hours} цаг`, [...summary.instructors].join(', '), summary.participants.size]
+                .forEach(value => {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+            body.appendChild(row);
+        });
+
+        if (!coursesSummary.size) {
+            body.innerHTML = '<tr><td colspan="5" style="padding:24px; color:#64748b;">Сонгосон сард бүртгэлгүй байна.</td></tr>';
+        }
+    }
+
+    document.getElementById('history-date-filter').addEventListener('change', renderHistory);
+    document.getElementById('summary-month-filter').addEventListener('change', renderMonthlySummary);
+    init();
+    renderMonthlySummary();
+</script>
+</body>
+</html>
